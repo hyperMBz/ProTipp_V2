@@ -82,7 +82,9 @@ export function LiveAlertsSystem() {
       audio.volume = 0.5;
       audio.play().catch(() => {
         // Fallback: Use Web Audio API to generate beep
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioContext = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (!AudioContext) return;
+        const audioContext = new AudioContext();
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
 

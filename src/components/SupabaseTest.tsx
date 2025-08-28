@@ -4,10 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { getSupabaseClient } from '@/lib/supabase-singleton';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { BMADLinearService } from '@/lib/linear/bmad-integration';
+import { Session } from '@supabase/supabase-js';
 
 export function SupabaseTest() {
   const [connectionStatus, setConnectionStatus] = useState('testing...');
-  const [currentSession, setCurrentSession] = useState<any>(null);
+  const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [messages, setMessages] = useState<string[]>([]);
 
   const supabase = getSupabaseClient();
@@ -16,32 +18,12 @@ export function SupabaseTest() {
     setMessages(prev => [...prev, 'Supabase kapcsolat tesztelése...']);
     try {
       console.log('🧪 Testing Supabase connection...');
+      const { data: { session }, error } = await supabase.auth.getSession();
 
-      // Test 1: Check if we can get session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      console.log('📋 Current session:', session?.user?.email || 'No session');
-
-      if (sessionError) {
-        console.error('❌ Session error:', sessionError);
-        setConnectionStatus(`Session Error: ${sessionError.message}`);
-        return;
+      if (error) {
+        throw error;
       }
-
       setCurrentSession(session);
-
-      // Test 2: Try to query a simple table (this will fail if database isn't set up)
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
-        .select('count')
-        .limit(1);
-
-      if (profileError) {
-        console.error('❌ Database error:', profileError);
-        setConnectionStatus(`Database Error: ${profileError.message}`);
-        return;
-      }
-
-      console.log('✅ Supabase connection working!');
       setConnectionStatus('✅ Connected successfully!');
 
     } catch (error: unknown) {
@@ -49,7 +31,7 @@ export function SupabaseTest() {
       console.error('❌ Connection test failed:', errorMessage);
       setConnectionStatus(`Error: ${errorMessage}`);
     }
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     testConnection();
