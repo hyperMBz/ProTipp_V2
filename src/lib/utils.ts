@@ -6,11 +6,11 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Fix for hydration mismatch - server/client consistent formatting
-export function formatNumber(num: number): string {
-  if (typeof window === 'undefined') {
-    // Server side - use simple formatting
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-  }
-  // Client side - use locale string
-  return num.toLocaleString('hu-HU');
+export function formatNumber(value: number): string {
+  return new Intl.NumberFormat('hu-HU').format(value)
+}
+
+// Adds two numbers (pure function for testing)
+export function addNumbers(a: number, b: number): number {
+  return a + b
 }

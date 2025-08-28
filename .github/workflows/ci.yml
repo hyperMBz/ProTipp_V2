@@ -25,6 +25,9 @@ jobs:
       - name: Run Linting
         run: bun run lint
 
+      - name: Run Tests
+        run: bunx vitest run --coverage --reporter=verbose
+
       - name: Build Project
         run: bun run build
         env:
