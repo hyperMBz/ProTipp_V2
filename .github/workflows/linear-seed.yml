@@ -54,10 +54,7 @@ jobs:
             issueCreate(input: $input) { success issue { identifier url } }
           }
           EOF
-          overview=$(cat <<TXT
-GitHub repo: https://github.com/hyperMBz/ProTipp_V2\nLive: https://protipp.netlify.app\nActions: https://github.com/hyperMBz/ProTipp_V2/actions\nDesign System: DESIGN_SYSTEM.md\nAgents: AGENTS.md\nDocs overview: docs/overview.md
-TXT
-          )
+          overview=$'GitHub repo: https://github.com/hyperMBz/ProTipp_V2\nLive: https://protipp.netlify.app\nActions: https://github.com/hyperMBz/ProTipp_V2/actions\nDesign System: DESIGN_SYSTEM.md\nAgents: AGENTS.md\nDocs overview: docs/overview.md'
           V=$(jq -n --arg team "$team" --arg title "Project Overview" --arg desc "$overview" '{input:{teamId:$team, title:$title, description:$desc, priority:3}}')
           call "$Q_ISSUE" "$V"
         env:
