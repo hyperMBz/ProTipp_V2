@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelProps } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatNumber } from "@/lib/utils";
@@ -277,7 +277,12 @@ export function SportPerformanceChart({ data, className }: SportPerformanceChart
                     cy="50%"
                     outerRadius={80}
                     dataKey="profit"
-                    label={(props: LabelProps & { sport: string }) => `${props.sport}: ${(props.percent ? props.percent * 100 : 0).toFixed(0)}%`}
+                    label={({ index, percent }: { index?: number, percent?: number }) => {
+                      if (index === undefined) return '';
+                      const sportName = sportData.filter(d => d.profit > 0)[index]?.sport || '';
+                      const percentage = percent ? (percent * 100).toFixed(0) : 0;
+                      return `${sportName}: ${percentage}%`;
+                    }}
                     labelLine={false}
                   >
                     {sportData.filter(d => d.profit > 0).map((entry, index) => (
