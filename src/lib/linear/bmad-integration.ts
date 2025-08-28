@@ -23,15 +23,15 @@ export class BMADLinearService {
     }
 
     private async getOrCreateLabel(labelName: string, color: string = '#ededed') {
-        const labels = await linearClient.labels({
+        const labels = await linearClient.issueLabels({
             filter: { name: { eq: labelName } }
         });
 
         if (labels.nodes.length > 0) {
             return labels.nodes[0];
         } else {
-            const newLabel = await linearClient.createLabel({ name: labelName, color });
-            return newLabel.label;
+            const newLabel = await linearClient.issueLabelCreate({ name: labelName, color });
+            return newLabel.issueLabel;
         }
     }
 
