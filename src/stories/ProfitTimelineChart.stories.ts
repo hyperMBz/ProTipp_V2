@@ -1,15 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from '@storybook/react';
 import { ProfitTimelineChart } from '../components/analytics/ProfitTimelineChart';
+import { UnifiedBetHistory } from '../lib/types/bet-history'; // Importáljuk a helyes típust
 
-// Mock data for the chart
-const mockProfitData = [
-  { date: '2024-01-01', profit: 0, cumulativeProfit: 0 },
-  { date: '2024-01-02', profit: 25.50, cumulativeProfit: 25.50 },
-  { date: '2024-01-03', profit: -15.20, cumulativeProfit: 10.30 },
-  { date: '2024-01-04', profit: 45.80, cumulativeProfit: 56.10 },
-  { date: '2024-01-05', profit: 12.30, cumulativeProfit: 68.40 },
-  { date: '2024-01-06', profit: -8.90, cumulativeProfit: 59.50 },
-  { date: '2024-01-07', profit: 33.70, cumulativeProfit: 93.20 },
+// Mock adatok, amik megfelelnek a UnifiedBetHistory típusnak
+const mockBetHistory: UnifiedBetHistory[] = [
+  { id: '1', sport: 'Soccer', bookmaker: 'Bet365', odds: 2.1, stake: 100, outcome: 'won', status: 'won', placed_at: '2024-01-01T12:00:00Z', profit: 110 },
+  { id: '2', sport: 'Tennis', bookmaker: 'Pinnacle', odds: 1.8, stake: 50, outcome: 'lost', status: 'lost', placed_at: '2024-01-02T15:30:00Z', profit: -50 },
+  { id: '3', sport: 'Basketball', bookmaker: 'Unibet', odds: 1.9, stake: 75, outcome: 'won', status: 'won', placed_at: '2024-01-03T20:00:00Z', profit: 67.5 },
+  { id: '4', sport: 'Soccer', bookmaker: 'Bet365', odds: 3.5, stake: 25, outcome: 'won', status: 'won', placed_at: '2024-01-04T18:45:00Z', profit: 62.5 },
+  { id: '5', sport: 'Tennis', bookmaker: 'Pinnacle', odds: 2.5, stake: 120, outcome: 'lost', status: 'lost', placed_at: '2024-01-05T11:00:00Z', profit: -120 },
 ];
 
 const meta = {
@@ -19,7 +18,7 @@ const meta = {
     layout: 'fullscreen',
     docs: {
       description: {
-        component: 'Real-time profit timeline chart showing cumulative profit over time for sports betting analysis.'
+        component: 'Real-time profit timeline chart showing cumulative profit over time. This component expects a full UnifiedBetHistory[] array and processes it internally.'
       }
     }
   },
@@ -27,7 +26,7 @@ const meta = {
   argTypes: {
     data: { 
       control: 'object',
-      description: 'Array of profit data points with date, profit, and cumulativeProfit'
+      description: 'Array of full UnifiedBetHistory data points.'
     },
     height: {
       control: 'number',
@@ -39,9 +38,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+// Most már a `data` prop a teljes bet history tömböt várja
 export const Default: Story = {
   args: {
-    data: mockProfitData,
+    data: mockBetHistory,
     height: 300,
   },
 };
@@ -49,28 +49,9 @@ export const Default: Story = {
 export const ProfitableWeek: Story = {
   args: {
     data: [
-      { date: '2024-01-01', profit: 0, cumulativeProfit: 0 },
-      { date: '2024-01-02', profit: 45.20, cumulativeProfit: 45.20 },
-      { date: '2024-01-03', profit: 32.80, cumulativeProfit: 78.00 },
-      { date: '2024-01-04', profit: 28.50, cumulativeProfit: 106.50 },
-      { date: '2024-01-05', profit: 55.30, cumulativeProfit: 161.80 },
-      { date: '2024-01-06', profit: 22.40, cumulativeProfit: 184.20 },
-      { date: '2024-01-07', profit: 38.90, cumulativeProfit: 223.10 },
-    ],
-    height: 300,
-  },
-};
-
-export const VolatileWeek: Story = {
-  args: {
-    data: [
-      { date: '2024-01-01', profit: 0, cumulativeProfit: 0 },
-      { date: '2024-01-02', profit: 85.20, cumulativeProfit: 85.20 },
-      { date: '2024-01-03', profit: -45.80, cumulativeProfit: 39.40 },
-      { date: '2024-01-04', profit: -25.50, cumulativeProfit: 13.90 },
-      { date: '2024-01-05', profit: 125.30, cumulativeProfit: 139.20 },
-      { date: '2024-01-06', profit: -65.40, cumulativeProfit: 73.80 },
-      { date: '2024-01-07', profit: 48.90, cumulativeProfit: 122.70 },
+      ...mockBetHistory,
+      { id: '6', sport: 'Soccer', bookmaker: 'Bet365', odds: 2.0, stake: 200, outcome: 'won', status: 'won', placed_at: '2024-01-06T14:00:00Z', profit: 200 },
+      { id: '7', sport: 'Basketball', bookmaker: 'Unibet', odds: 1.5, stake: 150, outcome: 'won', status: 'won', placed_at: '2024-01-07T21:00:00Z', profit: 75 },
     ],
     height: 300,
   },
@@ -78,7 +59,7 @@ export const VolatileWeek: Story = {
 
 export const LargeChart: Story = {
   args: {
-    data: mockProfitData,
+    data: mockBetHistory,
     height: 500,
   },
 };
