@@ -1,13 +1,17 @@
 import { LinearClient } from "@linear/sdk";
-import { GraphQLClient } from "@linear/sdk/dist/graphql-client";
 
 // Ez a kliens szerver oldalon fog futni, biztonságosan hozzáférve a környezeti változókhoz.
 export const linearClient = new LinearClient({
   apiKey: process.env.LINEAR_API_KEY,
 });
 
-interface LinearClientWithRequest extends LinearClient {
-  _client: GraphQLClient;
+// Define the shape of the internal client for type safety without a direct import
+interface IGraphQLClient {
+  request<T>(query: string, variables?: Record<string, unknown>): Promise<T>;
+}
+
+interface LinearClientWithInternalClient extends LinearClient {
+  _client: IGraphQLClient;
 }
 
 // Basic structure for creating issues
@@ -36,7 +40,7 @@ export class BMADLinearService {
             return labels.nodes[0];
         } else {
             // Use the internal GraphQL client's request method for stability
-            const response: { issueLabelCreate: { issueLabel: { id: string, name: string } } } = await (linearClient as LinearClientWithRequest)._client.request(`
+            const response: { issueLabelCreate: { issueLabel: { id: string, name: string } } } = await (linearClient as LinearClientWithInternalClient)._client.request(`
                 mutation CreateLabel($name: String!, $color: String) {
                     issueLabelCreate(input: { name: $name, color: $color }) {
                         issueLabel {
