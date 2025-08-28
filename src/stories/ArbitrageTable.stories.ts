@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/nextjs';
 import { ArbitrageTable } from '../components/ArbitrageTable';
 import { ArbitrageOpportunity, mockArbitrageOpportunities } from '../lib/mock-data';
 

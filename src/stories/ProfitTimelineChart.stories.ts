@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/nextjs';
 import { ProfitTimelineChart } from '../components/analytics/ProfitTimelineChart';
 import { UnifiedBetHistory } from '../lib/types/bet-history'; // Importáljuk a helyes típust
 

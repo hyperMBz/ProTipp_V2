@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useUser } from '@/lib/providers/auth-provider';
 import { useArbitrageWithFallback } from '@/lib/hooks/use-odds-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,7 +74,157 @@ export function LiveAlertsSystem() {
 
   // Get arbitrage opportunities
   const arbitrageQuery = useArbitrageWithFallback(['soccer_epl', 'basketball_nba', 'tennis_atp']);
-  const opportunities = arbitrageQuery.data || [];
+  const opportunities = useMemo(() => arbitrageQuery.data || [], [arbitrageQuery.data]);
+
+  const playAlertSound = useCallback(() => {
+    try {
+      const audio = new Audio('/sounds/alert.mp3'); // You'd need to add this sound file
+      audio.volume = 0.5;
+      audio.play().catch(() => {
+        // Fallback: Use Web Audio API to generate beep
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.2);
+      });
+    } catch (error) {
+      console.error('Could not play alert sound:', error);
+    }
+  }, []);
+
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      return permission === 'granted';
+    }
+    return false;
+  };
+
+  const sendWebhookAlert = useCallback(async (alert: LiveAlert) => {
+    try {
+      const payload = {
+        type: 'arbitrage_alert',
+        alert_type: alert.type,
+        timestamp: alert.timestamp.toISOString(),
+        opportunity: {
+          id: alert.opportunity.id,
+          event: alert.opportunity.event,
+          sport: alert.opportunity.sport,
+          profit_margin: alert.opportunity.profitMargin,
+          expected_profit: alert.opportunity.expectedProfit,
+          total_stake: alert.opportunity.totalStake,
+          bet1: alert.opportunity.bet1,
+          bet2: alert.opportunity.bet2,
+          time_to_expiry: alert.opportunity.timeToExpiry
+        }
+      };
+
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch (error) {
+      console.error('Webhook failed:', error);
+    }
+  }, [webhookUrl]);
+
+  const sendDiscordAlert = useCallback(async (alert: LiveAlert) => {
+    try {
+      const { opportunity } = alert;
+      const embed = {
+        title: '🚨 Új Arbitrage Lehetőség!',
+        color: 0x00ff00,
+        fields: [
+          { name: 'Esemény', value: opportunity.event, inline: true },
+          { name: 'Sport', value: opportunity.sport, inline: true },
+          { name: 'Profit', value: `${opportunity.profitMargin.toFixed(1)}%`, inline: true },
+          { name: 'Várható nyereség', value: `${formatNumber(opportunity.expectedProfit)} Ft`, inline: true },
+          { name: 'Szükséges tét', value: `${formatNumber(opportunity.totalStake)} Ft`, inline: true },
+          { name: 'Lejárat', value: opportunity.timeToExpiry, inline: true },
+          {
+            name: 'Fogadóiroda 1',
+            value: `${opportunity.bet1.bookmaker}: ${opportunity.bet1.odds} (${formatNumber(opportunity.stakes.bet1.stake)} Ft)`,
+            inline: false
+          },
+          {
+            name: 'Fogadóiroda 2',
+            value: `${opportunity.bet2.bookmaker}: ${opportunity.bet2.odds} (${formatNumber(opportunity.stakes.bet2.stake)} Ft)`,
+            inline: false
+          }
+        ],
+        timestamp: new Date().toISOString()
+      };
+
+      await fetch(discordWebhook, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ embeds: [embed] })
+      });
+    } catch (error) {
+      console.error('Discord webhook failed:', error);
+    }
+  }, [discordWebhook]);
+
+  const sendTelegramAlert = useCallback(async (alert: LiveAlert) => {
+    try {
+      const { opportunity } = alert;
+      const message = `
+🚨 *Új Arbitrage Lehetőség!*
+
+📊 *Esemény:* ${opportunity.event}
+🏆 *Sport:* ${opportunity.sport}
+💰 *Profit:* ${opportunity.profitMargin.toFixed(1)}%
+💵 *Várható nyereség:* ${formatNumber(opportunity.expectedProfit)} Ft
+🎯 *Szükséges tét:* ${formatNumber(opportunity.totalStake)} Ft
+⏰ *Lejárat:* ${opportunity.timeToExpiry}
+
+🏠 *${opportunity.bet1.bookmaker}:* ${opportunity.bet1.odds} (${formatNumber(opportunity.stakes.bet1.stake)} Ft)
+🏠 *${opportunity.bet2.bookmaker}:* ${opportunity.bet2.odds} (${formatNumber(opportunity.stakes.bet2.stake)} Ft)
+      `.trim();
+
+      await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: telegramChatId,
+          text: message,
+          parse_mode: 'Markdown'
+        })
+      });
+    } catch (error) {
+      console.error('Telegram alert failed:', error);
+    }
+  }, [telegramChatId, telegramToken]);
+
+  const getAlertTitle = useCallback((type: LiveAlert['type']) => {
+    switch (type) {
+      case 'high_profit':
+        return '🚨 Magas profit arbitrage!';
+      case 'large_stake':
+        return '💰 Nagy tétes lehetőség!';
+      case 'closing_soon':
+        return '⏰ Hamarosan lejár!';
+      case 'favorite_sport':
+        return '⭐ Kedvenc sport arbitrage!';
+      default:
+        return '🔔 Új arbitrage lehetőség!';
+    }
+  }, []);
 
   // Notification functions - moved before checkForAlerts
   const triggerNotification = useCallback(async (alert: LiveAlert) => {
@@ -110,7 +260,7 @@ export function LiveAlertsSystem() {
     if (telegramToken && telegramChatId) {
       await sendTelegramAlert(alert);
     }
-  }, [soundEnabled, webhookEnabled, webhookUrl, discordWebhook, telegramToken, telegramChatId]);
+  }, [soundEnabled, webhookEnabled, webhookUrl, discordWebhook, telegramToken, telegramChatId, getAlertTitle, playAlertSound, sendDiscordAlert, sendTelegramAlert, sendWebhookAlert]);
 
   // Check for new opportunities that meet alert criteria
   const checkForAlerts = useCallback((opportunities: ArbitrageOpportunity[]) => {
@@ -183,157 +333,6 @@ export function LiveAlertsSystem() {
       checkForAlerts(opportunities);
     }
   }, [opportunities, checkForAlerts, isEnabled]);
-
-  // Notification functions
-  const playAlertSound = () => {
-    try {
-      const audio = new Audio('/sounds/alert.mp3'); // You'd need to add this sound file
-      audio.volume = 0.5;
-      audio.play().catch(() => {
-        // Fallback: Use Web Audio API to generate beep
-        const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.2);
-      });
-    } catch (error) {
-      console.error('Could not play alert sound:', error);
-    }
-  };
-
-  const requestNotificationPermission = async () => {
-    if ('Notification' in window) {
-      const permission = await Notification.requestPermission();
-      return permission === 'granted';
-    }
-    return false;
-  };
-
-  const sendWebhookAlert = async (alert: LiveAlert) => {
-    try {
-      const payload = {
-        type: 'arbitrage_alert',
-        alert_type: alert.type,
-        timestamp: alert.timestamp.toISOString(),
-        opportunity: {
-          id: alert.opportunity.id,
-          event: alert.opportunity.event,
-          sport: alert.opportunity.sport,
-          profit_margin: alert.opportunity.profitMargin,
-          expected_profit: alert.opportunity.expectedProfit,
-          total_stake: alert.opportunity.totalStake,
-          bet1: alert.opportunity.bet1,
-          bet2: alert.opportunity.bet2,
-          time_to_expiry: alert.opportunity.timeToExpiry
-        }
-      };
-
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
-    } catch (error) {
-      console.error('Webhook failed:', error);
-    }
-  };
-
-  const sendDiscordAlert = async (alert: LiveAlert) => {
-    try {
-      const { opportunity } = alert;
-      const embed = {
-        title: '🚨 Új Arbitrage Lehetőség!',
-        color: 0x00ff00,
-        fields: [
-          { name: 'Esemény', value: opportunity.event, inline: true },
-          { name: 'Sport', value: opportunity.sport, inline: true },
-          { name: 'Profit', value: `${opportunity.profitMargin.toFixed(1)}%`, inline: true },
-          { name: 'Várható nyereség', value: `${formatNumber(opportunity.expectedProfit)} Ft`, inline: true },
-          { name: 'Szükséges tét', value: `${formatNumber(opportunity.totalStake)} Ft`, inline: true },
-          { name: 'Lejárat', value: opportunity.timeToExpiry, inline: true },
-          {
-            name: 'Fogadóiroda 1',
-            value: `${opportunity.bet1.bookmaker}: ${opportunity.bet1.odds} (${formatNumber(opportunity.stakes.bet1.stake)} Ft)`,
-            inline: false
-          },
-          {
-            name: 'Fogadóiroda 2',
-            value: `${opportunity.bet2.bookmaker}: ${opportunity.bet2.odds} (${formatNumber(opportunity.stakes.bet2.stake)} Ft)`,
-            inline: false
-          }
-        ],
-        timestamp: new Date().toISOString()
-      };
-
-      await fetch(discordWebhook, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ embeds: [embed] })
-      });
-    } catch (error) {
-      console.error('Discord webhook failed:', error);
-    }
-  };
-
-  const sendTelegramAlert = async (alert: LiveAlert) => {
-    try {
-      const { opportunity } = alert;
-      const message = `
-🚨 *Új Arbitrage Lehetőség!*
-
-📊 *Esemény:* ${opportunity.event}
-🏆 *Sport:* ${opportunity.sport}
-💰 *Profit:* ${opportunity.profitMargin.toFixed(1)}%
-💵 *Várható nyereség:* ${formatNumber(opportunity.expectedProfit)} Ft
-🎯 *Szükséges tét:* ${formatNumber(opportunity.totalStake)} Ft
-⏰ *Lejárat:* ${opportunity.timeToExpiry}
-
-🏠 *${opportunity.bet1.bookmaker}:* ${opportunity.bet1.odds} (${formatNumber(opportunity.stakes.bet1.stake)} Ft)
-🏠 *${opportunity.bet2.bookmaker}:* ${opportunity.bet2.odds} (${formatNumber(opportunity.stakes.bet2.stake)} Ft)
-      `.trim();
-
-      await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chat_id: telegramChatId,
-          text: message,
-          parse_mode: 'Markdown'
-        })
-      });
-    } catch (error) {
-      console.error('Telegram alert failed:', error);
-    }
-  };
-
-  const getAlertTitle = (type: LiveAlert['type']) => {
-    switch (type) {
-      case 'high_profit':
-        return '🚨 Magas profit arbitrage!';
-      case 'large_stake':
-        return '💰 Nagy tétes lehetőség!';
-      case 'closing_soon':
-        return '⏰ Hamarosan lejár!';
-      case 'favorite_sport':
-        return '⭐ Kedvenc sport arbitrage!';
-      default:
-        return '🔔 Új arbitrage lehetőség!';
-    }
-  };
 
   const acknowledgeAlert = (alertId: string) => {
     setAlerts(prev => prev.map(alert =>

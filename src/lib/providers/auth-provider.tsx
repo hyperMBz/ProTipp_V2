@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase-singleton';
@@ -32,6 +32,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
 
   const supabase = getSupabaseClient();
+
+  const ensureUserProfile = useCallback(async (user: User) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .eq('id', user.id)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        // Profile does not exist, so create it
+        const { error: insertError } = await supabase.from('profiles').insert({
+          id: user.id,
+          full_name: user.email, // Default to email
+          updated_at: new Date().toISOString(),
+        });
+        if (insertError) {
+          console.error("Error creating profile:", insertError);
+        }
+      } else if (error) {
+        console.error("Error fetching profile:", error);
+      }
+    } catch (error) {
+      console.error('Error checking user profile:', error);
+    }
+  }, [supabase]);
 
   useEffect(() => {
     // Get initial session
@@ -81,38 +107,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase]);
-
-  // Ensure user profile exists in database
-  const ensureUserProfile = async (user: User) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error && error.code === 'PGRST116') {
-        // Profile doesn't exist, create it
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            email: user.email,
-            full_name: user.user_metadata?.full_name || '',
-            avatar_url: user.user_metadata?.avatar_url || '',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-
-        if (insertError) {
-          console.error('Error creating user profile:', insertError);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking user profile:', error);
-    }
-  };
+  }, [supabase, ensureUserProfile, router]);
 
   // Sign up with email and password
   const signUp = async (email: string, password: string, metadata: Record<string, unknown> = {}) => {

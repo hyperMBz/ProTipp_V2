@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,11 +25,7 @@ export function ProfitCalculator() {
     isArbitrage: false
   });
 
-  useEffect(() => {
-    calculateArbitrage();
-  }, [totalStake, odds1, odds2]);
-
-  const calculateArbitrage = () => {
+  const calculateArbitrage = useCallback(() => {
     const stake = parseFloat(totalStake) || 0;
     const o1 = parseFloat(odds1) || 0;
     const o2 = parseFloat(odds2) || 0;
@@ -86,7 +82,11 @@ export function ProfitCalculator() {
         isArbitrage: false
       });
     }
-  };
+  }, [odds1, odds2, totalStake]);
+
+  useEffect(() => {
+    calculateArbitrage();
+  }, [calculateArbitrage]);
 
   const resetCalculator = () => {
     setTotalStake("100000");

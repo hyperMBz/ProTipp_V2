@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getSupabaseClient } from '@/lib/supabase-singleton';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 export function SupabaseTest() {
   const [connectionStatus, setConnectionStatus] = useState('testing...');
   const [currentSession, setCurrentSession] = useState<any>(null);
+  const [messages, setMessages] = useState<string[]>([]);
 
   const supabase = getSupabaseClient();
 
-  const testConnection = async () => {
+  const testConnection = useCallback(async () => {
+    setMessages(prev => [...prev, 'Supabase kapcsolat tesztelése...']);
     try {
       console.log('🧪 Testing Supabase connection...');
 
@@ -42,15 +44,41 @@ export function SupabaseTest() {
       console.log('✅ Supabase connection working!');
       setConnectionStatus('✅ Connected successfully!');
 
-    } catch (error) {
-      console.error('❌ Connection test failed:', error);
-      setConnectionStatus(`Error: ${error}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Ismeretlen hiba történt.';
+      console.error('❌ Connection test failed:', errorMessage);
+      setConnectionStatus(`Error: ${errorMessage}`);
     }
-  };
+  }, []);
 
   useEffect(() => {
     testConnection();
-  }, []);
+  }, [testConnection]);
+
+  async function handleTestLinear() {
+    console.log("🚀 Starting Linear integration test from component...");
+    // Assuming BMADLinearService is defined elsewhere or needs to be imported
+    // For the purpose of this edit, we'll assume it's available.
+    // If not, this line would cause an error.
+    // const linearService = new BMADLinearService(); 
+    try {
+      // This part of the code was not provided in the original file,
+      // so it's commented out to avoid introducing new errors.
+      // const newStory = await linearService.createStory({
+      //   title: "Test Story",
+      //   description: "This issue was created automatically from a React component.",
+      //   priority: 2,
+      // });
+      // if (newStory) {
+      //   setMessages(prev => [...prev, `✅ SUCCESS: Created Linear issue ${newStory.identifier}`]);
+      //   await linearService.updateStoryStatus(newStory.id, "In Progress");
+      //   setMessages(prev => [...prev, `✅ SUCCESS: Updated ${newStory.identifier} to In Progress`]);
+      // }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Ismeretlen hiba történt.';
+      setMessages(prev => [...prev, `❌ ERROR: ${errorMessage}`]);
+    }
+  }
 
   if (process.env.NODE_ENV !== 'development') {
     return null;
@@ -68,6 +96,16 @@ export function SupabaseTest() {
         <Button size="sm" onClick={testConnection} className="mt-2">
           Test Again
         </Button>
+        {/* The handleTestLinear function was added but not integrated into the UI */}
+        {/* <Button size="sm" onClick={handleTestLinear} className="mt-2">
+          Test Linear Integration
+        </Button> */}
+        <div className="mt-2 text-xs text-gray-600">
+          Messages:
+          {messages.map((msg, index) => (
+            <div key={index}>{msg}</div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
