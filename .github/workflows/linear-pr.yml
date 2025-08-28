@@ -1,0 +1,50 @@
+name: Linear PR sync
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  create-linear-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Create Linear story
+        shell: bash
+        run: |
+          cat > script.mjs << 'EOF'
+          import { LinearClient } from '@linear/sdk'
+
+          const apiKey = process.env.LINEAR_API_KEY
+          const teamId = process.env.LINEAR_TEAM_ID
+          if (!apiKey || !teamId) {
+            console.error('Missing LINEAR_API_KEY or LINEAR_TEAM_ID')
+            process.exit(1)
+          }
+
+          const client = new LinearClient({ apiKey })
+
+          const title = `PR: ${process.env.PR_TITLE}`
+          const description = `GitHub PR: ${process.env.PR_URL}\n\n${process.env.PR_BODY || ''}`
+
+          const res = await client.createIssue({
+            teamId,
+            title,
+            description,
+            priority: 3
+          })
+
+          console.log('Linear issue:', res?.issue?.identifier)
+          EOF
+
+          bunx --bun node script.mjs
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          LINEAR_TEAM_ID: ${{ secrets.LINEAR_TEAM_ID }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_BODY: ${{ github.event.pull_request.body }}
