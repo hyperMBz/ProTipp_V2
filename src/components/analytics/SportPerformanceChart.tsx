@@ -277,7 +277,7 @@ export function SportPerformanceChart({ data, className }: SportPerformanceChart
                     cy="50%"
                     outerRadius={80}
                     dataKey="profit"
-                    label={({ sport, percent }) => `${sport}: ${(percent * 100).toFixed(0)}%`}
+                    label={({ sport, percent }: { sport: string; percent?: number }) => `${sport}: ${(percent ? percent * 100 : 0).toFixed(0)}%`}
                     labelLine={false}
                   >
                     {sportData.filter(d => d.profit > 0).map((entry, index) => (
