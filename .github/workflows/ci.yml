@@ -83,7 +83,7 @@ jobs:
         run: bun install
 
       - name: Install Netlify CLI
-        run: npm install -g netlify-cli jq
+        run: npm install -g netlify-cli
 
       - name: Deploy preview to Netlify
         id: netlify_preview
@@ -92,7 +92,8 @@ jobs:
           set -e
           OUT=$(netlify deploy --dir=.next --build --json)
           echo "$OUT"
-          URL=$(echo "$OUT" | jq -r '.deploy_url // .url // .deployUrl // .links.deploy_prime_url // .links.permalink // empty')
+          # Extract URL using grep and sed instead of jq
+          URL=$(echo "$OUT" | grep -o '"deploy_url":"[^"]*"' | sed 's/"deploy_url":"//;s/"//' || echo "$OUT" | grep -o '"url":"[^"]*"' | sed 's/"url":"//;s/"//' || echo "$OUT" | grep -o '"deployUrl":"[^"]*"' | sed 's/"deployUrl":"//;s/"//')
           echo "PREVIEW_URL=$URL" >> $GITHUB_ENV
         env:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
