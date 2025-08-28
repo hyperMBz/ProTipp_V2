@@ -16,8 +16,34 @@ jobs:
             echo "Missing LINEAR_API_KEY or LINEAR_TEAM_ID" >&2
             exit 1
           fi
+          
+          echo "Using LINEAR_TEAM_ID: $LINEAR_TEAM_ID"
+          
+          # First, get the team ID if we have a short key
+          if [[ "$LINEAR_TEAM_ID" =~ ^[A-Z]{2,4}$ ]]; then
+            echo "Detected short team key, fetching full team ID..."
+            TEAM_QUERY='{"query": "query { viewer { teams { nodes { id name key } } } }"}'
+            TEAM_RESPONSE=$(curl -sS https://api.linear.app/graphql \
+              -H "Content-Type: application/json" \
+              -H "Authorization: ${LINEAR_API_KEY}" \
+              -d "$TEAM_QUERY")
+            
+            echo "Team response: $TEAM_RESPONSE"
+            
+            FULL_TEAM_ID=$(echo "$TEAM_RESPONSE" | jq -r --arg key "$LINEAR_TEAM_ID" '.data.viewer.teams.nodes[] | select(.key == $key) | .id')
+            
+            if [ "$FULL_TEAM_ID" = "null" ] || [ -z "$FULL_TEAM_ID" ]; then
+              echo "Could not find team with key: $LINEAR_TEAM_ID" >&2
+              exit 1
+            fi
+            
+            echo "Found team ID: $FULL_TEAM_ID"
+            LINEAR_TEAM_ID="$FULL_TEAM_ID"
+          fi
+          
           TITLE="PR: ${PR_TITLE}"
           DESC="GitHub PR: ${PR_URL}\n\n${PR_BODY}"
+          
           read -r -d '' QUERY <<'EOF'
           mutation IssueCreate($input: IssueCreateInput!) {
             issueCreate(input: $input) {
@@ -26,16 +52,30 @@ jobs:
             }
           }
           EOF
+          
           JSON=$(jq -n --arg q "$QUERY" \
                     --arg team "$LINEAR_TEAM_ID" \
                     --arg title "$TITLE" \
                     --arg desc "$DESC" \
                     '{query:$q, variables:{input:{teamId:$team, title:$title, description:$desc, priority:3}}}')
-          curl -sS https://api.linear.app/graphql \
+          
+          echo "Sending request with JSON: $JSON"
+          
+          RESPONSE=$(curl -sS https://api.linear.app/graphql \
             -H "Content-Type: application/json" \
             -H "Authorization: ${LINEAR_API_KEY}" \
-            -d "$JSON" | tee response.json
-          echo "Response saved to response.json"
+            -d "$JSON")
+          
+          echo "Linear API Response: $RESPONSE"
+          
+          # Check for errors
+          if echo "$RESPONSE" | jq -e '.errors' > /dev/null; then
+            echo "Error creating Linear issue: $(echo "$RESPONSE" | jq -r '.errors')" >&2
+            exit 1
+          fi
+          
+          ISSUE_URL=$(echo "$RESPONSE" | jq -r '.data.issueCreate.issue.url')
+          echo "Successfully created Linear issue: $ISSUE_URL"
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           LINEAR_TEAM_ID: ${{ secrets.LINEAR_TEAM_ID }}
