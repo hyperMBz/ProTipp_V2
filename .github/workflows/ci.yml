@@ -54,10 +54,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           
+      - name: Install Netlify CLI
+        run: npm install -g netlify-cli
+
       - name: Deploy to Netlify
-        uses: netlify/actions/cli-action@v1
-        with:
-          site_id: ${{ secrets.NETLIFY_SITE_ID }}
-          auth_token: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          dir: '.next'
-          prod: true
+        run: netlify deploy --prod --dir=.next --site ${{ secrets.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
