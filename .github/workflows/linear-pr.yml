@@ -8,40 +8,34 @@ jobs:
   create-linear-issue:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Create Linear story
+      - name: Create Linear story via GraphQL
         shell: bash
         run: |
-          cat > script.mjs << 'EOF'
-          import { LinearClient } from '@linear/sdk'
-
-          const apiKey = process.env.LINEAR_API_KEY
-          const teamId = process.env.LINEAR_TEAM_ID
-          if (!apiKey || !teamId) {
-            console.error('Missing LINEAR_API_KEY or LINEAR_TEAM_ID')
-            process.exit(1)
+          set -e
+          if [ -z "$LINEAR_API_KEY" ] || [ -z "$LINEAR_TEAM_ID" ]; then
+            echo "Missing LINEAR_API_KEY or LINEAR_TEAM_ID" >&2
+            exit 1
+          fi
+          TITLE="PR: ${PR_TITLE}"
+          DESC="GitHub PR: ${PR_URL}\n\n${PR_BODY}"
+          read -r -d '' QUERY <<'EOF'
+          mutation IssueCreate($input: IssueCreateInput!) {
+            issueCreate(input: $input) {
+              success
+              issue { id identifier url }
+            }
           }
-
-          const client = new LinearClient({ apiKey })
-
-          const title = `PR: ${process.env.PR_TITLE}`
-          const description = `GitHub PR: ${process.env.PR_URL}\n\n${process.env.PR_BODY || ''}`
-
-          const res = await client.createIssue({
-            teamId,
-            title,
-            description,
-            priority: 3
-          })
-
-          console.log('Linear issue:', res?.issue?.identifier)
           EOF
-
-          bunx --bun node script.mjs
+          JSON=$(jq -n --arg q "$QUERY" \
+                    --arg team "$LINEAR_TEAM_ID" \
+                    --arg title "$TITLE" \
+                    --arg desc "$DESC" \
+                    '{query:$q, variables:{input:{teamId:$team, title:$title, description:$desc, priority:3}}}')
+          curl -sS https://api.linear.app/graphql \
+            -H "Content-Type: application/json" \
+            -H "Authorization: ${LINEAR_API_KEY}" \
+            -d "$JSON" | tee response.json
+          echo "Response saved to response.json"
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           LINEAR_TEAM_ID: ${{ secrets.LINEAR_TEAM_ID }}
