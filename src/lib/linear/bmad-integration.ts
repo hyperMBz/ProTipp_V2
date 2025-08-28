@@ -30,8 +30,19 @@ export class BMADLinearService {
         if (labels.nodes.length > 0) {
             return labels.nodes[0];
         } else {
-            const newLabel = await linearClient.issueLabelCreate({ name: labelName, color });
-            return newLabel.issueLabel;
+            // Use the generic `request` method as a stable alternative
+            const response: { issueLabelCreate: { issueLabel: { id: string, name: string } } } = await linearClient.request(`
+                mutation CreateLabel($name: String!, $color: String) {
+                    issueLabelCreate(input: { name: $name, color: $color }) {
+                        issueLabel {
+                            id
+                            name
+                        }
+                    }
+                }
+            `, { name: labelName, color });
+
+            return response.issueLabelCreate.issueLabel;
         }
     }
 
