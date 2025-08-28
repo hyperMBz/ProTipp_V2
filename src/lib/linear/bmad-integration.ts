@@ -1,4 +1,5 @@
-import { LinearClient, GraphQLClient } from "@linear/sdk";
+import { LinearClient } from "@linear/sdk";
+import { GraphQLClient } from "@linear/sdk/dist/graphql-client";
 
 // Ez a kliens szerver oldalon fog futni, biztonságosan hozzáférve a környezeti változókhoz.
 export const linearClient = new LinearClient({
