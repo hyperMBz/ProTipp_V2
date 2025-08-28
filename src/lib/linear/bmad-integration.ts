@@ -30,8 +30,8 @@ export class BMADLinearService {
         if (labels.nodes.length > 0) {
             return labels.nodes[0];
         } else {
-            // Use the generic `request` method as a stable alternative
-            const response: { issueLabelCreate: { issueLabel: { id: string, name: string } } } = await linearClient.request(`
+            // Use the internal GraphQL client's request method for stability
+            const response: { issueLabelCreate: { issueLabel: { id: string, name: string } } } = await (linearClient as any)._client.request(`
                 mutation CreateLabel($name: String!, $color: String) {
                     issueLabelCreate(input: { name: $name, color: $color }) {
                         issueLabel {
