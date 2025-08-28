@@ -85,12 +85,12 @@ jobs:
       - name: Install Netlify CLI
         run: npm install -g netlify-cli jq
 
-      - name: Deploy preview to Netlify (draft)
+      - name: Deploy preview to Netlify
         id: netlify_preview
         shell: bash
         run: |
           set -e
-          OUT=$(netlify deploy --draft --dir=.next --build --json)
+          OUT=$(netlify deploy --dir=.next --build --json)
           echo "$OUT"
           URL=$(echo "$OUT" | jq -r '.deploy_url // .url // .deployUrl // .links.deploy_prime_url // .links.permalink // empty')
           echo "PREVIEW_URL=$URL" >> $GITHUB_ENV
