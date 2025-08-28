@@ -76,6 +76,42 @@ export function LiveAlertsSystem() {
   const arbitrageQuery = useArbitrageWithFallback(['soccer_epl', 'basketball_nba', 'tennis_atp']);
   const opportunities = arbitrageQuery.data || [];
 
+  // Notification functions - moved before checkForAlerts
+  const triggerNotification = useCallback(async (alert: LiveAlert) => {
+    const { opportunity, type } = alert;
+
+    // Browser notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const title = getAlertTitle(type);
+      const body = `${opportunity.event}: ${opportunity.profitMargin.toFixed(1)}% profit (${formatNumber(opportunity.expectedProfit)} Ft)`;
+
+      new Notification(title, {
+        body,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        requireInteraction: true
+      });
+    }
+
+    // Sound notification
+    if (soundEnabled) {
+      playAlertSound();
+    }
+
+    // Send to webhooks
+    if (webhookEnabled && webhookUrl) {
+      await sendWebhookAlert(alert);
+    }
+
+    if (discordWebhook) {
+      await sendDiscordAlert(alert);
+    }
+
+    if (telegramToken && telegramChatId) {
+      await sendTelegramAlert(alert);
+    }
+  }, [soundEnabled, webhookEnabled, webhookUrl, discordWebhook, telegramToken, telegramChatId]);
+
   // Check for new opportunities that meet alert criteria
   const checkForAlerts = useCallback((opportunities: ArbitrageOpportunity[]) => {
     const newAlerts: LiveAlert[] = [];
@@ -149,49 +185,6 @@ export function LiveAlertsSystem() {
   }, [opportunities, checkForAlerts, isEnabled]);
 
   // Notification functions
-  const triggerNotification = async (alert: LiveAlert) => {
-    const { opportunity, type } = alert;
-
-    // Browser notification
-    if ('Notification' in window && Notification.permission === 'granted') {
-      const title = getAlertTitle(type);
-      const body = `${opportunity.event}: ${opportunity.profitMargin.toFixed(1)}% profit (${formatNumber(opportunity.expectedProfit)} Ft)`;
-
-      new Notification(title, {
-        body,
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        requireInteraction: true
-      });
-    }
-
-    // Sound notification
-    if (soundEnabled) {
-      playAlertSound();
-    }
-
-    // Send to webhooks
-    if (webhookEnabled && webhookUrl) {
-      await sendWebhookAlert(alert);
-    }
-
-    if (discordWebhook) {
-      await sendDiscordAlert(alert);
-    }
-
-    if (telegramToken && telegramChatId) {
-      await sendTelegramAlert(alert);
-    }
-  };
-
-  const requestNotificationPermission = async () => {
-    if ('Notification' in window) {
-      const permission = await Notification.requestPermission();
-      return permission === 'granted';
-    }
-    return false;
-  };
-
   const playAlertSound = () => {
     try {
       const audio = new Audio('/sounds/alert.mp3'); // You'd need to add this sound file
@@ -214,6 +207,14 @@ export function LiveAlertsSystem() {
     } catch (error) {
       console.error('Could not play alert sound:', error);
     }
+  };
+
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      return permission === 'granted';
+    }
+    return false;
   };
 
   const sendWebhookAlert = async (alert: LiveAlert) => {

@@ -26,6 +26,7 @@ import { ROITrendsChart } from "./ROITrendsChart";
 import { BankrollGrowthChart } from "./BankrollGrowthChart";
 import { PerformanceMetrics } from "./PerformanceMetrics";
 import { WinRateHeatmap } from "./WinRateHeatmap";
+import { getBetPlacedDate } from '@/lib/types/bet-history';
 
 interface AnalyticsDashboardProps {
   className?: string;
@@ -62,7 +63,7 @@ export function AnalyticsDashboard({ className }: AnalyticsDashboardProps) {
 
   // Filter data by timeframe and sport
   const filteredBetHistory = betHistory.filter(bet => {
-    const betDate = new Date(bet.placed_at || bet.placedAt || new Date());
+    const betDate = getBetPlacedDate(bet);
     const timeframeMatch = betDate >= getTimeframeDate();
     const sportMatch = selectedSport === 'all' || bet.sport === selectedSport;
     return timeframeMatch && sportMatch;

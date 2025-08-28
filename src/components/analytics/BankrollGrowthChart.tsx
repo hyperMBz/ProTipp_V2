@@ -8,6 +8,7 @@ import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { UnifiedBetHistory } from '@/lib/types/bet-history';
 import { DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { ChartTooltipPayload } from '@/lib/types/charts';
 
 interface BankrollGrowthChartProps {
   data: UnifiedBetHistory[];
@@ -128,7 +129,15 @@ export function BankrollGrowthChart({
   const maxDrawdown = Math.max(...chartData.map(d => d.drawdown), 0);
   const maxDrawdownPercent = initialBankroll > 0 ? (maxDrawdown / initialBankroll) * 100 : 0;
 
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ payload: Record<string, unknown> }>; label?: string }) => {
+  type TooltipPayloadData = {
+    bankroll: number;
+    profit: number;
+    growthPercent: number;
+    dailyChange: number;
+    drawdown: number;
+  };
+
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: ChartTooltipPayload<TooltipPayloadData>[]; label?: string }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

@@ -211,7 +211,7 @@ export default function Home() {
                 {isRealTime ? 'ÉLŐ' : 'OFFLINE'}
               </div>
               <p className="text-xs text-muted-foreground">
-                {apiUsage ? `${apiUsage.used}/${apiUsage.limit} API hívás` : 'API státusz'}
+                {apiUsage.data ? `${apiUsage.data.requestsUsed}/${apiUsage.data.requestsRemaining} API hívás` : 'API státusz'}
               </p>
             </CardContent>
           </Card>
