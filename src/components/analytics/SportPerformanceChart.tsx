@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatNumber } from "@/lib/utils";
 import { UnifiedBetHistory } from '@/lib/types/bet-history';
 import { PieChart as PieChartIcon, BarChart3, Trophy, Target } from 'lucide-react';
+import { ChartTooltipPayload } from '@/lib/types/charts';
 
 interface SportPerformanceChartProps {
   data: UnifiedBetHistory[];
@@ -122,7 +123,14 @@ export function SportPerformanceChart({ data, className }: SportPerformanceChart
   const bestSport = sportData.find(sport => sport.profit > 0);
   const worstSport = sportData.find(sport => sport.profit < 0);
 
-  const CustomPieTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: Record<string, unknown> }> }) => {
+  type PieTooltipPayloadData = {
+    sport: string;
+    profit: number;
+    bets: number;
+    roi: number;
+  };
+
+  const CustomPieTooltip = ({ active, payload }: { active?: boolean; payload?: ChartTooltipPayload<PieTooltipPayloadData>[] }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -152,7 +160,13 @@ export function SportPerformanceChart({ data, className }: SportPerformanceChart
     return null;
   };
 
-  const CustomBarTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ payload: Record<string, unknown> }>; label?: string }) => {
+  type BarTooltipPayloadData = {
+    roi: number;
+    winRate: number;
+    profit: number;
+  };
+
+  const CustomBarTooltip = ({ active, payload, label }: { active?: boolean; payload?: ChartTooltipPayload<BarTooltipPayloadData>[]; label?: string }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

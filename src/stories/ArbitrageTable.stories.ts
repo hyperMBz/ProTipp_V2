@@ -70,31 +70,25 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    // data: mockArbitrageData,
-    loading: false,
+    opportunities: mockArbitrageData,
   },
 };
 
-export const Loading: Story = {
+export const WithLiveUpdates: Story = {
   args: {
-    // data: [],
-    loading: true,
-  },
-};
-
-export const HighProfitOpportunities: Story = {
-  args: {
-    // data: mockArbitrageData.map(item => ({
-    //   ...item,
-    //   profit: item.profit * 2
-    // })),
-    loading: false,
+    opportunities: mockArbitrageData,
+    oddsUpdateTrigger: 1,
   },
 };
 
 export const EmptyState: Story = {
   args: {
-    // data: [],
-    loading: false,
+    opportunities: [],
+  },
+};
+
+export const FewOpportunities: Story = {
+  args: {
+    opportunities: mockArbitrageData.slice(0, 3),
   },
 };

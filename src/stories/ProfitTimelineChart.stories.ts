@@ -28,9 +28,11 @@ const meta = {
       control: 'object',
       description: 'Array of full UnifiedBetHistory data points.'
     },
-    height: {
-      control: 'number',
-      defaultValue: 300
+    timeframe: {
+      control: 'select',
+      options: ['7d', '30d', '1y'],
+      defaultValue: '30d',
+      description: 'Timeframe for the chart to display.'
     }
   },
 } satisfies Meta<typeof ProfitTimelineChart>;
@@ -42,7 +44,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     data: mockBetHistory,
-    height: 300,
+    timeframe: '30d',
   },
 };
 
@@ -53,13 +55,13 @@ export const ProfitableWeek: Story = {
       { id: '6', sport: 'Soccer', bookmaker: 'Bet365', odds: 2.0, stake: 200, outcome: 'won', status: 'won', placed_at: '2024-01-06T14:00:00Z', profit: 200 },
       { id: '7', sport: 'Basketball', bookmaker: 'Unibet', odds: 1.5, stake: 150, outcome: 'won', status: 'won', placed_at: '2024-01-07T21:00:00Z', profit: 75 },
     ],
-    height: 300,
+    timeframe: '7d',
   },
 };
 
-export const LargeChart: Story = {
+export const LargeTimeframe: Story = {
   args: {
     data: mockBetHistory,
-    height: 500,
+    timeframe: '1y',
   },
 };

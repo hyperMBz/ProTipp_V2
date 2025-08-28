@@ -9,6 +9,7 @@ import { format, subDays, eachWeekOfInterval, eachMonthOfInterval, startOfWeek, 
 import { hu } from 'date-fns/locale';
 import { UnifiedBetHistory } from '@/lib/types/bet-history';
 import { TrendingUp, TrendingDown, Target, Activity } from 'lucide-react';
+import { ChartTooltipPayload } from '@/lib/types/charts';
 
 interface ROITrendsChartProps {
   data: UnifiedBetHistory[];
@@ -169,7 +170,16 @@ export function ROITrendsChart({
     ? chartData.reduce((sum, d) => sum + d.clv, 0) / chartData.length
     : 0;
 
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ payload: Record<string, unknown> }>; label?: string }) => {
+  type TooltipPayloadData = {
+    cumulativeROI: number;
+    weeklyROI: number;
+    winRate: number;
+    clv: number;
+    bets: number;
+    volume: number;
+  };
+
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: ChartTooltipPayload<TooltipPayloadData>[]; label?: string }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

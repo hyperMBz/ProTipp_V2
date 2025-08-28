@@ -108,7 +108,11 @@ export function AddBetDialog({ children, open, onOpenChange }: AddBetDialogProps
       setSuccess('Fogadás sikeresen hozzáadva!');
       setTimeout(() => handleOpenChange(false), 1500);
     } catch (err: unknown) {
-      setError(err.message || 'Hiba történt a fogadás hozzáadása során');
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Hiba történt a fogadás hozzáadása során');
+      }
     }
   };
 
