@@ -30,10 +30,17 @@ jobs:
             
             echo "Team response: $TEAM_RESPONSE"
             
+            # Check if the response contains errors
+            if echo "$TEAM_RESPONSE" | jq -e '.errors' > /dev/null; then
+              echo "Error fetching teams: $(echo "$TEAM_RESPONSE" | jq -r '.errors')" >&2
+              exit 1
+            fi
+            
             FULL_TEAM_ID=$(echo "$TEAM_RESPONSE" | jq -r --arg key "$LINEAR_TEAM_ID" '.data.viewer.teams.nodes[] | select(.key == $key) | .id')
             
             if [ "$FULL_TEAM_ID" = "null" ] || [ -z "$FULL_TEAM_ID" ]; then
               echo "Could not find team with key: $LINEAR_TEAM_ID" >&2
+              echo "Available teams: $(echo "$TEAM_RESPONSE" | jq -r '.data.viewer.teams.nodes[] | "\(.key): \(.name)"')" >&2
               exit 1
             fi
             
