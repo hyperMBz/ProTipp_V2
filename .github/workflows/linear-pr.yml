@@ -18,34 +18,20 @@ jobs:
           fi
           
           echo "Using LINEAR_TEAM_ID: $LINEAR_TEAM_ID"
+          echo "LINEAR_API_KEY length: ${#LINEAR_API_KEY}"
           
-          # First, get the team ID if we have a short key
-          if [[ "$LINEAR_TEAM_ID" =~ ^[A-Z]{2,4}$ ]]; then
-            echo "Detected short team key, fetching full team ID..."
-            TEAM_QUERY='{"query": "query { viewer { teams { nodes { id name key } } } }"}'
-            TEAM_RESPONSE=$(curl -sS https://api.linear.app/graphql \
-              -H "Content-Type: application/json" \
-              -H "Authorization: ${LINEAR_API_KEY}" \
-              -d "$TEAM_QUERY")
-            
-            echo "Team response: $TEAM_RESPONSE"
-            
-            # Check if the response contains errors
-            if echo "$TEAM_RESPONSE" | jq -e '.errors' > /dev/null; then
-              echo "Error fetching teams: $(echo "$TEAM_RESPONSE" | jq -r '.errors')" >&2
-              exit 1
-            fi
-            
-            FULL_TEAM_ID=$(echo "$TEAM_RESPONSE" | jq -r --arg key "$LINEAR_TEAM_ID" '.data.viewer.teams.nodes[] | select(.key == $key) | .id')
-            
-            if [ "$FULL_TEAM_ID" = "null" ] || [ -z "$FULL_TEAM_ID" ]; then
-              echo "Could not find team with key: $LINEAR_TEAM_ID" >&2
-              echo "Available teams: $(echo "$TEAM_RESPONSE" | jq -r '.data.viewer.teams.nodes[] | "\(.key): \(.name)"')" >&2
-              exit 1
-            fi
-            
-            echo "Found team ID: $FULL_TEAM_ID"
-            LINEAR_TEAM_ID="$FULL_TEAM_ID"
+          # Validate API key format
+          if [[ ! "$LINEAR_API_KEY" =~ ^lin_api_ ]]; then
+            echo "Error: LINEAR_API_KEY should start with 'lin_api_'" >&2
+            exit 1
+          fi
+          
+          # Validate team ID format
+          if [[ ! "$LINEAR_TEAM_ID" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+            echo "Error: LINEAR_TEAM_ID should be a valid UUID format" >&2
+            echo "Expected format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" >&2
+            echo "Current value: $LINEAR_TEAM_ID" >&2
+            exit 1
           fi
           
           TITLE="PR: ${PR_TITLE}"
