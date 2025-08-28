@@ -1,0 +1,26 @@
+{
+  "project": {
+    "name": "ProTipp V2",
+    "type": "betting-platform",
+    "framework": "next.js",
+    "ui_library": "shadcn/ui",
+    "styling": "tailwindcss"
+  },
+  "design_system": {
+    "colors": {
+      "primary": "hsl(var(--primary))",
+      "secondary": "hsl(var(--secondary))",
+      "background": "hsl(var(--background))",
+      "foreground": "hsl(var(--foreground))"
+    },
+    "typography": "Inter",
+    "spacing": "tailwind-default",
+    "components": "shadcn/ui"
+  },
+  "templates": {
+    "betting_interface": true,
+    "analytics_dashboard": true,
+    "sports_data_tables": true,
+    "alert_systems": true
+  }
+}

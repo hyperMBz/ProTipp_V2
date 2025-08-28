@@ -1,0 +1,109 @@
+You have access to a team of specialized AI agents. Each agent has unique expertise and can be activated using slash commands.
+
+## Team Composition
+
+### Core Development Team
+- `/analyst` - Business Analysis & Requirements
+- `/pm` - Product Management & Strategy  
+- `/ux-expert` - User Experience & Interface Design
+- `/design-agent` - AI Design Generation with SuperDesign
+- `/architect` - Technical Architecture & System Design
+- `/dev` - Full-Stack Development & Implementation
+- `/qa` - Quality Assurance & Testing
+- `/sm` - Scrum Master & Process Management
+
+### Enhanced Design Workflow
+
+#### Traditional BMAD Flow
+```
+Analyst → PM → UX-Expert → Architect → Dev → QA
+```
+
+#### SuperDesign Enhanced Flow
+```
+Analyst → PM → UX-Expert → Design-Agent → Architect → Dev → QA
+                    ↓           ↓
+              front-end-spec → visual mockups → implementation prompts
+```
+
+## Design-Enhanced Workflows
+
+### 1. Greenfield Projects with Design Focus
+```
+/analyst    # Create project brief
+/pm         # Generate PRD
+/ux-expert  # Create front-end specifications
+/design-agent # Generate visual mockups with SuperDesign
+/architect  # Technical architecture with design constraints
+/dev        # Implementation using design artifacts
+/qa         # Test against design specifications
+```
+
+### 2. UI Component Development
+```
+/ux-expert    # Define component requirements
+/design-agent # Create component variations in SuperDesign
+/dev          # Implement with shadcn/ui
+/qa           # Validate against design mockups
+```
+
+### 3. Design System Evolution
+```
+/design-agent # Generate new component designs
+/ux-expert    # Validate user experience
+/architect    # Assess technical feasibility
+/dev          # Implement and integrate
+```
+
+## Agent Interaction Patterns
+
+### Design-Agent Collaboration
+- **Receives from UX-Expert**: Detailed specifications and user requirements
+- **Provides to Architect**: Visual constraints and design system requirements
+- **Provides to Dev**: Implementation prompts and component specifications
+- **Collaborates with QA**: Design validation criteria and visual testing requirements
+
+### Enhanced Handoffs
+1. **UX-Expert → Design-Agent**: front-end-spec.md → visual mockups
+2. **Design-Agent → Architect**: design constraints → technical feasibility
+3. **Design-Agent → Dev**: component prompts → implementation guidance
+4. **Design-Agent → QA**: visual specifications → testing criteria
+
+## SuperDesign Integration Points
+
+### Project Setup
+- Configure SuperDesign for project design system
+- Set up component templates and style guides
+- Establish design token integration
+
+### Development Workflow
+- Generate mockups before coding
+- Create component variations for testing
+- Iterate designs based on user feedback
+- Export implementation prompts for developers
+
+### Quality Assurance
+- Visual regression testing against SuperDesign mockups
+- Design system compliance validation
+- Cross-device design consistency checks
+
+## Quick Commands
+
+### Start Design-Enhanced Development
+```
+/design-agent Generate initial dashboard mockups for sports betting platform
+```
+
+### Component-Focused Development
+```
+/design-agent Create betting odds comparison table variations
+/dev Implement the selected design with shadcn/ui
+```
+
+### Design System Work
+```
+/design-agent Evolve current design system with new components
+/architect Assess technical implications of design changes
+```
+
+This enhanced team provides a complete design-to-development pipeline with AI-powered visual generation, making BMAD workflows more comprehensive and design-focused.
