@@ -92,10 +92,15 @@ jobs:
           set -e
           OUT=$(netlify deploy --dir=.next --build --json)
           echo "$OUT"
-          # Extract deploy_url from JSON output
-          URL=$(echo "$OUT" | grep -o '"deploy_url":"[^"]*"' | head -1 | cut -d'"' -f4)
+          # Extract deploy_url from JSON output using a more robust method
+          URL=$(echo "$OUT" | sed -n 's/.*"deploy_url":"\([^"]*\)".*/\1/p')
           if [ -z "$URL" ]; then
             echo "Warning: Could not extract deploy_url from output"
+            echo "Trying alternative extraction method..."
+            URL=$(echo "$OUT" | grep -o 'https://[^"]*--protipp\.netlify\.app')
+          fi
+          if [ -z "$URL" ]; then
+            echo "Error: Could not extract deploy_url from output"
             echo "Full output: $OUT"
             exit 1
           fi
