@@ -83,17 +83,29 @@ jobs:
         run: bun install
 
       - name: Install Netlify CLI
-        run: npm install -g netlify-cli jq
+        run: npm install -g netlify-cli
 
-      - name: Deploy preview to Netlify (draft)
+      - name: Deploy preview to Netlify
         id: netlify_preview
         shell: bash
         run: |
           set -e
-          OUT=$(netlify deploy --draft --dir=.next --build --json)
+          OUT=$(netlify deploy --dir=.next --build --json)
           echo "$OUT"
-          URL=$(echo "$OUT" | jq -r '.deploy_url // .url // .deployUrl // .links.deploy_prime_url // .links.permalink // empty')
+          # Extract deploy_url from JSON output using a more robust method
+          URL=$(echo "$OUT" | sed -n 's/.*"deploy_url":"\([^"]*\)".*/\1/p')
+          if [ -z "$URL" ]; then
+            echo "Warning: Could not extract deploy_url from output"
+            echo "Trying alternative extraction method..."
+            URL=$(echo "$OUT" | grep -o 'https://[^"]*--protipp\.netlify\.app')
+          fi
+          if [ -z "$URL" ]; then
+            echo "Error: Could not extract deploy_url from output"
+            echo "Full output: $OUT"
+            exit 1
+          fi
           echo "PREVIEW_URL=$URL" >> $GITHUB_ENV
+          echo "Preview URL: $URL"
         env:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}

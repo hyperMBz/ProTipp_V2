@@ -348,7 +348,7 @@ export function ROITrendsChart({
             </div>
             <div className="text-lg font-semibold text-purple-400">
               {chartData.length > 0
-                ? Math.abs(Math.max(...chartData.map(d => d.weeklyROI)) - Math.min(...chartData.map(d => d.weeklyROI))).toFixed(1)
+                ? Math.abs(Math.max(...chartData.map((d: { weeklyROI: number }) => d.weeklyROI)) - Math.min(...chartData.map((d: { weeklyROI: number }) => d.weeklyROI))).toFixed(1)
                 : '0.0'
               }%
             </div>

@@ -1,0 +1,106 @@
+
+🔑 Legjobb UI/UX funkciók arbitrage platformhoz
+
+1. Dashboard (Kezdőoldal)
+	•	Valós idejű odds frissítés (auto-refresh 1-5 mp-enként).
+	•	Arbitrage lehetőségek listája táblázatos formában:
+	•	Mérkőzés neve + liga
+	•	Fogadóirodák neve
+	•	Odds értékek (kiemelve, színezve a magasabb / alacsonyabb)
+	•	Profit % és várható fix nyereség (pl. +3.2%, +12.5 USD)
+	•	Szűrők (sportág, liga, minimális profit %, idő, fogadóiroda).
+	•	Keresőmező (csapatnév, liga alapján).
+	•	Kedvencek / Bookmark gomb (gyors mentés a listához).
+
+➡️ Inspiráció: OddsJam grid + RebelBetting szűrő.
+
+⸻
+
+2. Arbitrage kalkulátor – egy kattintásos
+	•	Automatikusan kitölti a téteket, ha a felhasználó beír egy alaptőkét (pl. 100 USD).
+	•	Mutatja:
+	•	Mekkora tétet tegyen az egyes irodákban.
+	•	Várható profit minden kimenetel esetén.
+	•	“One-click bet” linkek → azonnal megnyitja a kiválasztott fogadóiroda esemény oldalát.
+
+➡️ Inspiráció: OddsJam bet calculator + RebelBetting AutoSurf.
+
+⸻
+
+3. Felhasználói testreszabás
+	•	Valuta választás (USD, EUR, HUF).
+	•	Adó-beállítás (pl. ha bizonyos országban adót kell fizetni nyeremény után).
+	•	Odds formátum választás (amerikai / decimális / tört).
+	•	Kedvenc fogadóirodák kijelölése (csak azokat listázza).
+	•	Értesítések (push vagy email): ha van új arb a preferált ligákban.
+
+➡️ Inspiráció: RebelBetting (adók + valuta), BetBurger (szűrők).
+
+⸻
+
+4. Match & Event oldal
+	•	Kattintás egy eseményre → külön oldal:
+	•	Odds összehasonlító grafikon (idősor: hogyan változtak az oddsok).
+	•	Profit kalkulátor részletes nézet.
+	•	Fogadási stratégia gombok: Arbitrage | Value Bet | Middling.
+	•	“Megnyitás az irodában” gombok.
+
+➡️ Inspiráció: OddsJam event details.
+
+⸻
+
+5. Profil és Statisztika
+	•	Saját fogadások naplózása (akár automatikusan importálva, ha API van).
+	•	Profit tracker: havi/éves grafikon, ROI %, sikeres arb-ok száma.
+	•	Excel / CSV export.
+	•	Leaderboard (közösségi funkció, opcionális): anonim statisztika másokhoz képest.
+
+➡️ Inspiráció: RebelBetting Excel alapú arbook + OddsJam coaching.
+
+⸻
+
+6. Mobil élmény
+	•	Reszponzív, letisztult mobil UI.
+	•	Gyors “Fogadj most” gomb → egyből nyitja a sportfogadó app linkjét.
+	•	Push értesítések (új arb, kedvenc liga esemény).
+
+➡️ Inspiráció: OddsJam mobil app.
+
+⸻
+
+7. Extra funkciók
+	•	Promo Converter – bónuszok, free bet-ek átváltása biztos pénzre.
+	•	Value Bet kereső – nem csak arb, hanem matematikailag előnyös oddsok listája.
+	•	Middle Finder – ha két iroda közötti odds lehetővé teszi a „köztes nyerést”.
+	•	Dark Mode 🌙 – a profi userek szeretik.
+	•	API hozzáférés (haladó felhasználóknak saját szkriptekhez).
+
+➡️ Inspiráció: OddsJam + ProfitDuel + BetBurger.
+
+⸻
+
+🎨 Design irányelvek
+	•	Tiszta, minimalista táblázatok (ne legyen túlzsúfolt).
+	•	Színkódolás:
+	•	Zöld: biztos profit
+	•	Piros: vesztes esély
+	•	Sárga: value bet / bizonytalan lehetőség
+	•	Tooltip-ek minden mutatónál (pl. „EV = Expected Value, azaz várható érték”).
+	•	Gyors animációk (frissítésnél ne ugráljon a képernyő, hanem smooth update legyen).
+	•	Dark/light theme váltás.
+
+⸻
+
+✅ Összegyúrt „Best of” UI Flow (felhasználó szempontjából)
+	1.	Belép a dashboardra → látja a top arb lehetőségeket real-time gridben.
+	2.	Szűrő + keresővel gyorsan szűkíti a sportágra/liga/irodákra.
+	3.	Rákattint egy lehetőségre → megnyílik a részletes nézet kalkulátorral.
+	4.	Kiválasztja a tőkét → a kalkulátor automatikusan kitölti a téteket.
+	5.	“Fogadj most” gomb → nyílik a kiválasztott iroda oldala / appja.
+	6.	Fogadás megtétele után → visszatér a dashboardra.
+	7.	Profil oldalon nyomon követheti a teljesítményét (profit, ROI, statisztikák).
+	8.	Értesítést kap mobilon új arb-ról, ha elérhető.
+
+⸻
+
+👉 Ez egy olyan UI/UX terv, ami egyesíti a legjobb meglévő szoftverek erősségeit.

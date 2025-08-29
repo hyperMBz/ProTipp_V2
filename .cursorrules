@@ -1,0 +1,45 @@
+# Cursor MCP Configuration for ProTipp V2
+
+# Linear MCP Server Configuration (Official)
+# Add this to Cursor Settings → MCP → Add new global MCP server:
+# {
+#   "mcpServers": {
+#     "linear": {
+#       "command": "npx",
+#       "args": ["-y", "mcp-remote", "https://mcp.linear.app/sse"]
+#     }
+#   }
+# }
+
+# Project-specific rules
+rules:
+  - name: "Linear Integration"
+    description: "Use Linear MCP server for issue management"
+    pattern: "**/*.{ts,tsx,js,jsx}"
+    message: |
+      When working on this project, you can use the Linear MCP server to:
+      - Create issues for bugs or features
+      - List existing issues
+      - Update issue status
+      - Manage project workflow
+      
+      Available tools:
+      - create_issue: Create new Linear issues
+      - list_teams: List available teams
+      - list_issues: List issues with filtering
+      - update_issue: Update existing issues
+
+  - name: "Issue Creation"
+    description: "Automatically create Linear issues for significant changes"
+    pattern: "**/*.{ts,tsx,js,jsx}"
+    message: |
+      When making significant changes or finding bugs, consider creating a Linear issue:
+      - Use create_issue tool for new features
+      - Use create_issue tool for bug reports
+      - Include relevant labels like "bug", "feature", "ui", "analytics"
+      - Set appropriate priority levels
+
+# Environment variables required
+env:
+  LINEAR_API_KEY: "Your Linear API key"
+  LINEAR_TEAM_ID: "Your Linear team ID"

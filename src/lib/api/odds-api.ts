@@ -1,4 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { getBookmakerManager } from './bookmakers/manager';
+import { RealTimeOdds } from './bookmakers/base';
 
 // The Odds API Response Types
 export interface OddsApiSport {
@@ -157,6 +159,21 @@ class OddsApiClient {
     dateFormat: 'iso' | 'unix' = 'iso'
   ): Promise<OddsApiEvent[]> {
     try {
+      // First, try to get odds from new bookmaker integrations
+      const bookmakerManager = getBookmakerManager();
+      const bookmakerOdds = await bookmakerManager.getOdds(sport);
+      
+      if (bookmakerOdds.length > 0) {
+        // Convert bookmaker odds to OddsApiEvent format for compatibility
+        const convertedEvents = this.convertBookmakerOddsToEvents(bookmakerOdds, sport);
+        if (convertedEvents.length > 0) {
+          console.log(`Using ${convertedEvents.length} events from bookmaker integrations`);
+          return convertedEvents;
+        }
+      }
+
+      // Fallback to The Odds API if no bookmaker data available
+      console.log('Falling back to The Odds API');
       const response: AxiosResponse<OddsApiEvent[]> = await this.client.get(`/sports/${sport}/odds`, {
         params: {
           markets: markets.join(','),
@@ -170,6 +187,60 @@ class OddsApiClient {
       console.error(`Error fetching odds for ${sport}:`, error);
       throw error;
     }
+  }
+
+  // Convert bookmaker odds to OddsApiEvent format for compatibility
+  private convertBookmakerOddsToEvents(bookmakerOdds: RealTimeOdds[], sport: string): OddsApiEvent[] {
+    const eventGroups = new Map<string, OddsApiEvent>();
+    
+    bookmakerOdds.forEach(odds => {
+      const eventKey = `${odds.sport}_${odds.event}`;
+      
+      if (!eventGroups.has(eventKey)) {
+        eventGroups.set(eventKey, {
+          id: odds.id,
+          sport_key: odds.sport,
+          sport_title: this.mapSportKey(odds.sport),
+          commence_time: odds.timestamp.toISOString(),
+          home_team: odds.event.split(' vs ')[1] || odds.event,
+          away_team: odds.event.split(' vs ')[0] || odds.event,
+          bookmakers: []
+        });
+      }
+      
+      const event = eventGroups.get(eventKey)!;
+      let bookmaker = event.bookmakers.find(b => b.key === odds.bookmaker_id);
+      
+      if (!bookmaker) {
+        bookmaker = {
+          key: odds.bookmaker_id,
+          title: odds.bookmaker_id,
+          last_update: odds.timestamp.toISOString(),
+          markets: []
+        };
+        event.bookmakers.push(bookmaker);
+      }
+      
+      let market = bookmaker.markets.find(m => m.key === odds.market);
+      if (!market) {
+        market = {
+          key: odds.market,
+          last_update: odds.timestamp.toISOString(),
+          outcomes: []
+        };
+        bookmaker.markets.push(market);
+      }
+      
+      // Add outcome if it doesn't exist
+      if (!market.outcomes.find(o => o.name === odds.outcome)) {
+        market.outcomes.push({
+          name: odds.outcome,
+          price: odds.odds
+        });
+      }
+    });
+    
+    return Array.from(eventGroups.values());
   }
 
   // Calculate arbitrage opportunities from raw odds data
