@@ -116,4 +116,12 @@ export class BMADLinearService {
 
         return issue.issue;
     }
+
+    async updateIssueDescription(issueId: string, description: string) {
+        const updatedIssue = await linearClient.updateIssue(issueId, {
+            description: description,
+        });
+
+        return updatedIssue.issue;
+    }
 }
