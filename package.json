@@ -9,7 +9,9 @@
     "lint": "bunx tsc --noEmit && next lint",
     "format": "bunx biome format --write",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "create-dev-status": "bunx tsx scripts/create-dev-status-issue.ts",
+    "update-dev-status": "bunx tsx scripts/update-dev-status-issue.ts"
   },
   "dependencies": {
     "@linear/sdk": "^58.1.0",
