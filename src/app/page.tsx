@@ -35,6 +35,7 @@ import {
 import { UserMenu } from "@/components/auth/UserMenu";
 import { DebugAuth } from "@/components/DebugAuth";
 import { SupabaseTest } from "@/components/SupabaseTest";
+import { MCPTest } from "@/components/MCPTest";
 
 const TRACKED_SPORTS = ['soccer_epl', 'basketball_nba', 'tennis_atp', 'americanfootball_nfl'];
 
@@ -153,6 +154,7 @@ export default function Home() {
       <div className="container mx-auto px-6 py-6">
         <SupabaseTest />
         <DebugAuth />
+        <MCPTest />
 
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">

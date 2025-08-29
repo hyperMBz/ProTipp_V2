@@ -1,0 +1,20 @@
+Terület,Jelenlegi Állapot,Tervezett BMAD Redesign,Improvement Factor
+Fejlesztési Metodológia,"Hagyományos fejlesztés, context loss",BMAD Method - Agentic Planning + Context Engineering,10x fejlesztési hatékonyság
+UI/UX Design,"Alapvető UI, nem tökéletes oddsjam stílus","Professional OddsJam-inspired design, modern UI/UX",5x user experience
+Arbitrage Detection,Kidolgozott de nem tökéletes algoritmus,"AI-powered detection, ML-based optimization",3x detection accuracy
+Odds Aggregation,Korlátozott bookmaker support,"150+ bookmaker APIs, real-time feeds",10x bookmaker coverage
+Real-time Updates,Lassú vagy hiányos real-time frissítések,"<100ms frissítési idő, WebSocket/SSE",50x speed improvement
+Mobile Experience,Nem optimalizált mobile élmény,"PWA, mobile-first responsive design",5x mobile performance
+User Management,Alapvető felhasználókezelés,"Teljes körű auth, role-based access control",3x security enhancement
+Performance,Teljesítmény problémák várhatóak,"<50ms API response, optimalizált query-k",10x response speed
+Scalability,Skálázhatósági korlátok,"10K+ concurrent users, microservices",50x scaling capacity
+Testing Strategy,"Manuális, nem szisztematikus tesztelés","Automated testing (unit, integration, e2e)",20x testing coverage
+Monitoring,Alapvető vagy hiányos monitoring,"Prometheus/Grafana, real-time dashboards",10x monitoring depth
+Security,Alap biztonsági intézkedések,"Enterprise-level security, compliance",5x security level
+API Integration,Néhány API integráció,"MCP standardization, 100+ integrations",20x integration count
+Notification System,Egyszerű értesítési rendszer,"Multi-channel alerts (SMS, push, email)",5x notification reliability
+Data Analytics,Korlátozott analytics funkciók,"Advanced analytics, ML insights, reporting",10x analytics depth
+Deployment,Manuális deployment folyamat,"CI/CD pipeline, containerized deployment",20x deployment speed
+Documentation,Hiányos vagy elavult dokumentáció,"Comprehensive docs, auto-generated specs",10x documentation quality
+Code Quality,Inkonzisztens kód minőség,"Consistent code quality, automated reviews",5x code maintainability
+Maintenance,Nehézkes karbantartás,"Modular architecture, easy maintenance",5x maintenance efficiency

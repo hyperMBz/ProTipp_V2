@@ -1,0 +1,200 @@
+name: Linear Story Progress Update
+
+on:
+  pull_request:
+    types: [opened, synchronize, closed]
+  push:
+    branches: [main]
+
+jobs:
+  update-linear-story:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract Linear Story ID from PR
+        id: extract-story
+        run: |
+          # Extract story ID from PR title or body
+          STORY_ID=""
+          
+          # Check PR title for CUR-XX pattern
+          if [[ "${{ github.event.pull_request.title }}" =~ CUR-[0-9]+ ]]; then
+            STORY_ID=$(echo "${{ github.event.pull_request.title }}" | grep -o 'CUR-[0-9]*' | head -1)
+          fi
+          
+          # Check PR body for CUR-XX pattern
+          if [[ -z "$STORY_ID" ]] && [[ "${{ github.event.pull_request.body }}" =~ CUR-[0-9]+ ]]; then
+            STORY_ID=$(echo "${{ github.event.pull_request.body }}" | grep -o 'CUR-[0-9]*' | head -1)
+          fi
+          
+          # Check commit messages for CUR-XX pattern
+          if [[ -z "$STORY_ID" ]]; then
+            STORY_ID=$(git log --oneline --grep="CUR-[0-9]*" -n 1 | grep -o 'CUR-[0-9]*' | head -1)
+          fi
+          
+          if [[ -n "$STORY_ID" ]]; then
+            echo "story_id=$STORY_ID" >> $GITHUB_OUTPUT
+            echo "Found Linear Story ID: $STORY_ID"
+          else
+            echo "No Linear Story ID found"
+          fi
+
+      - name: Update Linear Story Progress
+        if: steps.extract-story.outputs.story_id != ''
+        run: |
+          set -e
+          STORY_ID="${{ steps.extract-story.outputs.story_id }}"
+          
+          if [ -z "$LINEAR_API_KEY" ]; then
+            echo "Missing LINEAR_API_KEY" >&2
+            exit 1
+          fi
+          
+          # Determine action based on PR event
+          ACTION=""
+          if [[ "${{ github.event.action }}" == "opened" ]]; then
+            ACTION="started"
+          elif [[ "${{ github.event.action }}" == "synchronize" ]]; then
+            ACTION="updated"
+          elif [[ "${{ github.event.action }}" == "closed" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            ACTION="completed"
+          fi
+          
+          if [[ -z "$ACTION" ]]; then
+            echo "No action needed for this event"
+            exit 0
+          fi
+          
+          # Create comment based on action
+          COMMENT=""
+          if [[ "$ACTION" == "started" ]]; then
+            COMMENT="🚀 **Development Started**\n\nPR opened: ${{ github.event.pull_request.html_url }}\nBranch: ${{ github.event.pull_request.head.ref }}"
+          elif [[ "$ACTION" == "updated" ]]; then
+            COMMENT="🔄 **Progress Update**\n\nPR updated: ${{ github.event.pull_request.html_url }}\nLatest commit: ${{ github.sha }}"
+          elif [[ "$ACTION" == "completed" ]]; then
+            COMMENT="✅ **Story Completed**\n\nPR merged: ${{ github.event.pull_request.html_url }}\nMerge commit: ${{ github.sha }}"
+          fi
+          
+          # Add Linear comment
+          read -r -d '' QUERY <<'EOF'
+          mutation CommentCreate($input: CommentCreateInput!) {
+            commentCreate(input: $input) {
+              success
+              comment { id }
+            }
+          }
+          EOF
+          
+          # First, get the issue ID from the story identifier
+          SEARCH_QUERY="query { issues(filter: { identifier: { eq: \"$STORY_ID\" } }, first: 1) { nodes { id } } }"
+          
+          SEARCH_JSON=$(jq -n --arg q "$SEARCH_QUERY" '{query:$q}')
+          SEARCH_RESPONSE=$(curl -sS https://api.linear.app/graphql \
+            -H "Content-Type: application/json" \
+            -H "Authorization: ${LINEAR_API_KEY}" \
+            -d "$SEARCH_JSON")
+          
+          ISSUE_ID=$(echo "$SEARCH_RESPONSE" | jq -r '.data.issues.nodes[0].id // empty')
+          
+          if [[ -z "$ISSUE_ID" ]]; then
+            echo "Could not find Linear issue for story ID: $STORY_ID"
+            exit 1
+          fi
+          
+          # Create comment
+          COMMENT_JSON=$(jq -n --arg q "$QUERY" \
+                              --arg issue "$ISSUE_ID" \
+                              --arg body "$COMMENT" \
+                              '{query:$q, variables:{input:{issueId:$issue, body:$body}}}')
+          
+          COMMENT_RESPONSE=$(curl -sS https://api.linear.app/graphql \
+            -H "Content-Type: application/json" \
+            -H "Authorization: ${LINEAR_API_KEY}" \
+            -d "$COMMENT_JSON")
+          
+          echo "Comment response: $COMMENT_RESPONSE"
+          
+          # If completed, also update issue status
+          if [[ "$ACTION" == "completed" ]]; then
+            read -r -d '' UPDATE_QUERY <<'EOF'
+            mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) {
+              issueUpdate(id: $id, input: $input) { success }
+            }
+            EOF
+            
+            NOW=$(date -u +%FT%TZ)
+            UPDATE_JSON=$(jq -n --arg q "$UPDATE_QUERY" \
+                                --arg id "$ISSUE_ID" \
+                                --arg time "$NOW" \
+                                '{query:$q, variables:{id:$id, input:{completedAt:$time}}}')
+            
+            UPDATE_RESPONSE=$(curl -sS https://api.linear.app/graphql \
+              -H "Content-Type: application/json" \
+              -H "Authorization: ${LINEAR_API_KEY}" \
+              -d "$UPDATE_JSON")
+            
+            echo "Update response: $UPDATE_RESPONSE"
+          fi
+          
+          echo "Successfully updated Linear story: $STORY_ID"
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+
+      - name: Update Story Progress from Commit Messages
+        if: github.event_name == 'push'
+        run: |
+          set -e
+          
+          if [ -z "$LINEAR_API_KEY" ]; then
+            echo "Missing LINEAR_API_KEY" >&2
+            exit 1
+          fi
+          
+          # Extract story IDs from commit messages
+          STORY_IDS=$(git log --oneline --grep="CUR-[0-9]*" -n 10 | grep -o 'CUR-[0-9]*' | sort | uniq)
+          
+          for STORY_ID in $STORY_IDS; do
+            echo "Processing story: $STORY_ID"
+            
+            # Create progress comment
+            COMMENT="🔄 **Commit Update**\n\nCommit: ${{ github.sha }}\nMessage: ${{ github.event.head_commit.message }}\nBranch: ${{ github.ref_name }}"
+            
+            # Get issue ID and add comment (similar to above)
+            SEARCH_QUERY="query { issues(filter: { identifier: { eq: \"$STORY_ID\" } }, first: 1) { nodes { id } } }"
+            SEARCH_JSON=$(jq -n --arg q "$SEARCH_QUERY" '{query:$q}')
+            SEARCH_RESPONSE=$(curl -sS https://api.linear.app/graphql \
+              -H "Content-Type: application/json" \
+              -H "Authorization: ${LINEAR_API_KEY}" \
+              -d "$SEARCH_JSON")
+            
+            ISSUE_ID=$(echo "$SEARCH_RESPONSE" | jq -r '.data.issues.nodes[0].id // empty')
+            
+            if [[ -n "$ISSUE_ID" ]]; then
+              read -r -d '' QUERY <<'EOF'
+              mutation CommentCreate($input: CommentCreateInput!) {
+                commentCreate(input: $input) {
+                  success
+                  comment { id }
+                }
+              }
+              EOF
+              
+              COMMENT_JSON=$(jq -n --arg q "$QUERY" \
+                                  --arg issue "$ISSUE_ID" \
+                                  --arg body "$COMMENT" \
+                                  '{query:$q, variables:{input:{issueId:$issue, body:$body}}}')
+              
+              curl -sS https://api.linear.app/graphql \
+                -H "Content-Type: application/json" \
+                -H "Authorization: ${LINEAR_API_KEY}" \
+                -d "$COMMENT_JSON"
+              
+              echo "Updated story: $STORY_ID"
+            fi
+          done
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}

@@ -1,25 +1,25 @@
-import { useQuery, useQueries, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, useQueries, useQueryClient, UseQueryResult } from '@tanstack/react-query';
 import {
   oddsApiClient,
   fetchArbitrageOpportunities,
   ProcessedOddsData,
-  OddsApiSport,
   ArbitrageCalculationResult
 } from '@/lib/api/odds-api';
 import { ArbitrageOpportunity } from '@/lib/mock-data';
+import { useBookmakerOdds, useAggregatedOdds } from './use-bookmakers';
+import { RealTimeOdds } from '@/lib/api/bookmakers/base';
+import { useState } from 'react';
 
 // Query keys for React Query caching
-export const QUERY_KEYS = {
-  SPORTS: ['sports'] as const,
-  ODDS: (sport: string) => ['odds', sport] as const,
-  ARBITRAGE: (sports: string[]) => ['arbitrage', ...sports] as const,
-  USAGE_STATS: ['usage-stats'] as const,
-} as const;
+const ODDS_QUERY_KEY = 'odds';
+const ARBITRAGE_QUERY_KEY = 'arbitrage';
+const BOOKMAKER_ODDS_QUERY_KEY = 'bookmaker-odds';
+const AGGREGATED_ODDS_QUERY_KEY = 'aggregated-odds';
 
 // Hook to get available sports
 export function useSports() {
   return useQuery({
-    queryKey: QUERY_KEYS.SPORTS,
+    queryKey: ['sports'],
     queryFn: () => oddsApiClient.getSports(),
     staleTime: 24 * 60 * 60 * 1000, // Sports list doesn't change often - cache for 24 hours
     gcTime: 24 * 60 * 60 * 1000,
@@ -30,7 +30,7 @@ export function useSports() {
 // Hook to get odds for a specific sport
 export function useOdds(sport: string, enabled: boolean = true) {
   return useQuery({
-    queryKey: QUERY_KEYS.ODDS(sport),
+    queryKey: [ODDS_QUERY_KEY, sport],
     queryFn: () => oddsApiClient.getOdds(sport, ['h2h'], ['us', 'eu']),
     staleTime: 30 * 1000, // Odds change frequently - refresh every 30 seconds
     gcTime: 5 * 60 * 1000,
@@ -43,7 +43,7 @@ export function useOdds(sport: string, enabled: boolean = true) {
 export function useMultipleSportsOdds(sports: string[]) {
   return useQueries({
     queries: sports.map(sport => ({
-      queryKey: QUERY_KEYS.ODDS(sport),
+      queryKey: [ODDS_QUERY_KEY, sport],
       queryFn: () => oddsApiClient.getOdds(sport, ['h2h'], ['us', 'eu']),
       staleTime: 30 * 1000,
       gcTime: 5 * 60 * 1000,
@@ -56,7 +56,7 @@ export function useMultipleSportsOdds(sports: string[]) {
 // Main hook for arbitrage opportunities
 export function useArbitrageOpportunities(sports: string[] = ['soccer_epl', 'basketball_nba', 'tennis_atp']) {
   return useQuery({
-    queryKey: QUERY_KEYS.ARBITRAGE(sports),
+    queryKey: [ARBITRAGE_QUERY_KEY, ...sports],
     queryFn: () => fetchArbitrageOpportunities(sports),
     staleTime: 30 * 1000, // Refresh every 30 seconds
     gcTime: 5 * 60 * 1000,
@@ -69,7 +69,7 @@ export function useArbitrageOpportunities(sports: string[] = ['soccer_epl', 'bas
 // Hook for API usage statistics
 export function useApiUsage() {
   return useQuery({
-    queryKey: QUERY_KEYS.USAGE_STATS,
+    queryKey: ['usage-stats'],
     queryFn: () => oddsApiClient.getUsageStats(),
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     gcTime: 10 * 60 * 1000,
@@ -142,15 +142,18 @@ function calculateTimeToExpiry(commenceTime: Date): string {
   return `${diffHours.toString().padStart(2, '0')}:${diffMinutes.toString().padStart(2, '0')}:${diffSeconds.toString().padStart(2, '0')}`;
 }
 
-// Helper hook for real-time detection
+// Real-time status hook
 export function useRealTimeStatus() {
+  const [isRealTime, setIsRealTime] = useState(true);
   const apiKey = process.env.NEXT_PUBLIC_ODDS_API_KEY;
-  const isRealTime = !!apiKey && apiKey !== 'your_odds_api_key_here';
-
+  const isDemo = !isRealTime || !apiKey || apiKey === 'your_odds_api_key_here';
+  
   return {
     isRealTime,
-    isDemo: !isRealTime,
-    apiConfigured: !!apiKey,
+    setIsRealTime,
+    toggleRealTime: () => setIsRealTime(!isRealTime),
+    isDemo,
+    apiConfigured: !!apiKey
   };
 }
 
@@ -184,5 +187,117 @@ export function useArbitrageWithFallback(sports: string[] = ['soccer_epl', 'bask
     ...mockDataQuery,
     isRealTime: false,
     fallbackMode: true,
+  };
+}
+
+// Enhanced hook that integrates bookmaker data with existing odds system
+export function useEnhancedArbitrageOpportunities(sports: string[] = ['soccer_epl', 'basketball_nba', 'tennis_atp']) {
+  const { isRealTime } = useRealTimeStatus();
+  
+  // Get data from new bookmaker integrations
+  const bookmakerQueries = useQueries({
+    queries: sports.map(sport => ({
+      queryKey: [BOOKMAKER_ODDS_QUERY_KEY, sport],
+      queryFn: async () => {
+        const manager = await import('@/lib/api/bookmakers/manager');
+        return manager.getBookmakerManager().getOdds(sport);
+      },
+      staleTime: 15 * 1000, // 15 seconds
+      refetchInterval: 30 * 1000, // 30 seconds
+      enabled: isRealTime,
+    })),
+  });
+
+  // Get aggregated odds from bookmakers
+  const aggregatedQueries = useQueries({
+    queries: sports.map(sport => ({
+      queryKey: [AGGREGATED_ODDS_QUERY_KEY, sport],
+      queryFn: async () => {
+        const manager = await import('@/lib/api/bookmakers/manager');
+        return manager.getBookmakerManager().getAggregatedOdds(sport);
+      },
+      staleTime: 15 * 1000,
+      refetchInterval: 30 * 1000,
+      enabled: isRealTime,
+    })),
+  });
+
+  // Get data from existing The Odds API
+  const existingOddsQuery = useArbitrageOpportunities(sports);
+
+  // Combine and prioritize data sources
+  const combinedData = {
+    bookmakerData: bookmakerQueries.map((query: UseQueryResult) => query.data).filter(Boolean),
+    aggregatedData: aggregatedQueries.map((query: UseQueryResult) => query.data).filter(Boolean),
+    existingData: existingOddsQuery.data,
+    isLoading: bookmakerQueries.some((q: UseQueryResult) => q.isLoading) || 
+               aggregatedQueries.some((q: UseQueryResult) => q.isLoading) || 
+               existingOddsQuery.isLoading,
+    error: bookmakerQueries.find((q: UseQueryResult) => q.error)?.error || 
+           aggregatedQueries.find((q: UseQueryResult) => q.error)?.error || 
+           existingOddsQuery.error,
+  };
+
+  return {
+    ...combinedData,
+    isRealTime,
+    hasBookmakerData: combinedData.bookmakerData.length > 0,
+    hasAggregatedData: combinedData.aggregatedData.length > 0,
+    dataSource: combinedData.bookmakerData.length > 0 ? 'bookmakers' : 
+                combinedData.existingData ? 'odds-api' : 'none',
+  };
+}
+
+// Hook for bookmaker-specific odds data
+export function useBookmakerSpecificOdds(sport: string, bookmakerId?: string) {
+  const { odds: bookmakerOdds, isLoading, error } = useBookmakerOdds(sport);
+  
+  const filteredOdds = bookmakerId 
+    ? bookmakerOdds?.filter((odds: RealTimeOdds) => odds.bookmaker_id === bookmakerId)
+    : bookmakerOdds;
+
+  return {
+    data: filteredOdds,
+    isLoading,
+    error,
+    bookmakerId,
+    totalOdds: bookmakerOdds?.length || 0,
+    filteredOdds: filteredOdds?.length || 0,
+  };
+}
+
+// Hook for comparing odds across different bookmakers
+export function useOddsComparison(sport: string, event?: string) {
+  const { data: aggregatedOdds } = useAggregatedOdds(sport, event);
+  
+  const comparisonData = aggregatedOdds?.map((eventData: {
+    event_name?: string;
+    event?: string;
+    sport: string;
+    bookmakers?: Array<{
+      bookmaker_name?: string;
+      name?: string;
+      odds?: Array<{ odds: number }>;
+    }>;
+    last_updated?: string;
+    lastUpdate?: string;
+  }) => ({
+    event: eventData.event_name || eventData.event,
+    sport: eventData.sport,
+    bookmakers: (eventData.bookmakers || []).map((bookmaker) => ({
+      name: bookmaker.bookmaker_name || bookmaker.name,
+      odds: bookmaker.odds || [],
+      averageOdds: (bookmaker.odds || []).reduce((sum: number, odd) => sum + odd.odds, 0) / (bookmaker.odds || []).length,
+      bestOdds: Math.max(...(bookmaker.odds || []).map((odd) => odd.odds)),
+      worstOdds: Math.min(...(bookmaker.odds || []).map((odd) => odd.odds)),
+    })),
+    lastUpdated: eventData.last_updated || eventData.lastUpdate,
+  }));
+
+  return {
+    data: comparisonData,
+    isLoading: false, // This is derived from aggregated odds
+    eventCount: comparisonData?.length || 0,
+    bookmakerCount: comparisonData?.[0]?.bookmakers.length || 0,
   };
 }
