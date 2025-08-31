@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ArbitrageOpportunity } from "@/lib/mock-data";
 import { formatNumber } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -65,10 +65,13 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
   const [lastUpdateTrigger, setLastUpdateTrigger] = useState(0);
   const [updatingRows, setUpdatingRows] = useState<Set<string>>(new Set());
 
+  // Memoize opportunities to prevent unnecessary re-renders
+  const memoizedOpportunities = useMemo(() => opportunities, [opportunities]);
+
   useEffect(() => {
     if (oddsUpdateTrigger !== lastUpdateTrigger && oddsUpdateTrigger > 0) {
       // Randomly select 2-3 opportunities to update
-      const shuffled = [...opportunities].sort(() => 0.5 - Math.random());
+      const shuffled = [...memoizedOpportunities].sort(() => 0.5 - Math.random());
       const toUpdate = shuffled.slice(0, Math.min(3, Math.floor(Math.random() * 3) + 1));
 
       setUpdatingRows(new Set(toUpdate.map(opp => opp.id)));
@@ -79,7 +82,7 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
         setUpdatingRows(new Set());
       }, 1000);
     }
-  }, [oddsUpdateTrigger, lastUpdateTrigger, opportunities]);
+  }, [oddsUpdateTrigger, lastUpdateTrigger, memoizedOpportunities]);
 
   const getStatusColor = (probability: number) => {
     if (probability >= 95) return "bg-green-500/20 text-green-400 border-green-500/30";

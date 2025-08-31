@@ -179,7 +179,7 @@ export default function BookmakerList() {
               <label className="text-sm font-medium">Status</label>
               <Select
                 value={filters.status}
-                onValueChange={(value) => handleFilterChange('status', value)}
+                onValueChange={(value: string) => handleFilterChange('status', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -198,7 +198,7 @@ export default function BookmakerList() {
               <label className="text-sm font-medium">API Type</label>
               <Select
                 value={filters.apiType}
-                onValueChange={(value) => handleFilterChange('apiType', value)}
+                onValueChange={(value: string) => handleFilterChange('apiType', value)}
               >
                 <SelectTrigger>
                   <SelectValue />

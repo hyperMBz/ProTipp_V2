@@ -642,3 +642,262 @@ export function getTimeToExpiryInHours(timeString: string): number {
   const [hours, minutes, seconds] = timeString.split(':').map(Number);
   return hours + minutes / 60 + seconds / 3600;
 }
+
+// Advanced Arbitrage Mock Data
+export const mockAdvancedArbitrageOpportunities = [
+  {
+    id: 'adv_1',
+    sport: 'Labdarúgás',
+    event: 'Manchester United vs Liverpool',
+    market_type: 'mainline' as const,
+    opportunities: [
+      {
+        bookmaker_id: 'Bet365',
+        outcome: 'Home Win',
+        odds: 2.1,
+        stake: 50000,
+        expected_return: 105000,
+        risk_factor: 0.15,
+        confidence: 0.85
+      },
+      {
+        bookmaker_id: 'William Hill',
+        outcome: 'Away Win',
+        odds: 1.9,
+        stake: 50000,
+        expected_return: 95000,
+        risk_factor: 0.12,
+        confidence: 0.88
+      }
+    ],
+    total_stake: 100000,
+    expected_profit: 5000,
+    profit_margin: 5.0,
+    confidence_score: 0.82,
+    risk_score: 0.28,
+    false_positive_probability: 0.18,
+    market_efficiency: 0.75,
+    time_to_expiry: '2h 30m',
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  {
+    id: 'adv_2',
+    sport: 'Tenisz',
+    event: 'Djokovic vs Nadal',
+    market_type: 'props' as const,
+    opportunities: [
+      {
+        bookmaker_id: 'Unibet',
+        outcome: 'Djokovic',
+        odds: 1.8,
+        stake: 60000,
+        expected_return: 108000,
+        risk_factor: 0.20,
+        confidence: 0.78
+      },
+      {
+        bookmaker_id: 'Bwin',
+        outcome: 'Nadal',
+        odds: 2.2,
+        stake: 40000,
+        expected_return: 88000,
+        risk_factor: 0.25,
+        confidence: 0.72
+      }
+    ],
+    total_stake: 100000,
+    expected_profit: 4800,
+    profit_margin: 4.8,
+    confidence_score: 0.75,
+    risk_score: 0.35,
+    false_positive_probability: 0.22,
+    market_efficiency: 0.68,
+    time_to_expiry: '1h 45m',
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  {
+    id: 'adv_3',
+    sport: 'Kosárlabda',
+    event: 'Lakers vs Warriors',
+    market_type: 'live' as const,
+    opportunities: [
+      {
+        bookmaker_id: 'Pinnacle',
+        outcome: 'Lakers',
+        odds: 1.95,
+        stake: 52000,
+        expected_return: 101400,
+        risk_factor: 0.18,
+        confidence: 0.82
+      },
+      {
+        bookmaker_id: 'SBOBET',
+        outcome: 'Warriors',
+        odds: 2.05,
+        stake: 48000,
+        expected_return: 98400,
+        risk_factor: 0.22,
+        confidence: 0.78
+      }
+    ],
+    total_stake: 100000,
+    expected_profit: 5100,
+    profit_margin: 5.1,
+    confidence_score: 0.79,
+    risk_score: 0.32,
+    false_positive_probability: 0.19,
+    market_efficiency: 0.71,
+    time_to_expiry: '3h 15m',
+    created_at: new Date(),
+    updated_at: new Date()
+  }
+];
+
+// Analytics mock data for testing
+export const mockAnalyticsData = {
+  // Performance metrics for different time periods
+  performanceMetrics: {
+    daily: {
+      totalBets: 45,
+      winningBets: 28,
+      totalProfit: 125000,
+      totalStaked: 2500000,
+      roiPercentage: 5.0,
+      winRate: 62.2,
+      averageOdds: 1.85,
+      largestWin: 25000,
+      largestLoss: -15000,
+      bestSport: 'Labdarúgás',
+      bestBookmaker: 'Unibet'
+    },
+    weekly: {
+      totalBets: 312,
+      winningBets: 198,
+      totalProfit: 875000,
+      totalStaked: 17500000,
+      roiPercentage: 5.0,
+      winRate: 63.5,
+      averageOdds: 1.82,
+      largestWin: 45000,
+      largestLoss: -25000,
+      bestSport: 'Labdarúgás',
+      bestBookmaker: 'Unibet'
+    },
+    monthly: {
+      totalBets: 1245,
+      winningBets: 792,
+      totalProfit: 3250000,
+      totalStaked: 65000000,
+      roiPercentage: 5.0,
+      winRate: 63.6,
+      averageOdds: 1.84,
+      largestWin: 75000,
+      largestLoss: -35000,
+      bestSport: 'Labdarúgás',
+      bestBookmaker: 'Unibet'
+    }
+  },
+
+  // Sport performance breakdown
+  sportPerformance: [
+    {
+      sport: 'Labdarúgás',
+      totalBets: 650,
+      winningBets: 420,
+      totalProfit: 1800000,
+      roiPercentage: 6.2,
+      winRate: 64.6,
+      averageOdds: 1.78
+    },
+    {
+      sport: 'Kosárlabda',
+      totalBets: 320,
+      winningBets: 198,
+      totalProfit: 850000,
+      roiPercentage: 4.8,
+      winRate: 61.9,
+      averageOdds: 1.92
+    },
+    {
+      sport: 'Tenisz',
+      totalBets: 275,
+      winningBets: 174,
+      totalProfit: 600000,
+      roiPercentage: 3.5,
+      winRate: 63.3,
+      averageOdds: 1.95
+    }
+  ],
+
+  // Bookmaker performance breakdown
+  bookmakerPerformance: [
+    {
+      bookmaker: 'Unibet',
+      totalBets: 450,
+      winningBets: 295,
+      totalProfit: 1200000,
+      roiPercentage: 6.8,
+      winRate: 65.6,
+      averageOdds: 1.76
+    },
+    {
+      bookmaker: 'Bet365',
+      totalBets: 380,
+      winningBets: 240,
+      totalProfit: 950000,
+      roiPercentage: 5.2,
+      winRate: 63.2,
+      averageOdds: 1.82
+    },
+    {
+      bookmaker: 'William Hill',
+      totalBets: 415,
+      winningBets: 257,
+      totalProfit: 1100000,
+      roiPercentage: 4.9,
+      winRate: 61.9,
+      averageOdds: 1.88
+    }
+  ],
+
+  // Time series data for charts
+  timeSeriesData: {
+    daily: Array.from({ length: 30 }, (_, i) => ({
+      date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      profit: Math.floor(Math.random() * 100000) - 20000,
+      cumulativeProfit: 0, // Will be calculated
+      betsCount: Math.floor(Math.random() * 20) + 10,
+      winRate: Math.random() * 30 + 50
+    })),
+    weekly: Array.from({ length: 12 }, (_, i) => ({
+      period: `Week ${i + 1}`,
+      roiPercentage: Math.random() * 15 - 5,
+      totalProfit: Math.floor(Math.random() * 500000) - 100000,
+      totalStaked: Math.floor(Math.random() * 5000000) + 2000000,
+      betCount: Math.floor(Math.random() * 100) + 50
+    })),
+    monthly: Array.from({ length: 6 }, (_, i) => ({
+      period: `Month ${i + 1}`,
+      winRate: Math.random() * 20 + 55,
+      totalBets: Math.floor(Math.random() * 300) + 150,
+      winningBets: 0, // Will be calculated
+      losingBets: 0 // Will be calculated
+    }))
+  }
+};
+
+// Calculate cumulative profits and win/loss counts
+mockAnalyticsData.timeSeriesData.daily.forEach((item, index) => {
+  if (index > 0) {
+    item.cumulativeProfit = mockAnalyticsData.timeSeriesData.daily[index - 1].cumulativeProfit + item.profit;
+  } else {
+    item.cumulativeProfit = item.profit;
+  }
+});
+
+mockAnalyticsData.timeSeriesData.monthly.forEach(item => {
+  item.winningBets = Math.floor(item.totalBets * (item.winRate / 100));
+  item.losingBets = item.totalBets - item.winningBets;
+});

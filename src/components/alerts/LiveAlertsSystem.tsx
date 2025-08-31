@@ -28,6 +28,8 @@ import { formatNumber } from "@/lib/utils";
 import { ArbitrageOpportunity } from "@/lib/mock-data";
 import { AlertHistoryList } from "./AlertHistoryList";
 import { NotificationSettings } from "./NotificationSettings";
+import { useNotifications } from "@/lib/hooks/use-notifications";
+import { useNotificationSettings } from "@/lib/hooks/use-notifications";
 
 interface AlertThresholds {
   minProfitMargin: number;
@@ -54,6 +56,19 @@ export function LiveAlertsSystem() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [alerts, setAlerts] = useState<LiveAlert[]>([]);
   const [newAlertsCount, setNewAlertsCount] = useState(0);
+
+  // Integrate new notification system
+  const { 
+    subscribeToPush, 
+    sendTestNotification: sendNewTestNotification,
+    processOpportunities,
+    processPriceChanges
+  } = useNotifications();
+  const { 
+    settings, 
+    updateSettings, 
+    loading: settingsLoading 
+  } = useNotificationSettings();
 
   const [thresholds, setThresholds] = useState<AlertThresholds>({
     minProfitMargin: 3.0,
@@ -333,8 +348,13 @@ export function LiveAlertsSystem() {
   useEffect(() => {
     if (opportunities.length > 0 && isEnabled) {
       checkForAlerts(opportunities);
+      
+      // Process opportunities with new notification system
+      if (settings?.channels.push || settings?.channels.email || settings?.channels.sms) {
+        processOpportunities(opportunities);
+      }
     }
-  }, [opportunities, checkForAlerts, isEnabled]);
+  }, [opportunities, isEnabled, checkForAlerts, settings, processOpportunities]);
 
   const acknowledgeAlert = (alertId: string) => {
     setAlerts(prev => prev.map(alert =>

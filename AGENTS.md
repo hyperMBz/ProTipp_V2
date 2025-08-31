@@ -1,8 +1,47 @@
 # AGENTS.md
 
+## Kommunikációs Szabályok
+**FONTOS**: Minden kommunikáció magyar nyelven történjen. Az Agent mindig magyarul válaszoljon és magyarul írjon kódot, kommenteket és dokumentációt.
+
+### Nyelvi Követelmények
+- **Kommunikáció**: Minden válasz magyar nyelven
+- **Kód kommentek**: Magyar nyelven
+- **Dokumentáció**: Magyar nyelven
+- **Hibaüzenetek**: Magyar nyelven
+- **Konzol üzenetek**: Magyar nyelven
+
 ## Project Overview
 **ProTipp V2** - Next.js 15 sports betting arbitrage platform with real-time odds comparison.
 TypeScript-first application using shadcn/ui components, Supabase backend, and dark-first design system.
+
+## 🚀 MCP Integration Overview
+
+A projekt támogatja a következő MCP (Model Context Protocol) szervereket:
+
+### 🗄️ Supabase MCP (Magas Prioritás)
+- **Adatbázis lekérdezések** AI asszisztenssel
+- **Arbitrage opportunity detektálás** valós idejű adatokból
+- **Felhasználói statisztikák** elemzése és optimalizálás
+- **Betting adatok kezelés** és validáció
+
+
+
+### 📝 Notion MCP
+- **Projekt dokumentáció** kezelés
+- **Automatikus formázás** és struktúra
+- **Keresés és lekérdezés** a workspace-ben
+
+### 🧪 Playwright MCP (Közepes Prioritás)
+- **UI tesztelés** automatizálása
+- **Cross-browser kompatibilitás** ellenőrzés
+- **Design konzisztencia** validáció
+
+### 🔒 Semgrep MCP (Alacsony Prioritás)
+- **Biztonsági ellenőrzések** automatizálása
+- **Kód minőség** javítása
+- **Best practice** ellenőrzés
+
+**Részletes dokumentáció**: [MCP_INTEGRATION.md](MCP_INTEGRATION.md)
 
 ## Quick Start Commands
 - **Install dependencies**: `bun install`
@@ -37,6 +76,8 @@ src/
 - **Charts**: Recharts
 - **Build**: Turbopack (dev), Biome (linting/formatting)
 - **Package Manager**: Bun
+- **Testing**: Playwright, Vitest
+- **Security**: Semgrep
 
 ## Code Style & Standards
 
@@ -110,6 +151,8 @@ Follow patterns defined in `COMPONENT_TEMPLATES.md`:
 - Ensure TypeScript compilation passes
 - Test responsive design on multiple breakpoints
 - Verify dark theme compatibility
+- **UI Testing**: Use Playwright for E2E tests
+- **Security**: Run Semgrep scans regularly
 
 ## API Integration
 
@@ -118,6 +161,7 @@ Follow patterns defined in `COMPONENT_TEMPLATES.md`:
 - **Auth**: Row Level Security enabled
 - **Real-time**: Subscriptions for live odds data
 - **Types**: Auto-generated from database schema
+- **MCP Integration**: Direct database access via AI assistants
 
 ### External APIs
 - **Odds API**: Centralized in `lib/api/odds-api.ts`
@@ -142,6 +186,7 @@ Follow patterns defined in `COMPONENT_TEMPLATES.md`:
 - **Supabase Auth**: Secure by default with RLS
 - **Middleware**: Route protection in `middleware.ts`
 - **Session management**: Automatic token refresh
+- **Semgrep Integration**: Automated security scanning
 
 ### Data Protection
 - **Environment variables**: Use `.env.local` for secrets
@@ -217,9 +262,42 @@ try {
 </div>
 ```
 
+## MCP Usage Examples
+
+### Supabase Database Queries
+```
+"Kérdezd le az összes arbitrage opportunity-t az elmúlt 24 órából"
+"Számítsd ki a felhasználó profit statisztikáit az elmúlt 30 napból"
+"Frissítsd a betting státuszt 'won'-ra a megadott ID-hoz"
+```
+
+
+
+### Notion Documentation
+```
+"Készíts egy új Notion oldalt 'API Integration Guide' címmel"
+"Frissítsd a projekt dokumentációt az új feature-rel"
+"Keresd meg a betting algoritmus dokumentációt"
+```
+
+### Playwright Testing
+```
+"Futtass egy UI tesztet a betting flow-hoz"
+"Generálj egy tesztet a login funkcióhoz"
+"Ellenőrizd a design konzisztenciát különböző böngészőkben"
+```
+
+### Semgrep Security
+```
+"Végezz biztonsági ellenőrzést a TypeScript kódon"
+"Generálj egyedi szabályokat a projekt specifikus biztonsághoz"
+"Ellenőrizd a dependency sebezhetőségeket"
+```
+
 ## Documentation References
 - **Design System**: `DESIGN_SYSTEM.md` - Complete visual guidelines
 - **Component Templates**: `COMPONENT_TEMPLATES.md` - Ready-to-use patterns
+- **MCP Integration**: `MCP_INTEGRATION.md` - Complete MCP setup and usage
 - **shadcn/ui docs**: https://ui.shadcn.com/
 - **Next.js 15 docs**: https://nextjs.org/docs
 - **Supabase docs**: https://supabase.com/docs
@@ -231,6 +309,8 @@ try {
 4. Test on multiple screen sizes and themes
 5. Run linting and type checking before commits
 6. Document complex logic and API integrations
+7. **Use MCP tools** for automated database queries, issue management, and testing
+8. **Run security scans** with Semgrep before major releases
 
 ---
 

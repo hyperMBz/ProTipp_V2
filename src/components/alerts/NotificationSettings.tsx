@@ -17,6 +17,8 @@ import {
   AlertTriangle,
   Info
 } from "lucide-react";
+import { useNotificationSettings } from "@/lib/hooks/use-notifications";
+import { useNotifications } from "@/lib/hooks/use-notifications";
 
 interface NotificationSettingsProps {
   onRequestPermission: () => Promise<boolean>;
@@ -29,6 +31,10 @@ export function NotificationSettings({ onRequestPermission }: NotificationSettin
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [highPriorityOnly, setHighPriorityOnly] = useState(false);
   const [testNotificationSent, setTestNotificationSent] = useState(false);
+
+  // Integrate new notification system
+  const { settings, updateSettings, loading } = useNotificationSettings();
+  const { subscribeToPush, sendTestNotification: sendNewTestNotification } = useNotifications();
 
   // Check browser notification permission on mount
   useEffect(() => {

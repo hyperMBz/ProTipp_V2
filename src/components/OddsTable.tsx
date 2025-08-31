@@ -46,7 +46,7 @@ export function OddsTable() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Sport</label>
-              <Select value={selectedSport} onValueChange={setSelectedSport}>
+                              <Select value={selectedSport} onValueChange={(value: string) => setSelectedSport(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -61,7 +61,7 @@ export function OddsTable() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Piac</label>
-              <Select value={selectedMarket} onValueChange={setSelectedMarket}>
+                              <Select value={selectedMarket} onValueChange={(value: string) => setSelectedMarket(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

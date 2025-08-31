@@ -156,7 +156,7 @@ A BMAD Method (Breakthrough Method for Agile AI-Driven Development) keretrendsze
 
 **Recommended MCP Servers:**
 - **GitHub MCP Server**: Version control és repository management
-- **Linear MCP Server**: Project management és issue tracking integration
+
 - **Database MCP Server**: PostgreSQL/MongoDB direct access
 - **API Testing MCP Server**: Automated endpoint testing
 - **Documentation MCP Server**: Markdown-based docs generation

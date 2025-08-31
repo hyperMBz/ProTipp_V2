@@ -129,14 +129,52 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
     setLoading(true);
+    console.log('🔐 Attempting sign in for:', email);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    setLoading(false);
-    return { error };
+      if (error) {
+        console.error('❌ Sign in error:', error);
+        
+        // Ha placeholder értékek vannak, adjunk egy informatív hibaüzenetet
+        if (error.message.includes('fetch') || error.message.includes('network')) {
+          setLoading(false);
+          return { 
+            error: {
+              ...error,
+              message: 'Supabase kapcsolat nincs beállítva. Kérjük, kövesse a SUPABASE_SETUP.md útmutatót.'
+            } as AuthError 
+          };
+        }
+        
+        setLoading(false);
+        return { error };
+      }
+
+      console.log('✅ Sign in successful');
+      setLoading(false);
+      return { error: null };
+    } catch (error) {
+      console.error('❌ Unexpected error during sign in:', error);
+      setLoading(false);
+      
+      // Ha placeholder értékek vannak, adjunk egy informatív hibaüzenetet
+      if (error instanceof Error && (error.message.includes('fetch') || error.message.includes('network'))) {
+        return { 
+          error: {
+            name: 'AuthError',
+            message: 'Supabase kapcsolat nincs beállítva. Kérjük, kövesse a SUPABASE_SETUP.md útmutatót.',
+            status: 500
+          } as AuthError 
+        };
+      }
+      
+      return { error: error as AuthError };
+    }
   };
 
   // Sign in with Google

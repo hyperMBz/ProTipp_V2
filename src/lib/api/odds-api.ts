@@ -1,6 +1,51 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { getBookmakerManager } from './bookmakers/manager';
 import { RealTimeOdds } from './bookmakers/base';
+import { mlDetector, AdvancedArbitrageOpportunity } from '../arbitrage-engine/ml-detector';
+import { riskAssessor, RiskAssessment } from '../arbitrage-engine/risk-assessor';
+import { marketAnalyzer, MarketAnalysis } from '../arbitrage-engine/market-analyzer';
+import { performanceOptimizer } from '../arbitrage-engine/optimizer';
+
+// Advanced Metrics Interface
+interface AdvancedMetrics {
+  totalOpportunities: number;
+  averageConfidence: number;
+  averageRisk: number;
+  averageProfitMargin: number;
+  falsePositiveRate: number;
+}
+
+// ML Input Opportunity Interface
+interface MLInputOpportunity {
+  id: string;
+  sport: string;
+  event: string;
+  bet1: {
+    bookmaker: string;
+    odds: number;
+    outcome: string;
+  };
+  bet2: {
+    bookmaker: string;
+    odds: number;
+    outcome: string;
+  };
+  stakes: {
+    bet1: {
+      stake: number;
+      profit: number;
+    };
+    bet2: {
+      stake: number;
+      profit: number;
+    };
+  };
+  totalStake: number;
+  expectedProfit: number;
+  profitMargin: number;
+  timeToExpiry: string;
+  probability: number;
+}
 
 // The Odds API Response Types
 export interface OddsApiSport {
@@ -441,3 +486,170 @@ export const fetchArbitrageOpportunities = async (sports: string[] = ['soccer_ep
     throw error;
   }
 };
+
+// Advanced arbitrage functions
+export const fetchAdvancedArbitrageOpportunities = async (
+  sports: string[] = ['soccer_epl', 'basketball_nba'],
+  filters: {
+    minConfidence?: number;
+    maxRisk?: number;
+    minProfitMargin?: number;
+    maxFalsePositive?: number;
+  } = {}
+): Promise<{
+  opportunities: AdvancedArbitrageOpportunity[];
+  riskAssessments: Map<string, RiskAssessment>;
+  marketAnalyses: Map<string, MarketAnalysis>;
+  metrics: AdvancedMetrics;
+}> => {
+  try {
+    // Get base opportunities
+    const baseOpportunities = await fetchArbitrageOpportunities(sports);
+    
+    // Convert to format expected by ML detector
+    const mlInputOpportunities = convertToMLInput(baseOpportunities);
+    
+    // Apply ML detection
+    const mlOpportunities = await mlDetector.detectArbitrageOpportunities(mlInputOpportunities);
+    
+    // Apply filters
+    const filteredOpportunities = mlOpportunities.filter(opportunity => {
+      if (filters.minConfidence && opportunity.confidence_score < filters.minConfidence) return false;
+      if (filters.maxRisk && opportunity.risk_score > filters.maxRisk) return false;
+      if (filters.minProfitMargin && opportunity.profit_margin < filters.minProfitMargin) return false;
+      if (filters.maxFalsePositive && opportunity.false_positive_probability > filters.maxFalsePositive) return false;
+      return true;
+    });
+    
+    // Optimize processing
+    const optimizedOpportunities = await performanceOptimizer.optimizeArbitrageProcessing(
+      filteredOpportunities,
+      async (opp) => opp
+    );
+    
+    // Perform risk assessment
+    const riskAssessments = new Map();
+    for (const opportunity of optimizedOpportunities) {
+      const assessment = riskAssessor.assessRisk(opportunity);
+      riskAssessments.set(opportunity.id, assessment);
+    }
+    
+    // Perform market analysis
+    const marketAnalyses = new Map();
+    const opportunitiesByMarket = groupOpportunitiesByMarket(optimizedOpportunities);
+    
+    for (const [marketKey, opportunities] of opportunitiesByMarket) {
+      const [sport, marketType] = marketKey.split('_');
+      const analysis = marketAnalyzer.analyzeMarket(
+        sport,
+        marketType as 'mainline' | 'props' | 'futures' | 'live',
+        opportunities
+      );
+      
+      for (const opportunity of opportunities) {
+        marketAnalyses.set(opportunity.id, analysis);
+      }
+    }
+    
+    // Calculate metrics
+    const metrics = calculateAdvancedMetrics(optimizedOpportunities);
+    
+    return {
+      opportunities: optimizedOpportunities,
+      riskAssessments,
+      marketAnalyses,
+      metrics
+    };
+    
+  } catch (error) {
+    console.error('Error fetching advanced arbitrage opportunities:', error);
+    throw error;
+  }
+};
+
+// Helper functions for advanced arbitrage
+function convertToMLInput(baseOpportunities: ProcessedOddsData[]): MLInputOpportunity[] {
+  const mlInput: MLInputOpportunity[] = [];
+  
+  for (const data of baseOpportunities) {
+    for (const market of data.markets) {
+      for (const opportunity of market.arbitrageOpportunities) {
+        mlInput.push({
+          id: `${data.eventId}_${market.type}_${Date.now()}`,
+          sport: data.sport,
+          event: data.event,
+          bet1: {
+            bookmaker: opportunity.bookmaker1.name,
+            odds: opportunity.bookmaker1.odds,
+            outcome: opportunity.bookmaker1.outcome
+          },
+          bet2: {
+            bookmaker: opportunity.bookmaker2.name,
+            odds: opportunity.bookmaker2.odds,
+            outcome: opportunity.bookmaker2.outcome
+          },
+          stakes: {
+            bet1: {
+              stake: opportunity.bookmaker1.stake,
+              profit: opportunity.bookmaker1.stake * opportunity.bookmaker1.odds
+            },
+            bet2: {
+              stake: opportunity.bookmaker2.stake,
+              profit: opportunity.bookmaker2.stake * opportunity.bookmaker2.odds
+            }
+          },
+          totalStake: opportunity.totalStake,
+          expectedProfit: opportunity.expectedProfit,
+          profitMargin: opportunity.profitMargin,
+          timeToExpiry: '2h 30m', // Mock data
+          probability: opportunity.probability
+        });
+      }
+    }
+  }
+  
+  return mlInput;
+}
+
+function groupOpportunitiesByMarket(opportunities: AdvancedArbitrageOpportunity[]): Map<string, AdvancedArbitrageOpportunity[]> {
+  const grouped = new Map<string, AdvancedArbitrageOpportunity[]>();
+  
+      for (const opportunity of opportunities) {
+      const marketKey = `${opportunity.sport}_${opportunity.market_type || 'mainline'}`;
+      if (!grouped.has(marketKey)) {
+        grouped.set(marketKey, []);
+      }
+      const marketGroup = grouped.get(marketKey);
+      if (marketGroup) {
+        marketGroup.push(opportunity);
+      }
+    }
+  
+  return grouped;
+}
+
+function calculateAdvancedMetrics(opportunities: AdvancedArbitrageOpportunity[]): AdvancedMetrics {
+  if (opportunities.length === 0) {
+    return {
+      totalOpportunities: 0,
+      averageConfidence: 0,
+      averageRisk: 0,
+      averageProfitMargin: 0,
+      falsePositiveRate: 0
+    };
+  }
+
+  const totalOpportunities = opportunities.length;
+  const averageConfidence = opportunities.reduce((sum, opp) => sum + opp.confidence_score, 0) / totalOpportunities;
+  const averageRisk = opportunities.reduce((sum, opp) => sum + opp.risk_score, 0) / totalOpportunities;
+  const averageProfitMargin = opportunities.reduce((sum, opp) => sum + opp.profit_margin, 0) / totalOpportunities;
+  const falsePositiveRate = opportunities.reduce((sum, opp) => sum + opp.false_positive_probability, 0) / totalOpportunities;
+
+  return {
+    totalOpportunities,
+    averageConfidence,
+    averageRisk,
+    averageProfitMargin,
+    falsePositiveRate
+  };
+}

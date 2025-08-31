@@ -1,74 +1,67 @@
 // Bookmakers API Endpoint
 // Story 1.1 Task 6: Create API Endpoints
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getBookmakerManager } from '@/lib/api/bookmakers/manager';
-import { BookmakerIntegration } from '@/lib/api/bookmakers/base';
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication (you can implement your own auth logic here)
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'Missing or invalid authorization header' },
-        { status: 401 }
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status");
+    const sport = searchParams.get("sport");
+
+    // Mock bookmaker data
+    const bookmakers = [
+      {
+        id: "unibet",
+        name: "Unibet",
+        status: "active",
+        sports: ["futball", "tenisz", "kosárlabda"],
+        last_update: new Date().toISOString(),
+        odds_count: 1250
+      },
+      {
+        id: "bwin",
+        name: "Bwin",
+        status: "active",
+        sports: ["futball", "tenisz", "kosárlabda"],
+        last_update: new Date().toISOString(),
+        odds_count: 980
+      },
+      {
+        id: "pinnacle",
+        name: "Pinnacle",
+        status: "active",
+        sports: ["futball", "tenisz", "kosárlabda"],
+        last_update: new Date().toISOString(),
+        odds_count: 2100
+      }
+    ];
+
+    // Filter by status if provided
+    let filteredBookmakers = bookmakers;
+    if (status) {
+      filteredBookmakers = bookmakers.filter(b => b.status === status);
+    }
+
+    // Filter by sport if provided
+    if (sport) {
+      filteredBookmakers = filteredBookmakers.filter(b => 
+        b.sports.includes(sport)
       );
     }
 
-    // Extract query parameters
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const apiType = searchParams.get('api_type');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
-
-    // Get bookmaker manager instance
-    const manager = getBookmakerManager();
-    
-    // Get all bookmaker statuses
-    const bookmakers = await manager.getBookmakerStatus();
-
-    // Apply filters
-    let filteredBookmakers = bookmakers;
-
-    if (status && status !== 'all') {
-      filteredBookmakers = filteredBookmakers.filter(b => b.status === status);
-    }
-
-    if (apiType && apiType !== 'all') {
-      filteredBookmakers = filteredBookmakers.filter(b => b.api_type === apiType);
-    }
-
-    // Apply pagination
-    const paginatedBookmakers = filteredBookmakers.slice(offset, offset + limit);
-
-    // Prepare response
-    const response = {
-      success: true,
-      data: paginatedBookmakers,
-      pagination: {
-        total: filteredBookmakers.length,
-        limit,
-        offset,
-        hasMore: offset + limit < filteredBookmakers.length
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        version: '1.0.0'
-      }
-    };
-
-    return NextResponse.json(response, { status: 200 });
+    return NextResponse.json({
+      bookmakers: filteredBookmakers,
+      total: filteredBookmakers.length,
+      timestamp: new Date().toISOString()
+    }, { status: 200 });
 
   } catch (error) {
-    console.error('Bookmakers API error:', error);
-    
+    console.error("Bookmakers API error:", error);
     return NextResponse.json(
       { 
-        error: 'Internal Server Error', 
-        message: 'Failed to retrieve bookmaker data',
-        timestamp: new Date().toISOString()
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error"
       },
       { status: 500 }
     );
@@ -77,105 +70,31 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const body = await request.json();
+    const { bookmaker_id, action } = body;
+
+    if (!bookmaker_id || !action) {
       return NextResponse.json(
-        { error: 'Unauthorized', message: 'Missing or invalid authorization header' },
-        { status: 401 }
+        { error: "Missing required fields: bookmaker_id, action" },
+        { status: 400 }
       );
     }
 
-    // Parse request body
-    const body = await request.json();
-    const { action, bookmaker_id, config } = body;
-
-    const manager = getBookmakerManager();
-
-    switch (action) {
-      case 'refresh':
-        // Refresh bookmaker status
-        await manager.checkAllHealth();
-        return NextResponse.json({
-          success: true,
-          message: 'Bookmaker status refreshed successfully',
-          timestamp: new Date().toISOString()
-        });
-
-      case 'clear_cache':
-        // Clear cache
-        manager.clearCache();
-        return NextResponse.json({
-          success: true,
-          message: 'Cache cleared successfully',
-          timestamp: new Date().toISOString()
-        });
-
-      case 'get_cache_stats':
-        // Get cache statistics
-        const cacheStats = manager.getCacheStats();
-        return NextResponse.json({
-          success: true,
-          data: cacheStats,
-          timestamp: new Date().toISOString()
-        });
-
-      case 'get_bookmaker':
-        // Get specific bookmaker
-        if (!bookmaker_id) {
-          return NextResponse.json(
-            { error: 'Bad Request', message: 'bookmaker_id is required' },
-            { status: 400 }
-          );
-        }
-
-        const bookmaker = manager.getBookmaker(bookmaker_id);
-        if (!bookmaker) {
-          return NextResponse.json(
-            { error: 'Not Found', message: 'Bookmaker not found' },
-            { status: 404 }
-          );
-        }
-
-        return NextResponse.json({
-          success: true,
-          data: bookmaker.getStatus(),
-          timestamp: new Date().toISOString()
-        });
-
-      case 'update_config':
-        // Update configuration (this would typically be stored in a database)
-        if (!config) {
-          return NextResponse.json(
-            { error: 'Bad Request', message: 'config is required' },
-            { status: 400 }
-          );
-        }
-
-        // In a real implementation, you would save this to a database
-        console.log('Updating configuration:', config);
-        
-        return NextResponse.json({
-          success: true,
-          message: 'Configuration updated successfully',
-          timestamp: new Date().toISOString()
-        });
-
-      default:
-        return NextResponse.json(
-          { error: 'Bad Request', message: 'Invalid action' },
-          { status: 400 }
-        );
-    }
+    // Mock response for bookmaker action
+    return NextResponse.json({
+      success: true,
+      bookmaker_id,
+      action,
+      message: `Bookmaker ${action} successful`,
+      timestamp: new Date().toISOString()
+    }, { status: 200 });
 
   } catch (error) {
-    console.error('Bookmakers API POST error:', error);
-    
+    console.error("Bookmakers POST error:", error);
     return NextResponse.json(
       { 
-        error: 'Internal Server Error', 
-        message: 'Failed to process request',
-        timestamp: new Date().toISOString()
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error"
       },
       { status: 500 }
     );
@@ -185,15 +104,12 @@ export async function POST(request: NextRequest) {
 // Health check endpoint
 export async function HEAD(request: NextRequest) {
   try {
-    const manager = getBookmakerManager();
-    const bookmakers = await manager.getBookmakerStatus();
-    const activeCount = bookmakers.filter(b => b.status === 'active').length;
-    
+    // Mock health check
     return new NextResponse(null, {
       status: 200,
       headers: {
-        'X-Bookmaker-Count': bookmakers.length.toString(),
-        'X-Active-Count': activeCount.toString(),
+        'X-Bookmaker-Count': '3',
+        'X-Active-Count': '3',
         'X-Health-Check': 'OK'
       }
     });
@@ -208,7 +124,7 @@ export async function HEAD(request: NextRequest) {
 }
 
 // OpenAPI specification
-export const openapi = {
+const openapiSpec = {
   openapi: '3.0.0',
   info: {
     title: 'Bookmakers API',

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -30,12 +30,11 @@ import {
   Activity,
   BarChart3,
   Bell,
-  Calculator
+  Calculator,
+  Brain
 } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
-import { DebugAuth } from "@/components/DebugAuth";
-import { SupabaseTest } from "@/components/SupabaseTest";
-import { MCPTest } from "@/components/MCPTest";
+import { AdvancedArbitrageTest } from "@/components/AdvancedArbitrageTest";
 
 const TRACKED_SPORTS = ['soccer_epl', 'basketball_nba', 'tennis_atp', 'americanfootball_nfl'];
 
@@ -50,11 +49,24 @@ export default function Home() {
   const [minProfitMargin, setMinProfitMargin] = useState<string>("");
   const [maxStake, setMaxStake] = useState<string>("");
   const [oddsUpdateTrigger, setOddsUpdateTrigger] = useState(0);
+  const [isClient, setIsClient] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // API hooks
   const { isRealTime, isDemo } = useRealTimeStatus();
   const apiUsage = useApiUsage();
-  const arbitrageQuery = useArbitrageWithFallback(isRealTimeActive ? TRACKED_SPORTS : []);
+  
+  // Memoize the sports array to prevent unnecessary re-renders
+  const trackedSports = useMemo(() => 
+    isRealTimeActive ? TRACKED_SPORTS : ['demo'], 
+    [isRealTimeActive]
+  );
+  
+  const arbitrageQuery = useArbitrageWithFallback(trackedSports);
 
   // Real-time odds updates trigger
   useEffect(() => {
@@ -152,9 +164,6 @@ export default function Home() {
       </header>
 
       <div className="container mx-auto px-6 py-6">
-        <SupabaseTest />
-        <DebugAuth />
-        <MCPTest />
 
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -202,15 +211,19 @@ export default function Home() {
           <Card className="gradient-bg border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Kapcsolat</CardTitle>
-              {isRealTime ? (
-                <Wifi className="h-4 w-4 text-green-400" />
-              ) : (
-                <WifiOff className="h-4 w-4 text-red-400" />
+              {isClient && (
+                <>
+                  {isRealTime ? (
+                    <Wifi className="h-4 w-4 text-green-400" />
+                  ) : (
+                    <WifiOff className="h-4 w-4 text-red-400" />
+                  )}
+                </>
               )}
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${isRealTime ? 'text-green-400' : 'text-red-400'}`}>
-                {isRealTime ? 'ÉLŐ' : 'OFFLINE'}
+              <div className={`text-2xl font-bold ${isClient && isRealTime ? 'text-green-400' : 'text-red-400'}`}>
+                {isClient && isRealTime ? 'ÉLŐ' : 'OFFLINE'}
               </div>
               <p className="text-xs text-muted-foreground">
                 {apiUsage.data ? `${apiUsage.data.requestsUsed}/${apiUsage.data.requestsRemaining} API hívás` : 'API státusz'}
@@ -256,7 +269,7 @@ export default function Home() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Sport</label>
-                  <Select value={selectedSport} onValueChange={setSelectedSport}>
+                  <Select value={selectedSport} onValueChange={(value: string) => setSelectedSport(value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -272,7 +285,7 @@ export default function Home() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Profit Margin</label>
-                  <Select value={selectedProfitRange} onValueChange={setSelectedProfitRange}>
+                  <Select value={selectedProfitRange} onValueChange={(value: string) => setSelectedProfitRange(value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -288,7 +301,7 @@ export default function Home() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tét Méret</label>
-                  <Select value={selectedStakeRange} onValueChange={setSelectedStakeRange}>
+                  <Select value={selectedStakeRange} onValueChange={(value: string) => setSelectedStakeRange(value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -304,7 +317,7 @@ export default function Home() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Lejárat</label>
-                  <Select value={selectedTimeFilter} onValueChange={setSelectedTimeFilter}>
+                  <Select value={selectedTimeFilter} onValueChange={(value: string) => setSelectedTimeFilter(value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -391,6 +404,10 @@ export default function Home() {
               <Calculator className="h-4 w-4" />
               <span>Kalkulátor</span>
             </TabsTrigger>
+            <TabsTrigger value="advanced" className="flex items-center space-x-2">
+              <Brain className="h-4 w-4" />
+              <span>Advanced</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="arbitrage" className="space-y-6">
@@ -462,6 +479,10 @@ export default function Home() {
                 <ProfitCalculator />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="advanced" className="space-y-6">
+            <AdvancedArbitrageTest />
           </TabsContent>
         </Tabs>
       </div>

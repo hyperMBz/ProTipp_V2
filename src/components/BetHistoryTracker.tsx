@@ -289,7 +289,7 @@ export function BetHistoryTracker() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Státusz</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                              <Select value={statusFilter} onValueChange={(value: string) => setStatusFilter(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -305,7 +305,7 @@ export function BetHistoryTracker() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Sport</label>
-              <Select value={sportFilter} onValueChange={setSportFilter}>
+                              <Select value={sportFilter} onValueChange={(value: string) => setSportFilter(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -321,7 +321,7 @@ export function BetHistoryTracker() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Időszak</label>
-              <Select value={dateRange} onValueChange={setDateRange}>
+                              <Select value={dateRange} onValueChange={(value: string) => setDateRange(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

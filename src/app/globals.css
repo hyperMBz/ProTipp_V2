@@ -4,31 +4,58 @@
 
 @layer base {
   :root {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 98%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
     --primary: 262 83% 58%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 14%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 63%;
-    --accent: 262 83% 58%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 85% 97%;
-    --border: 0 0% 14%;
-    --input: 0 0% 14%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
     --ring: 262 83% 58%;
     --radius: 0.5rem;
-    --chart-1: 262 83% 58%;
-    --chart-2: 280 65% 45%;
-    --chart-3: 295 70% 35%;
-    --chart-4: 310 60% 40%;
-    --chart-5: 325 55% 50%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 0 0% 5%;
+    --foreground: 210 40% 98%;
+    --card: 0 0% 5%;
+    --card-foreground: 210 40% 98%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 262 83% 58%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
@@ -38,7 +65,302 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .gradient-bg {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card)/0.8) 100%);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: hsl(var(--card)/0.8);
+    border: 1px solid hsl(var(--border)/0.2);
+  }
+
+  .dashboard-grid {
+    background-image: 
+      radial-gradient(circle at 1px 1px, hsl(var(--border)/0.1) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+
+  .widget-shadow {
+    box-shadow: 
+      0 4px 6px -1px hsl(var(--foreground)/0.1),
+      0 2px 4px -1px hsl(var(--foreground)/0.06);
+  }
+
+  .widget-shadow-hover {
+    box-shadow: 
+      0 10px 15px -3px hsl(var(--foreground)/0.1),
+      0 4px 6px -2px hsl(var(--foreground)/0.05);
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-bounce-slow {
+    animation: bounce 2s infinite;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground));
+  }
+
+  /* Dashboard specific styles */
+  .dashboard-container {
+    @apply min-h-screen bg-background;
+  }
+
+  .dashboard-header {
+    @apply sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60;
+  }
+
+  .dashboard-content {
+    @apply flex-1 p-4;
+  }
+
+  /* Widget specific styles */
+  .widget-card {
+    @apply h-full transition-all duration-200 hover:shadow-lg border-primary/20 bg-gradient-to-br from-background to-background/50 backdrop-blur-sm;
+  }
+
+  .widget-card:hover {
+    @apply hover:shadow-lg hover:border-primary/30;
+  }
+
+  .widget-header {
+    @apply flex items-center justify-between pb-3;
+  }
+
+  .widget-content {
+    @apply pt-0 h-full;
+  }
+
+  .widget-controls {
+    @apply flex items-center space-x-1 transition-opacity duration-200;
+  }
+
+  .widget-controls-hidden {
+    @apply opacity-0 group-hover:opacity-100;
+  }
+
+  /* Grid layout specific styles */
+  .react-grid-item {
+    @apply transition-all duration-200;
+  }
+
+  .react-grid-item.react-grid-placeholder {
+    @apply bg-primary/20 border-2 border-dashed border-primary/40 rounded-lg;
+  }
+
+  .react-grid-item.react-draggable-dragging {
+    @apply shadow-2xl z-50;
+  }
+
+  .react-grid-item.react-resizable-resizing {
+    @apply shadow-2xl z-50;
+  }
+
+  .react-resizable-handle {
+    @apply absolute bottom-0 right-0 w-4 h-4 cursor-se-resize;
+  }
+
+  .react-resizable-handle::after {
+    content: '';
+    @apply absolute bottom-1 right-1 w-2 h-2 border-r-2 border-b-2 border-muted-foreground/30;
+  }
+
+  /* Filter specific styles */
+  .filter-panel {
+    @apply p-3 border border-border rounded-lg bg-card/50;
+  }
+
+  .filter-category {
+    @apply flex items-center justify-between w-full p-2 rounded-md hover:bg-muted/50 transition-colors;
+  }
+
+  .filter-category-expanded {
+    @apply pl-4 space-y-3 border-l border-border;
+  }
+
+  /* Status indicators */
+  .status-indicator {
+    @apply w-3 h-3 rounded-full;
+  }
+
+  .status-indicator.online {
+    @apply bg-green-400;
+  }
+
+  .status-indicator.offline {
+    @apply bg-red-400;
+  }
+
+  .status-indicator.warning {
+    @apply bg-yellow-400;
+  }
+
+  .status-indicator.loading {
+    @apply bg-blue-400 animate-pulse;
+  }
+
+  /* Progress bars */
+  .progress-bar {
+    @apply w-full bg-muted rounded-full h-2;
+  }
+
+  .progress-bar-fill {
+    @apply bg-primary h-2 rounded-full transition-all duration-300;
+  }
+
+  /* Notification styles */
+  .notification-item {
+    @apply flex items-center space-x-2 p-2 rounded-md;
+  }
+
+  .notification-item.success {
+    @apply bg-green-400/10 border border-green-400/20;
+  }
+
+  .notification-item.warning {
+    @apply bg-yellow-400/10 border border-yellow-400/20;
+  }
+
+  .notification-item.info {
+    @apply bg-blue-400/10 border border-blue-400/20;
+  }
+
+  .notification-item.error {
+    @apply bg-red-400/10 border border-red-400/20;
+  }
+
+  /* Responsive utilities */
+  .responsive-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+  }
+
+  .responsive-flex {
+    @apply flex flex-col md:flex-row gap-4;
+  }
+
+  /* Animation utilities */
+  .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Custom scrollbar for dashboard */
+  .dashboard-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  .dashboard-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dashboard-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .dashboard-scrollbar::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 4px;
+  }
+
+  .dashboard-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground));
+  }
+
+  /* Loading states */
+  .loading-skeleton {
+    @apply animate-pulse bg-muted rounded;
+  }
+
+  .loading-spinner {
+    @apply animate-spin rounded-full border-2 border-muted border-t-primary;
+  }
+
+  /* Focus states */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background;
+  }
+
+  /* Hover effects */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-1;
+  }
+
+  .hover-glow {
+    @apply transition-shadow duration-200 hover:shadow-lg hover:shadow-primary/20;
   }
 }
 

@@ -1,18 +1,50 @@
 # Cursor MCP Configuration for ProTipp V2
 
-# Linear MCP Server Configuration (Official)
+# Linear, Notion & Supabase MCP Server Configuration (Official)
 # Add this to Cursor Settings → MCP → Add new global MCP server:
 # {
 #   "mcpServers": {
+#     "supabase": {
+#       "command": "npx",
+#       "args": ["-y", "mcp-remote", "https://supabase.com/docs/guides/getting-started/mcp"]
+#     },
 #     "linear": {
 #       "command": "npx",
 #       "args": ["-y", "mcp-remote", "https://mcp.linear.app/sse"]
+#     },
+#     "notion": {
+#       "command": "npx",
+#       "args": ["-y", "mcp-remote", "https://mcp.notion.com/sse"]
+#     },
+#     "playwright": {
+#       "command": "npx",
+#       "args": ["-y", "mcp-remote", "https://github.com/microsoft/playwright-mcp"]
+#     },
+#     "semgrep": {
+#       "command": "npx",
+#       "args": ["-y", "mcp-remote", "https://github.com/semgrep/mcp"]
 #     }
 #   }
 # }
 
 # Project-specific rules
 rules:
+  - name: "Supabase MCP Integration"
+    description: "Use Supabase MCP server for database operations"
+    pattern: "**/*.{ts,tsx,js,jsx}"
+    message: |
+      When working on this project, you can use the Supabase MCP server to:
+      - Query betting data and arbitrage opportunities
+      - Insert and update user betting records
+      - Analyze user statistics and performance
+      - Optimize database queries and performance
+      
+      Available tools:
+      - query_database: Execute database queries
+      - insert_data: Insert new betting records
+      - update_data: Update existing records
+      - delete_data: Clean up old data
+
   - name: "Linear Integration"
     description: "Use Linear MCP server for issue management"
     pattern: "**/*.{ts,tsx,js,jsx}"
@@ -29,6 +61,53 @@ rules:
       - list_issues: List issues with filtering
       - update_issue: Update existing issues
 
+  - name: "Notion Integration"
+    description: "Use Notion MCP server for project documentation"
+    pattern: "**/*.{ts,tsx,js,jsx}"
+    message: |
+      When working on this project, you can use the Notion MCP server to:
+      - Create and update project documentation
+      - Manage project structure and architecture docs
+      - Track development progress and milestones
+      - Maintain technical documentation
+      
+      Available tools:
+      - create_page: Create new Notion pages
+      - create_database: Create new Notion databases
+      - query_database: Query existing databases
+      - update_page: Update existing pages
+      - search: Search in Notion workspace
+      - get_page: Get page details
+
+  - name: "Playwright Integration"
+    description: "Use Playwright MCP server for UI testing"
+    pattern: "**/*.{ts,tsx,js,jsx}"
+    message: |
+      When working on this project, you can use the Playwright MCP server to:
+      - Run automated UI tests for betting flows
+      - Test cross-browser compatibility
+      - Validate design consistency
+      - Analyze performance metrics
+      
+      Available tools:
+      - run_test: Execute UI tests
+      - generate_test: Create test scripts
+      - analyze_performance: Measure page performance
+
+  - name: "Semgrep Integration"
+    description: "Use Semgrep MCP server for security scanning"
+    pattern: "**/*.{ts,tsx,js,jsx}"
+    message: |
+      When working on this project, you can use the Semgrep MCP server to:
+      - Scan code for security vulnerabilities
+      - Improve code quality and best practices
+      - Generate custom security rules
+      - Ensure TypeScript security standards
+      
+      Available tools:
+      - scan_code: Perform security analysis
+      - generate_rules: Create custom rules
+
   - name: "Issue Creation"
     description: "Automatically create Linear issues for significant changes"
     pattern: "**/*.{ts,tsx,js,jsx}"
@@ -39,7 +118,53 @@ rules:
       - Include relevant labels like "bug", "feature", "ui", "analytics"
       - Set appropriate priority levels
 
+  - name: "Documentation Updates"
+    description: "Automatically update Notion documentation for project changes"
+    pattern: "**/*.{ts,tsx,js,jsx}"
+    message: |
+      When making significant project changes, consider updating Notion documentation:
+      - Use create_page tool for new feature documentation
+      - Use update_page tool for architecture updates
+      - Use create_database tool for new data structures
+      - Document API changes and new integrations
+
+  - name: "Database Operations"
+    description: "Use Supabase MCP for database queries and analysis"
+    pattern: "**/*.{ts,tsx,js,jsx}"
+    message: |
+      When working with betting data or user statistics:
+      - Use query_database tool for data analysis
+      - Use insert_data tool for test data creation
+      - Use update_data tool for record updates
+      - Optimize queries for performance
+
+  - name: "UI Testing"
+    description: "Use Playwright MCP for automated UI testing"
+    pattern: "**/*.{ts,tsx,js,jsx}"
+    message: |
+      When implementing new UI features or components:
+      - Use run_test tool for automated testing
+      - Use generate_test tool for new test scripts
+      - Test betting flows across different browsers
+      - Validate responsive design and accessibility
+
+  - name: "Security Scanning"
+    description: "Use Semgrep MCP for code security analysis"
+    pattern: "**/*.{ts,tsx,js,jsx}"
+    message: |
+      When writing new code or updating existing code:
+      - Use scan_code tool for security analysis
+      - Use generate_rules tool for project-specific rules
+      - Ensure TypeScript best practices
+      - Check for common security vulnerabilities
+
 # Environment variables required
 env:
+  SUPABASE_URL: "Your Supabase project URL"
+  SUPABASE_ANON_KEY: "Your Supabase anon key"
+  SUPABASE_SERVICE_ROLE_KEY: "Your Supabase service role key"
   LINEAR_API_KEY: "Your Linear API key"
   LINEAR_TEAM_ID: "Your Linear team ID"
+  NOTION_TOKEN: "Your Notion integration token"
+  PLAYWRIGHT_BROWSERS_PATH: "./node_modules/.cache/playwright"
+  SEMGREP_APP_TOKEN: "Your Semgrep app token"

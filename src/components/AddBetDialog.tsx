@@ -172,7 +172,7 @@ export function AddBetDialog({ children, open, onOpenChange }: AddBetDialogProps
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="sport">Sport *</Label>
-              <Select value={formData.sport} onValueChange={(value) => updateFormField('sport', value)}>
+                              <Select value={formData.sport} onValueChange={(value: string) => updateFormField('sport', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Válassz sportot" />
                 </SelectTrigger>
@@ -188,7 +188,7 @@ export function AddBetDialog({ children, open, onOpenChange }: AddBetDialogProps
 
             <div className="space-y-2">
               <Label htmlFor="bookmaker">Fogadóiroda *</Label>
-              <Select value={formData.bookmaker} onValueChange={(value) => updateFormField('bookmaker', value)}>
+                              <Select value={formData.bookmaker} onValueChange={(value: string) => updateFormField('bookmaker', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Válassz fogadóirodát" />
                 </SelectTrigger>

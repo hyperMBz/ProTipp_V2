@@ -156,7 +156,7 @@ export function EVBettingFinder() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">EV Típus</label>
-              <Select value={evFilter} onValueChange={setEvFilter}>
+                              <Select value={evFilter} onValueChange={(value: string) => setEvFilter(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -170,7 +170,7 @@ export function EVBettingFinder() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Min. EV %</label>
-              <Select value={minEVPercent} onValueChange={setMinEVPercent}>
+                              <Select value={minEVPercent} onValueChange={(value: string) => setMinEVPercent(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -186,7 +186,7 @@ export function EVBettingFinder() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Sport</label>
-              <Select value={selectedSport} onValueChange={setSelectedSport}>
+                              <Select value={selectedSport} onValueChange={(value: string) => setSelectedSport(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

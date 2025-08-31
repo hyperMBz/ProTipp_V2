@@ -21,8 +21,7 @@
 #   test     (testing changes)
 #   docs     (documentation changes)
 
-# Linear Story Reference:
-#   CUR-XX   (Linear story ID, e.g., CUR-16, CUR-17)
+
 
 # Examples:
 #   feat(api): implement bookmaker API integration CUR-16
@@ -36,6 +35,6 @@
 #   - Any breaking changes
 
 # Footer:
-#   - Linear story links
+
 #   - Breaking changes
 #   - Closes issues

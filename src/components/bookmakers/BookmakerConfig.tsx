@@ -283,7 +283,7 @@ export default function BookmakerConfig() {
                       <Label htmlFor="health-interval">Health Check Interval</Label>
                       <Select
                         value={formatInterval(config.healthCheckInterval)}
-                        onValueChange={(value) => handleConfigChange('healthCheckInterval', parseInterval(value))}
+                        onValueChange={(value: string) => handleConfigChange('healthCheckInterval', parseInterval(value))}
                       >
                         <SelectTrigger>
                           <SelectValue />

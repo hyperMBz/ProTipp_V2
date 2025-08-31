@@ -12,9 +12,7 @@ Röviden: mit változtattál és miért?
 - [ ] CI zöld (build-and-test)
 - [ ] Netlify Preview ellenőrizve (ha van link)
 
-## Kapcsolódó Linear Story
-**Story ID**: `CUR-XX` (pl. CUR-16, CUR-17)
-**Story Link**: https://linear.app/cursor-z/issue/CUR-XX/story-title
+
 
 ### Story Progress Update
 - [ ] Acceptance Criteria 1: ✅/🔄/❌
@@ -30,5 +28,4 @@ Röviden: mit változtattál és miért?
 
 ## Képernyőkép/Video (ha UI változás)
 
-## Automatikus Linear Update
-Ez a PR automatikusan frissíti a Linear story státuszát merge után.
+

@@ -2,7 +2,7 @@
 // Story 1.1 Task 4: Create React Hooks for Bookmaker Data
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getBookmakerManager, BookmakerManagerConfig, AggregatedOdds } from '../api/bookmakers/manager';
 import { RealTimeOdds, BookmakerEvent, BookmakerIntegration } from '../api/bookmakers/base';
 import { BookmakerAPI } from '../api/bookmakers/base';
@@ -86,10 +86,15 @@ export function useBookmakerOdds(sport?: string, event?: string, useCache: boole
   const [manager] = useState(() => getBookmakerManager());
   const [odds, setOdds] = useState<RealTimeOdds[]>([]);
 
+  // Memoize inputs to prevent unnecessary re-renders
+  const memoizedSport = useMemo(() => sport, [sport]);
+  const memoizedEvent = useMemo(() => event, [event]);
+  const memoizedUseCache = useMemo(() => useCache, [useCache]);
+
   const oddsQuery = useQuery({
-    queryKey: ['bookmakers', 'odds', sport, event, useCache],
-    queryFn: () => manager.getOdds(sport, event, useCache),
-    enabled: !!sport || !!event,
+    queryKey: ['bookmakers', 'odds', memoizedSport, memoizedEvent, memoizedUseCache],
+    queryFn: () => manager.getOdds(memoizedSport, memoizedEvent, memoizedUseCache),
+    enabled: !!memoizedSport || !!memoizedEvent,
     refetchInterval: 30000, // 30 seconds
     staleTime: 5000, // 5 seconds
   });
@@ -118,11 +123,14 @@ export function useBookmakerOdds(sport?: string, event?: string, useCache: boole
 
 export function useBookmakerEvents(sport?: string) {
   const [manager] = useState(() => getBookmakerManager());
+  
+  // Memoize sport to prevent unnecessary re-renders
+  const memoizedSport = useMemo(() => sport, [sport]);
 
   return useQuery({
-    queryKey: ['bookmakers', 'events', sport],
-    queryFn: () => manager.getEvents(sport),
-    enabled: !!sport,
+    queryKey: ['bookmakers', 'events', memoizedSport],
+    queryFn: () => manager.getEvents(memoizedSport),
+    enabled: !!memoizedSport,
     refetchInterval: 60000, // 1 minute
     staleTime: 30000, // 30 seconds
   });

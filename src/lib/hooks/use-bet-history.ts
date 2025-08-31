@@ -2,10 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '@/lib/providers/auth-provider';
 import { getSupabaseClient } from '@/lib/supabase-singleton';
 import type { Database } from '@/lib/supabase/client';
+import { BetHistoryItem } from '@/lib/mock-data';
 
 type BetHistory = Database['public']['Tables']['bet_history']['Row'];
 type BetHistoryInsert = Database['public']['Tables']['bet_history']['Insert'];
 type BetHistoryUpdate = Database['public']['Tables']['bet_history']['Update'];
+type UnifiedBetHistory = BetHistoryItem | BetHistory;
 
 export const BET_HISTORY_QUERY_KEYS = {
   all: ['bet-history'] as const,
@@ -27,7 +29,7 @@ export function useBetHistory(filters?: {
 
   return useQuery({
     queryKey: BET_HISTORY_QUERY_KEYS.userFiltered(user?.id || '', filters || {}),
-    queryFn: async (): Promise<BetHistory[]> => {
+    queryFn: async (): Promise<UnifiedBetHistory[]> => {
       if (!user?.id) {
         throw new Error('User not authenticated');
       }
@@ -213,7 +215,7 @@ export function useBetHistoryWithFallback(filters?: {
   // Import mock data dynamically to avoid bundle issues
   const mockDataQuery = useQuery({
     queryKey: ['mock-bet-history', filters],
-    queryFn: async () => {
+    queryFn: async (): Promise<UnifiedBetHistory[]> => {
       const { mockBetHistory } = await import('@/lib/mock-data');
 
       // Apply mock filters
@@ -240,6 +242,13 @@ export function useBetHistoryWithFallback(filters?: {
       ...realDataQuery,
       isAuthenticated: true,
       isUsingMockData: false,
+    } as {
+      data: UnifiedBetHistory[] | undefined;
+      isLoading: boolean;
+      isError: boolean;
+      error: Error | null;
+      isAuthenticated: boolean;
+      isUsingMockData: boolean;
     };
   }
 
@@ -247,5 +256,12 @@ export function useBetHistoryWithFallback(filters?: {
     ...mockDataQuery,
     isAuthenticated: false,
     isUsingMockData: true,
+  } as {
+    data: UnifiedBetHistory[] | undefined;
+    isLoading: boolean;
+    isError: boolean;
+    error: Error | null;
+    isAuthenticated: boolean;
+    isUsingMockData: boolean;
   };
 }

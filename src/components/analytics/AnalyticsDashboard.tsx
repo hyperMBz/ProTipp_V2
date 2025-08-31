@@ -17,9 +17,16 @@ import {
   Calendar,
   PieChart,
   LineChart,
-  Activity
+  Activity,
+  Download,
+  RefreshCw,
+  Settings,
+  Filter,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { formatNumber } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { ProfitTimelineChart } from "./ProfitTimelineChart";
 import { SportPerformanceChart } from "./SportPerformanceChart";
 import { ROITrendsChart } from "./ROITrendsChart";
@@ -27,6 +34,10 @@ import { BankrollGrowthChart } from "./BankrollGrowthChart";
 import { PerformanceMetrics } from "./PerformanceMetrics";
 import { WinRateHeatmap } from "./WinRateHeatmap";
 import { getBetPlacedDate } from '@/lib/types/bet-history';
+
+// Import new analytics components and hooks
+import { AdvancedAnalyticsDashboard } from "./AdvancedAnalyticsDashboard";
+import { useAnalyticsExport } from "@/lib/hooks/use-analytics";
 
 interface AnalyticsDashboardProps {
   className?: string;
@@ -36,6 +47,12 @@ export function AnalyticsDashboard({ className }: AnalyticsDashboardProps) {
   const user = useUser();
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
   const [selectedSport, setSelectedSport] = useState<string>('all');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showCharts, setShowCharts] = useState(true);
+  const [showTables, setShowTables] = useState(true);
+  
+  // Export functionality
+  const exportMutation = useAnalyticsExport();
 
   // Get bet history and stats
   const betHistoryQuery = useBetHistoryWithFallback();
@@ -92,8 +109,16 @@ export function AnalyticsDashboard({ className }: AnalyticsDashboardProps) {
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Show Advanced Analytics Dashboard if enabled */}
+      {showAdvanced && (
+        <AdvancedAnalyticsDashboard />
+      )}
+      
+      {/* Show Basic Analytics Dashboard if not advanced */}
+      {!showAdvanced && (
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
             Analytics Dashboard
@@ -103,8 +128,8 @@ export function AnalyticsDashboard({ className }: AnalyticsDashboardProps) {
           </p>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <Select value={selectedSport} onValueChange={setSelectedSport}>
+        <div className="flex items-center gap-2">
+          <Select value={selectedSport} onValueChange={(value: string) => setSelectedSport(value)}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Sport" />
             </SelectTrigger>
@@ -116,7 +141,7 @@ export function AnalyticsDashboard({ className }: AnalyticsDashboardProps) {
             </SelectContent>
           </Select>
 
-          <Select value={timeframe} onValueChange={(value: '7d' | '30d' | '90d' | '1y' | 'all') => setTimeframe(value)}>
+          <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as '7d' | '30d' | '90d' | '1y' | 'all')}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -128,6 +153,31 @@ export function AnalyticsDashboard({ className }: AnalyticsDashboardProps) {
               <SelectItem value="all">Minden</SelectItem>
             </SelectContent>
           </Select>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCharts(!showCharts)}
+          >
+            {showCharts ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportMutation.mutate({ format: 'csv', filename: 'analytics-report' })}
+            disabled={exportMutation.isPending}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant={showAdvanced ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+          >
+            {showAdvanced ? "Egyszerű" : "Haladó"}
+          </Button>
         </div>
       </div>
 
@@ -294,6 +344,8 @@ export function AnalyticsDashboard({ className }: AnalyticsDashboardProps) {
             </div>
           </CardContent>
         </Card>
+      )}
+        </>
       )}
     </div>
   );
