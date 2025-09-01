@@ -2,6 +2,8 @@
  * Touch eseménykezelő rendszer mobil optimalizált interakciókhoz
  */
 
+import { useState, useEffect, useCallback } from 'react';
+
 export interface TouchConfig {
   minSwipeDistance?: number;
   maxSwipeTime?: number;
@@ -39,12 +41,12 @@ export class TouchManager {
   /**
    * Touch start esemény kezelése
    */
-  handleTouchStart = (e: TouchEvent | React.TouchEvent, onEvent?: (event: TouchEvent) => void) => {
+  handleTouchStart = (e: TouchEvent | React.TouchEvent<Element>, onEvent?: (event: TouchEvent) => void) => {
     if (this.config.preventDefault) {
-      e.preventDefault?.();
+      (e as any).preventDefault?.();
     }
 
-    const touch = 'touches' in e ? e.touches[0] : e;
+    const touch = 'touches' in e ? (e as any).touches[0] : e;
     this.touchStart = {
       x: touch.clientX,
       y: touch.clientY,
@@ -65,10 +67,10 @@ export class TouchManager {
   /**
    * Touch move esemény kezelése
    */
-  handleTouchMove = (e: TouchEvent | React.TouchEvent, onEvent?: (event: TouchEvent) => void) => {
+  handleTouchMove = (e: TouchEvent | React.TouchEvent<Element>, onEvent?: (event: TouchEvent) => void) => {
     if (!this.touchStart) return;
 
-    const touch = 'touches' in e ? e.touches[0] : e;
+    const touch = 'touches' in e ? (e as any).touches[0] : e;
     const currentX = touch.clientX;
     const currentY = touch.clientY;
 
@@ -86,10 +88,10 @@ export class TouchManager {
   /**
    * Touch end esemény kezelése
    */
-  handleTouchEnd = (e: TouchEvent | React.TouchEvent, onEvent?: (event: TouchEvent) => void) => {
+  handleTouchEnd = (e: TouchEvent | React.TouchEvent<Element>, onEvent?: (event: TouchEvent) => void) => {
     if (!this.touchStart) return;
 
-    const touch = 'changedTouches' in e ? e.changedTouches[0] : e;
+    const touch = 'changedTouches' in e ? (e as any).changedTouches[0] : e;
     this.touchEnd = {
       x: touch.clientX,
       y: touch.clientY,
@@ -158,9 +160,9 @@ export class TouchManager {
    * Pinch zoom detektálás (két ujjal)
    */
   handlePinch = (e: TouchEvent, onEvent?: (event: TouchEvent) => void) => {
-    if ('touches' in e && e.touches.length === 2) {
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
+    if ('touches' in e && (e as any).touches.length === 2) {
+      const touch1 = (e as any).touches[0];
+      const touch2 = (e as any).touches[1];
 
       const distance = Math.sqrt(
         Math.pow(touch2.clientX - touch1.clientX, 2) + Math.pow(touch2.clientY - touch1.clientY, 2)
@@ -199,9 +201,9 @@ export class TouchManager {
  * Hook a touch események kezeléséhez
  */
 export function useTouchManager(config?: TouchConfig) {
-  const [touchManager] = React.useState(() => new TouchManager(config));
+  const [touchManager] = useState(() => new TouchManager(config));
 
-  React.useEffect(() => {
+  useEffect(() => {
     return () => touchManager.destroy();
   }, [touchManager]);
 
@@ -217,7 +219,7 @@ export function useSwipeGesture(
 ) {
   const touchManager = useTouchManager(config);
 
-  const handleTouchEvent = React.useCallback(
+  const handleTouchEvent = useCallback(
     (event: TouchEvent) => {
       if (event.type === 'swipe' && event.direction) {
         onSwipe?.(event.direction);
@@ -238,7 +240,7 @@ export function useTapGesture(
 ) {
   const touchManager = useTouchManager(config);
 
-  const handleTouchEvent = React.useCallback(
+  const handleTouchEvent = useCallback(
     (event: TouchEvent) => {
       if (event.type === 'tap' && event.position) {
         onTap?.(event.position);
@@ -259,7 +261,7 @@ export function useLongPressGesture(
 ) {
   const touchManager = useTouchManager(config);
 
-  const handleTouchEvent = React.useCallback(
+  const handleTouchEvent = useCallback(
     (event: TouchEvent) => {
       if (event.type === 'longPress' && event.position) {
         onLongPress?.(event.position);

@@ -60,7 +60,7 @@ describe('RiskAssessor', () => {
         updated_at: new Date()
       };
 
-      const kellyResult = (riskAssessor as unknown as Record<string, unknown>).calculateKellyCriterion(mockOpportunity);
+      const kellyResult = (riskAssessor as any).calculateKellyCriterion(mockOpportunity);
       
       expect(kellyResult).toBeDefined();
       // Kelly can be negative for arbitrage opportunities, so we check the structure
@@ -98,7 +98,7 @@ describe('RiskAssessor', () => {
         updated_at: new Date()
       };
 
-      const kellyResult = (riskAssessor as unknown as Record<string, unknown>).calculateKellyCriterion(mockOpportunity);
+      const kellyResult = (riskAssessor as any).calculateKellyCriterion(mockOpportunity);
       
       // For very low odds, Kelly might still be positive due to normalization
       expect(typeof (kellyResult as any).is_kelly_positive).toBe('boolean');
@@ -137,7 +137,7 @@ describe('RiskAssessor', () => {
         updated_at: new Date()
       };
 
-      const portfolioRisk = (riskAssessor as unknown as Record<string, unknown>).analyzePortfolioRisk(mockOpportunity);
+      const portfolioRisk = (riskAssessor as any).analyzePortfolioRisk(mockOpportunity);
       
       expect(portfolioRisk).toBeDefined();
       expect((portfolioRisk as any).total_exposure).toBe(50000);
@@ -176,7 +176,7 @@ describe('RiskAssessor', () => {
         updated_at: new Date()
       };
 
-      const marketRisk = (riskAssessor as unknown as Record<string, unknown>).analyzeMarketRisk(mockOpportunity);
+      const marketRisk = (riskAssessor as any).analyzeMarketRisk(mockOpportunity);
       
       expect(marketRisk).toBeDefined();
       expect(marketRisk.market_volatility).toBeGreaterThan(0);
@@ -216,7 +216,7 @@ describe('RiskAssessor', () => {
         updated_at: new Date()
       };
 
-      const bookmakerRisk = (riskAssessor as unknown as Record<string, unknown>).analyzeBookmakerRisk(mockOpportunity);
+      const bookmakerRisk = (riskAssessor as any).analyzeBookmakerRisk(mockOpportunity);
       
       expect(bookmakerRisk).toBeDefined();
       expect(bookmakerRisk.bookmaker_credit_risk).toBeGreaterThan(0);
@@ -272,22 +272,22 @@ describe('RiskAssessor', () => {
 
   describe('Risk Level Determination', () => {
     it('should determine low risk level', () => {
-      const riskLevel = (riskAssessor as unknown as Record<string, unknown>).determineRiskLevel(0.2);
+      const riskLevel = (riskAssessor as any).determineRiskLevel(0.2);
       expect(riskLevel).toBe('low');
     });
 
     it('should determine medium risk level', () => {
-      const riskLevel = (riskAssessor as unknown as Record<string, unknown>).determineRiskLevel(0.5);
+      const riskLevel = (riskAssessor as any).determineRiskLevel(0.5);
       expect(riskLevel).toBe('medium');
     });
 
     it('should determine high risk level', () => {
-      const riskLevel = (riskAssessor as unknown as Record<string, unknown>).determineRiskLevel(0.7);
+      const riskLevel = (riskAssessor as any).determineRiskLevel(0.7);
       expect(riskLevel).toBe('high');
     });
 
     it('should determine extreme risk level', () => {
-      const riskLevel = (riskAssessor as unknown as Record<string, unknown>).determineRiskLevel(0.9);
+      const riskLevel = (riskAssessor as any).determineRiskLevel(0.9);
       expect(riskLevel).toBe('extreme');
     });
   });

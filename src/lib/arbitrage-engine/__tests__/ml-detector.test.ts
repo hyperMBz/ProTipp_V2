@@ -45,7 +45,7 @@ describe('MLArbitrageDetector', () => {
         probability: 0.5
       };
 
-      const features = (mlDetector as unknown as Record<string, unknown>).extractFeatures(mockOpportunity);
+      const features = (mlDetector as any).extractFeatures(mockOpportunity);
       
       expect(features).toBeDefined();
       expect((features as any).profit_margin).toBe(5.0);
@@ -61,7 +61,7 @@ describe('MLArbitrageDetector', () => {
         sport: 'soccer'
       };
 
-      const marketType = (mlDetector as unknown as Record<string, unknown>).determineMarketType(mockOpportunity);
+      const marketType = (mlDetector as any).determineMarketType(mockOpportunity);
       expect(marketType).toBe('live'); // Event contains 'vs' which might trigger live detection
     });
 
@@ -71,7 +71,7 @@ describe('MLArbitrageDetector', () => {
         sport: 'soccer'
       };
 
-      const marketType = (mlDetector as unknown as Record<string, unknown>).determineMarketType(mockOpportunity);
+      const marketType = (mlDetector as any).determineMarketType(mockOpportunity);
       expect(marketType).toBe('props');
     });
 
@@ -81,7 +81,7 @@ describe('MLArbitrageDetector', () => {
         sport: 'soccer'
       };
 
-      const marketType = (mlDetector as unknown as Record<string, unknown>).determineMarketType(mockOpportunity);
+      const marketType = (mlDetector as any).determineMarketType(mockOpportunity);
       expect(marketType).toBe('futures');
     });
   });
@@ -105,7 +105,7 @@ describe('MLArbitrageDetector', () => {
         probability: 0.5
       };
 
-      const bets = (mlDetector as unknown as Record<string, unknown>).createArbitrageBets(mockOpportunity);
+      const bets = (mlDetector as any).createArbitrageBets(mockOpportunity);
       
       expect(bets).toHaveLength(2);
       expect((bets as any)[0].bookmaker_id).toBe('Bet365');
@@ -118,25 +118,25 @@ describe('MLArbitrageDetector', () => {
   describe('Time Parsing', () => {
     it('should parse time to expiry correctly', () => {
       const timeString = '2h 30m';
-      const hours = (mlDetector as unknown as Record<string, unknown>).parseTimeToExpiry(timeString);
+      const hours = (mlDetector as any).parseTimeToExpiry(timeString);
       expect(hours).toBe(2.5);
     });
 
     it('should handle hours only', () => {
       const timeString = '3h';
-      const hours = (mlDetector as unknown as Record<string, unknown>).parseTimeToExpiry(timeString);
+      const hours = (mlDetector as any).parseTimeToExpiry(timeString);
       expect(hours).toBe(3);
     });
 
     it('should handle minutes only', () => {
       const timeString = '45m';
-      const hours = (mlDetector as unknown as Record<string, unknown>).parseTimeToExpiry(timeString);
+      const hours = (mlDetector as any).parseTimeToExpiry(timeString);
       expect(hours).toBe(0.75);
     });
 
     it('should handle invalid format', () => {
       const timeString = 'invalid';
-      const hours = (mlDetector as unknown as Record<string, unknown>).parseTimeToExpiry(timeString);
+      const hours = (mlDetector as any).parseTimeToExpiry(timeString);
       expect(hours).toBe(0);
     });
   });

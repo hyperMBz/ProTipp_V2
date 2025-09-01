@@ -2,6 +2,8 @@
  * PWA Manager - Progresszív Webalkalmazás kezelő
  */
 
+import { useState, useEffect } from 'react';
+
 export interface PWAInstallPrompt {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
@@ -88,7 +90,7 @@ export class PWAManager {
   private setupInstallPrompt() {
     window.addEventListener('beforeinstallprompt', (event) => {
       event.preventDefault();
-      this.installPrompt = event as PWAInstallPrompt;
+      this.installPrompt = event as unknown as PWAInstallPrompt;
       console.log('[PWA] Install prompt elérhető');
       
       // Custom event küldése
@@ -346,10 +348,10 @@ export class PWAManager {
  * Hook a PWA manager használatához
  */
 export function usePWAManager(config: PWAConfig) {
-  const [pwaManager] = React.useState(() => new PWAManager(config));
-  const [status, setStatus] = React.useState(pwaManager.getStatus());
+  const [pwaManager] = useState(() => new PWAManager(config));
+  const [status, setStatus] = useState(pwaManager.getStatus());
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Státus frissítése
     const updateStatus = () => setStatus(pwaManager.getStatus());
     
