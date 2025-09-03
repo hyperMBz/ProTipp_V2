@@ -2,12 +2,14 @@
 // Story 1.1 Task 6: Create API Endpoints
 
 import { NextRequest, NextResponse } from "next/server";
+import { withUserAuth, apiError, apiSuccess, getQueryParams } from '@/lib/auth/api-middleware';
 
-export async function GET(request: NextRequest) {
+// GET /api/v1/bookmakers - Get bookmakers list (Protected)
+export const GET = withUserAuth(async (request: NextRequest, user) => {
   try {
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status");
-    const sport = searchParams.get("sport");
+    const query = getQueryParams(request);
+    const status = query.get("status");
+    const sport = query.get("sport");
 
     // Mock bookmaker data
     const bookmakers = [
@@ -50,56 +52,45 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
+    return apiSuccess({
       bookmakers: filteredBookmakers,
       total: filteredBookmakers.length,
       timestamp: new Date().toISOString()
-    }, { status: 200 });
+    });
 
   } catch (error) {
     console.error("Bookmakers API error:", error);
-    return NextResponse.json(
-      { 
-        error: "Internal server error",
-        message: error instanceof Error ? error.message : "Unknown error"
-      },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500, {
+      message: error instanceof Error ? error.message : "Unknown error"
+    });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+// POST /api/v1/bookmakers - Bookmaker actions (Protected)
+export const POST = withUserAuth(async (request: NextRequest, user) => {
   try {
     const body = await request.json();
     const { bookmaker_id, action } = body;
 
     if (!bookmaker_id || !action) {
-      return NextResponse.json(
-        { error: "Missing required fields: bookmaker_id, action" },
-        { status: 400 }
-      );
+      return apiError("Missing required fields: bookmaker_id, action", 400);
     }
 
     // Mock response for bookmaker action
-    return NextResponse.json({
-      success: true,
+    return apiSuccess({
       bookmaker_id,
       action,
       message: `Bookmaker ${action} successful`,
       timestamp: new Date().toISOString()
-    }, { status: 200 });
+    });
 
   } catch (error) {
     console.error("Bookmakers POST error:", error);
-    return NextResponse.json(
-      { 
-        error: "Internal server error",
-        message: error instanceof Error ? error.message : "Unknown error"
-      },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500, {
+      message: error instanceof Error ? error.message : "Unknown error"
+    });
   }
-}
+});
 
 // Health check endpoint
 export async function HEAD(request: NextRequest) {

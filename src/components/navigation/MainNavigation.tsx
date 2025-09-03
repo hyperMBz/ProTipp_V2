@@ -19,7 +19,11 @@ import {
   Target,
   Calendar,
   Users,
-  Award
+  Award,
+  Info,
+  Mail,
+  FileText,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -71,6 +75,36 @@ const navigationItems: NavigationItem[] = [
   }
 ];
 
+const publicNavigationItems: NavigationItem[] = [
+  {
+    href: "/about",
+    label: "Rólunk",
+    icon: <Info className="h-4 w-4" />,
+    description: "Cégről és csapatról"
+  },
+  {
+    href: "/contact",
+    label: "Kapcsolat",
+    icon: <Mail className="h-4 w-4" />,
+    description: "Vegye fel velünk a kapcsolatot"
+  }
+];
+
+const legalNavigationItems: NavigationItem[] = [
+  {
+    href: "/terms",
+    label: "ÁSZF",
+    icon: <FileText className="h-4 w-4" />,
+    description: "Általános Szerződési Feltételek"
+  },
+  {
+    href: "/privacy",
+    label: "Adatvédelem",
+    icon: <Shield className="h-4 w-4" />,
+    description: "Adatvédelmi Tájékoztató"
+  }
+];
+
 interface MainNavigationProps {
   className?: string;
   showMobileMenu?: boolean;
@@ -103,40 +137,112 @@ export function MainNavigation({
         </div>
 
         {/* Navigation Items */}
-        <div className="flex-1 p-4 space-y-2">
-          {navigationItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant={isActive ? "default" : "ghost"}
-                  className={cn(
-                    "w-full justify-start h-12",
-                    isActive && "bg-primary text-primary-foreground"
-                  )}
-                >
-                  <div className="flex items-center space-x-3">
-                    {item.icon}
-                    <div className="flex-1 text-left">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">{item.label}</span>
-                        {item.badge && (
-                          <Badge variant="secondary" className="text-xs">
-                            {item.badge}
-                          </Badge>
+        <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+          {/* Main Navigation */}
+          <div className="space-y-2">
+            {navigationItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link key={item.href} href={item.href}>
+                  <Button
+                    variant={isActive ? "default" : "ghost"}
+                    className={cn(
+                      "w-full justify-start h-12",
+                      isActive && "bg-primary text-primary-foreground"
+                    )}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {item.icon}
+                      <div className="flex-1 text-left">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">{item.label}</span>
+                          {item.badge && (
+                            <Badge variant="secondary" className="text-xs">
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </div>
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground">
+                            {item.description}
+                          </p>
                         )}
                       </div>
-                      {item.description && (
-                        <p className="text-xs text-muted-foreground">
-                          {item.description}
-                        </p>
-                      )}
                     </div>
-                  </div>
-                </Button>
-              </Link>
-            );
-          })}
+                  </Button>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Separator */}
+          <div className="border-t border-border my-4"></div>
+
+          {/* Public Pages */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground px-2 mb-2">
+              Információk
+            </p>
+            {publicNavigationItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link key={item.href} href={item.href}>
+                  <Button
+                    variant={isActive ? "default" : "ghost"}
+                    className={cn(
+                      "w-full justify-start h-10",
+                      isActive && "bg-primary text-primary-foreground"
+                    )}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {item.icon}
+                      <div className="flex-1 text-left">
+                        <span className="font-medium text-sm">{item.label}</span>
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Button>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Legal Pages */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground px-2 mb-2">
+              Jogi információk
+            </p>
+            {legalNavigationItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link key={item.href} href={item.href}>
+                  <Button
+                    variant={isActive ? "default" : "ghost"}
+                    className={cn(
+                      "w-full justify-start h-10",
+                      isActive && "bg-primary text-primary-foreground"
+                    )}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {item.icon}
+                      <div className="flex-1 text-left">
+                        <span className="font-medium text-sm">{item.label}</span>
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Button>
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
         {/* Bottom Section */}
@@ -180,40 +286,102 @@ export function MainNavigation({
 
         {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="p-4 space-y-2 border-b border-border">
-            {navigationItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link key={item.href} href={item.href} onClick={onMobileMenuToggle}>
-                  <Button
-                    variant={isActive ? "default" : "ghost"}
-                    className={cn(
-                      "w-full justify-start h-12",
-                      isActive && "bg-primary text-primary-foreground"
-                    )}
-                  >
-                    <div className="flex items-center space-x-3">
-                      {item.icon}
-                      <div className="flex-1 text-left">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">{item.label}</span>
-                          {item.badge && (
-                            <Badge variant="secondary" className="text-xs">
-                              {item.badge}
-                            </Badge>
+          <div className="p-4 space-y-4 border-b border-border max-h-screen overflow-y-auto">
+            {/* Main Navigation */}
+            <div className="space-y-2">
+              {navigationItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link key={item.href} href={item.href} onClick={onMobileMenuToggle}>
+                    <Button
+                      variant={isActive ? "default" : "ghost"}
+                      className={cn(
+                        "w-full justify-start h-12",
+                        isActive && "bg-primary text-primary-foreground"
+                      )}
+                    >
+                      <div className="flex items-center space-x-3">
+                        {item.icon}
+                        <div className="flex-1 text-left">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium">{item.label}</span>
+                            {item.badge && (
+                              <Badge variant="secondary" className="text-xs">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </div>
+                          {item.description && (
+                            <p className="text-xs text-muted-foreground">
+                              {item.description}
+                            </p>
                           )}
                         </div>
-                        {item.description && (
-                          <p className="text-xs text-muted-foreground">
-                            {item.description}
-                          </p>
-                        )}
                       </div>
-                    </div>
-                  </Button>
-                </Link>
-              );
-            })}
+                    </Button>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Separator */}
+            <div className="border-t border-border"></div>
+
+            {/* Public Pages */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground px-2">
+                Információk
+              </p>
+              {publicNavigationItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link key={item.href} href={item.href} onClick={onMobileMenuToggle}>
+                    <Button
+                      variant={isActive ? "default" : "ghost"}
+                      className={cn(
+                        "w-full justify-start h-10",
+                        isActive && "bg-primary text-primary-foreground"
+                      )}
+                    >
+                      <div className="flex items-center space-x-3">
+                        {item.icon}
+                        <div className="flex-1 text-left">
+                          <span className="font-medium text-sm">{item.label}</span>
+                        </div>
+                      </div>
+                    </Button>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Legal Pages */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground px-2">
+                Jogi információk
+              </p>
+              {legalNavigationItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link key={item.href} href={item.href} onClick={onMobileMenuToggle}>
+                    <Button
+                      variant={isActive ? "default" : "ghost"}
+                      className={cn(
+                        "w-full justify-start h-10",
+                        isActive && "bg-primary text-primary-foreground"
+                      )}
+                    >
+                      <div className="flex items-center space-x-3">
+                        {item.icon}
+                        <div className="flex-1 text-left">
+                          <span className="font-medium text-sm">{item.label}</span>
+                        </div>
+                      </div>
+                    </Button>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

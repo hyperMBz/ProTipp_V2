@@ -3,76 +3,70 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { withUserAuth, apiError, apiSuccess, getQueryParams } from '@/lib/auth/api-middleware';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// GET /api/v1/notifications - Get user notifications
-export async function GET(request: NextRequest) {
+// GET /api/v1/notifications - Get user notifications (Protected)
+export const GET = withUserAuth(async (request: NextRequest, user) => {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const type = searchParams.get('type');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const query = getQueryParams(request);
+    const type = query.get('type');
+    const limit = query.getInt('limit', 50) ?? 50;
+    const offset = query.getInt('offset', 0) ?? 0;
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
-
-    let query = supabase
+    // Felhasználó csak saját notification-jeit láthatja
+    let dbQuery = supabase
       .from('notification_history')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .order('sent_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (type) {
-      query = query.eq('type', type);
+      dbQuery = dbQuery.eq('type', type);
     }
 
-    const { data, error } = await query;
+    const { data, error } = await dbQuery;
 
     if (error) {
       console.error('Error fetching notifications:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch notifications' },
-        { status: 500 }
-      );
+      return apiError('Failed to fetch notifications', 500);
     }
 
-    return NextResponse.json({ notifications: data || [] });
+    return apiSuccess({
+      notifications: data || [],
+      pagination: {
+        total: data?.length || 0,
+        limit,
+        offset,
+        hasMore: (data?.length || 0) === limit
+      }
+    });
   } catch (error) {
     console.error('Error in GET /api/v1/notifications:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('Internal server error', 500);
   }
-}
+});
 
-// POST /api/v1/notifications - Create notification
-export async function POST(request: NextRequest) {
+// POST /api/v1/notifications - Create notification (Protected)
+export const POST = withUserAuth(async (request: NextRequest, user) => {
   try {
     const body = await request.json();
-    const { userId, type, title, message, data } = body;
+    const { type, title, message, data } = body;
 
-    if (!userId || !type || !title || !message) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+    if (!type || !title || !message) {
+      return apiError('Missing required fields: type, title, message', 400);
     }
 
+    // Felhasználó csak saját notification-t hozhat létre
     const { data: notification, error } = await supabase
       .from('notification_history')
       .insert({
-        user_id: userId,
+        user_id: user.id, // Authenticated user ID használata
         type,
         title,
         message,
@@ -85,92 +79,80 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error creating notification:', error);
-      return NextResponse.json(
-        { error: 'Failed to create notification' },
-        { status: 500 }
-      );
+      return apiError('Failed to create notification', 500);
     }
 
-    return NextResponse.json({ notification });
+    return apiSuccess({ notification }, 201);
   } catch (error) {
     console.error('Error in POST /api/v1/notifications:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('Internal server error', 500);
   }
-}
+});
 
-// PUT /api/v1/notifications - Update notification
-export async function PUT(request: NextRequest) {
+// PUT /api/v1/notifications - Update notification (Protected)
+export const PUT = withUserAuth(async (request: NextRequest, user) => {
   try {
     const body = await request.json();
     const { notificationId, updates } = body;
 
     if (!notificationId) {
-      return NextResponse.json(
-        { error: 'Notification ID is required' },
-        { status: 400 }
-      );
+      return apiError('Notification ID is required', 400);
     }
 
+    // Felhasználó csak saját notification-jeit frissítheti
     const { data, error } = await supabase
       .from('notification_history')
       .update(updates)
       .eq('id', notificationId)
+      .eq('user_id', user.id) // Ownership ellenőrzés
       .select()
       .single();
 
     if (error) {
       console.error('Error updating notification:', error);
-      return NextResponse.json(
-        { error: 'Failed to update notification' },
-        { status: 500 }
-      );
+      return apiError('Failed to update notification', 500);
     }
 
-    return NextResponse.json({ notification: data });
+    if (!data) {
+      return apiError('Notification not found or access denied', 404);
+    }
+
+    return apiSuccess({ notification: data });
   } catch (error) {
     console.error('Error in PUT /api/v1/notifications:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('Internal server error', 500);
   }
-}
+});
 
-// DELETE /api/v1/notifications - Delete notification
-export async function DELETE(request: NextRequest) {
+// DELETE /api/v1/notifications - Delete notification (Protected)
+export const DELETE = withUserAuth(async (request: NextRequest, user) => {
   try {
-    const { searchParams } = new URL(request.url);
-    const notificationId = searchParams.get('id');
+    const query = getQueryParams(request);
+    const notificationId = query.get('id');
 
     if (!notificationId) {
-      return NextResponse.json(
-        { error: 'Notification ID is required' },
-        { status: 400 }
-      );
+      return apiError('Notification ID is required', 400);
     }
 
-    const { error } = await supabase
+    // Felhasználó csak saját notification-jeit törölheti
+    const { error, count } = await supabase
       .from('notification_history')
-      .delete()
-      .eq('id', notificationId);
+      .delete({ count: 'exact' })
+      .eq('id', notificationId)
+      .eq('user_id', user.id); // Ownership ellenőrzés
 
     if (error) {
       console.error('Error deleting notification:', error);
-      return NextResponse.json(
-        { error: 'Failed to delete notification' },
-        { status: 500 }
-      );
+      return apiError('Failed to delete notification', 500);
     }
 
-    return NextResponse.json({ success: true });
+    if (count === 0) {
+      return apiError('Notification not found or access denied', 404);
+    }
+
+    return apiSuccess({ deleted: true });
   } catch (error) {
     console.error('Error in DELETE /api/v1/notifications:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('Internal server error', 500);
   }
-}
+});
