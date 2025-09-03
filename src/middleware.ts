@@ -1,83 +1,146 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createSupabaseAdminClient } from '@/lib/supabase/client'
+ main
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
+  const pathname = req.nextUrl.pathname
+  const method = req.method
+  
+  console.log('🔄 Middleware - Request to:', pathname, method)
 
-  // Security headers
-  res.headers.set('X-Content-Type-Options', 'nosniff')
-  res.headers.set('X-Frame-Options', 'DENY')
-  res.headers.set('X-XSS-Protection', '1; mode=block')
-  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+ main
 
-  // Rate limiting for API routes
-  if (req.nextUrl.pathname.startsWith('/api/')) {
-    const clientIp = req.headers.get('x-forwarded-for') || 'unknown'
-    const rateLimitKey = `rate_limit:${clientIp}`
+  // Rate limiting ellenőrzés
+  const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+  const rateLimit = checkRateLimit(clientIP, 100, 15 * 60 * 1000) // 100 req/15min
+  
+  if (!rateLimit.allowed) {
+    console.warn('🚫 Rate limit exceeded for IP:', clientIP)
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { 
+        status: 429,
+        headers: {
+          'Retry-After': Math.ceil((rateLimit.resetTime - Date.now()) / 1000).toString(),
+          ...securityHeaders
+        }
+      }
+    )
+  }
+
+  // Supabase client létrehozása
+  const supabase = createMiddlewareClient({ req, res: response })
+  
+  let userSession: UserSession | null = null
+  
+  try {
+    // Session ellenőrzés
+    const { data: { session }, error } = await supabase.auth.getSession()
     
-    try {
-      const supabase = createSupabaseAdminClient()
-      const { data: rateLimitData } = await supabase
-        .from('rate_limits')
-        .select('*')
-        .eq('ip_address', clientIp)
-        .eq('route', req.nextUrl.pathname)
+    if (session?.user && !error) {
+      // Felhasználó profil lekérése a role meghatározásához
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_tier, subscription_ends_at')
+        .eq('id', session.user.id)
         .single()
+      
+      if (profile) {
+        userSession = {
+          id: session.user.id,
+          email: session.user.email || '',
+          role: determineUserRole(profile, session.user.email || ''),
+          subscription_tier: profile.subscription_tier,
+          subscription_ends_at: profile.subscription_ends_at || undefined,
+        }
+      }
+    }
+  } catch (error) {
+    console.error('🚫 Session validation error:', error)
+    // Folytatjuk guest user-ként
+  }
 
-      if (rateLimitData && (rateLimitData as any).request_count > 100) {
-        return new NextResponse('Rate limit exceeded', { status: 429 })
+  // API route protection
+  if (pathname.startsWith('/api/')) {
+    if (isProtectedApiRoute(pathname)) {
+      if (!userSession) {
+        console.warn('🚫 Unauthorized API access attempt:', pathname)
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401, headers: securityHeaders }
+        )
+      }
+      
+      // API permission ellenőrzés
+      if (!hasApiPermission(userSession, method, pathname)) {
+        console.warn('🚫 Insufficient permissions for API:', pathname, userSession.role)
+        return NextResponse.json(
+          { error: 'Insufficient permissions' },
+          { status: 403, headers: securityHeaders }
+        )
+      }
+    }
+    
+    // API rate limiting headers hozzáadása
+    response.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString())
+    response.headers.set('X-RateLimit-Reset', rateLimit.resetTime.toString())
+    
+    return response
+  }
+
+  // Page route protection
+  if (isProtectedRoute(pathname)) {
+    if (!hasRouteAccess(pathname, userSession)) {
+      const redirectPath = getRedirectPath(pathname)
+      console.warn('🚫 Unauthorized page access attempt:', pathname, '-> redirecting to:', redirectPath)
+      
+      // Redirect URL-ben eredeti path mentése
+      const redirectUrl = new URL(redirectPath, req.url)
+      redirectUrl.searchParams.set('from', pathname)
+      
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
+
+  // Auth refresh ellenőrzés protected route-oknál
+  if (userSession && isProtectedRoute(pathname)) {
+    try {
+      const { data: { session } } = await supabase.auth.refreshSession()
+      if (!session) {
+        console.warn('🚫 Session refresh failed, redirecting to login')
+        const loginUrl = new URL('/', req.url)
+        loginUrl.searchParams.set('from', pathname)
+        return NextResponse.redirect(loginUrl)
       }
     } catch (error) {
-      console.error('Rate limiting error:', error)
+      console.error('🚫 Session refresh error:', error)
     }
   }
 
-  // MFA verification for protected routes
-  if (req.nextUrl.pathname.startsWith('/dashboard') || req.nextUrl.pathname.startsWith('/profile')) {
-    const authHeader = req.headers.get('authorization')
-    
-    if (authHeader) {
-      try {
-        const supabase = createSupabaseAdminClient()
-        const token = authHeader.replace('Bearer ', '')
-        
-        // Verify MFA session if required
-        const { data: { user } } = await supabase.auth.getUser(token)
-        
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('mfa_enabled, mfa_type')
-            .eq('id', user.id)
-            .single()
+  console.log('✅ Middleware - Access granted to:', pathname, userSession?.role || 'guest')
+  return response
+}
 
-          if ((profile as any)?.mfa_enabled) {
-            // Check if MFA session is valid
-            const { data: mfaSession } = await supabase
-              .from('mfa_sessions')
-              .select('*')
-              .eq('user_id', user.id)
-              .eq('verified', true)
-              .gt('expires_at', new Date().toISOString())
-              .single()
-
-            if (!mfaSession) {
-              return NextResponse.redirect(new URL('/auth/mfa-verify', req.url))
-            }
-          }
-        }
-      } catch (error) {
-        console.error('MFA verification error:', error)
+/**
+ * Felhasználó szerepkör meghatározása
+ */
+function determineUserRole(profile: any, email: string): 'user' | 'premium' | 'admin' {
+  // Admin ellenőrzés
+  if (email.endsWith('@protipp.admin')) {
+    return 'admin'
+  }
+  
+  // Premium subscription ellenőrzés
+  if (profile.subscription_tier === 'premium' || profile.subscription_tier === 'pro') {
+    if (profile.subscription_ends_at) {
+      const expiryDate = new Date(profile.subscription_ends_at)
+      if (expiryDate > new Date()) {
+        return 'premium'
       }
     }
   }
-
-  // Log request for audit
-  console.log('🔄 Middleware - Request to:', req.nextUrl.pathname, 'from IP:', req.headers.get('x-forwarded-for') || 'unknown')
-
-  return res
+  
+  return 'user'
 }
 
 export const config = {

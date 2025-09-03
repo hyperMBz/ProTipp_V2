@@ -3,20 +3,22 @@ import { mlDetector } from '@/lib/arbitrage-engine/ml-detector';
 import { riskAssessor } from '@/lib/arbitrage-engine/risk-assessor';
 import { marketAnalyzer } from '@/lib/arbitrage-engine/market-analyzer';
 import { performanceOptimizer } from '@/lib/arbitrage-engine/optimizer';
+import { withPremiumAuth, apiError, apiSuccess, getQueryParams } from '@/lib/auth/api-middleware';
 
-export async function GET(request: NextRequest) {
+// GET /api/v1/arbitrage/advanced - Premium arbitrage opportunities (Protected)
+export const GET = withPremiumAuth(async (request: NextRequest, user) => {
   try {
-    const { searchParams } = new URL(request.url);
+    const query = getQueryParams(request);
     
     // Query parameters
-    const sport = searchParams.get('sport');
-    const marketType = searchParams.get('market_type') as 'mainline' | 'props' | 'futures' | 'live' | null;
-    const minConfidence = searchParams.get('min_confidence') ? parseFloat(searchParams.get('min_confidence')!) : undefined;
-    const maxRisk = searchParams.get('max_risk') ? parseFloat(searchParams.get('max_risk')!) : undefined;
-    const minProfitMargin = searchParams.get('min_profit_margin') ? parseFloat(searchParams.get('min_profit_margin')!) : undefined;
-    const maxFalsePositive = searchParams.get('max_false_positive') ? parseFloat(searchParams.get('max_false_positive')!) : undefined;
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 50;
-    const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0;
+    const sport = query.get('sport');
+    const marketType = query.get('market_type') as 'mainline' | 'props' | 'futures' | 'live' | null;
+    const minConfidence = query.getFloat('min_confidence');
+    const maxRisk = query.getFloat('max_risk');
+    const minProfitMargin = query.getFloat('min_profit_margin');
+    const maxFalsePositive = query.getFloat('max_false_positive');
+    const limit = query.getInt('limit', 50) ?? 50;
+    const offset = query.getInt('offset', 0) ?? 0;
 
     // Get base opportunities from mock data or external source
     const baseOpportunities = await getBaseOpportunities();
@@ -90,30 +92,24 @@ export async function GET(request: NextRequest) {
       performance: performanceOptimizer.getMetrics()
     };
 
-    return NextResponse.json(response, { status: 200 });
+    return apiSuccess(response);
 
   } catch (error) {
     console.error('Advanced arbitrage API error:', error);
-    return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return apiError('Internal server error', 500, {
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+// POST /api/v1/arbitrage/advanced - Process arbitrage opportunities (Protected)
+export const POST = withPremiumAuth(async (request: NextRequest, user) => {
   try {
     const body = await request.json();
     const { opportunities, optimization_config } = body;
 
     if (!opportunities || !Array.isArray(opportunities)) {
-      return NextResponse.json(
-        { error: 'Invalid request body. Expected opportunities array.' },
-        { status: 400 }
-      );
+      return apiError('Invalid request body. Expected opportunities array.', 400);
     }
 
     // Apply optimization configuration if provided
@@ -165,19 +161,15 @@ export async function POST(request: NextRequest) {
       cache_stats: performanceOptimizer.getCacheStats()
     };
 
-    return NextResponse.json(response, { status: 200 });
+    return apiSuccess(response);
 
   } catch (error) {
     console.error('Advanced arbitrage POST error:', error);
-    return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return apiError('Internal server error', 500, {
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
-}
+});
 
 // Helper functions
 async function getBaseOpportunities() {
