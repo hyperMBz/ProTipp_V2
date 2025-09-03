@@ -44,10 +44,10 @@ jobs:
         run: bun run lint
 
       - name: 🔬 Type check
-        run: bun run build --dry-run
+        run: bunx tsc --noEmit
 
       - name: 🧪 Run tests
-        run: bun run test
+        run: bun run test:run
         env:
           CI: true
 
