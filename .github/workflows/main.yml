@@ -1,0 +1,146 @@
+name: 🚀 ProTipp V2 - Complete CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# Egyidejű futtatás kezelése
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '18'
+  BUN_VERSION: 'latest'
+
+jobs:
+  # 1. CODE QUALITY & TESTING
+  quality:
+    name: 🔍 Code Quality & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: 📦 Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: 📥 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🧹 Lint code
+        run: bun run lint
+
+      - name: 🔬 Type check
+        run: bun run build --dry-run
+
+      - name: 🧪 Run tests
+        run: bun run test
+        env:
+          CI: true
+
+  # 2. BUILD VERIFICATION
+  build:
+    name: 🏗️ Build Verification
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🏗️ Build application
+        run: bun run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_ODDS_API_KEY: ${{ secrets.NEXT_PUBLIC_ODDS_API_KEY }}
+
+      - name: 📤 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-files
+          path: .next/
+          retention-days: 1
+
+  # 3. DEPLOYMENT (csak main branch push esetén)
+  deploy:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [quality, build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://protipp.netlify.app
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-files
+          path: .next/
+
+      - name: 🚀 Deploy to Netlify
+        uses: nwtgck/actions-netlify@v2.0
+        with:
+          publish-dir: '.next'
+          production-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "🚀 Deploy from GitHub Actions - ${{ github.sha }}"
+          enable-pull-request-comment: true
+          enable-commit-comment: false
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      - name: ✅ Deployment Success
+        if: success()
+        run: |
+          echo "🎉 Deployment successful!"
+          echo "🌐 Live URL: https://protipp.netlify.app"
+
+      - name: ❌ Deployment Failed
+        if: failure()
+        run: |
+          echo "💥 Deployment failed!"
+          exit 1
+
+  # 4. NOTIFICATION
+  notify:
+    name: 📢 Notify Results
+    runs-on: ubuntu-latest
+    needs: [quality, build, deploy]
+    if: always()
+    steps:
+      - name: 📢 Success Notification
+        if: ${{ needs.deploy.result == 'success' }}
+        run: |
+          echo "✅ ProTipp V2 successfully deployed!"
+          echo "🌐 https://protipp.netlify.app"
+
+      - name: ⚠️ Failure Notification
+        if: ${{ needs.deploy.result == 'failure' || needs.build.result == 'failure' || needs.quality.result == 'failure' }}
+        run: |
+          echo "❌ Pipeline failed - check logs"
+          echo "🔍 Failed jobs: quality=${{ needs.quality.result }}, build=${{ needs.build.result }}, deploy=${{ needs.deploy.result }}"
