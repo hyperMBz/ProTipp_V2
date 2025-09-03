@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { AdvancedArbitrageTest } from "@/components/AdvancedArbitrageTest";
+import { ConnectionStatus } from "@/components/ui/connection-status";
 
 const TRACKED_SPORTS = ['soccer_epl', 'basketball_nba', 'tennis_atp', 'americanfootball_nfl'];
 
@@ -211,15 +212,7 @@ export default function Home() {
           <Card className="gradient-bg border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Kapcsolat</CardTitle>
-              {isClient && (
-                <>
-                  {isRealTime ? (
-                    <Wifi className="h-4 w-4 text-green-400" />
-                  ) : (
-                    <WifiOff className="h-4 w-4 text-red-400" />
-                  )}
-                </>
-              )}
+              <ConnectionStatus isRealTime={isClient && isRealTime} />
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${isClient && isRealTime ? 'text-green-400' : 'text-red-400'}`}>

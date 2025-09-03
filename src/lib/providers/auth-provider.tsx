@@ -10,12 +10,17 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  mfaRequired: boolean;
+  mfaVerified: boolean;
   signUp: (email: string, password: string, metadata?: Record<string, unknown>) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   updateProfile: (data: Record<string, unknown>) => Promise<{ error: AuthError | null }>;
+  verifyMFA: (code: string, type: 'totp' | 'sms' | 'email') => Promise<{ error: AuthError | null }>;
+  setupMFA: (type: 'totp' | 'sms' | 'email') => Promise<{ error: AuthError | null }>;
+  disableMFA: () => Promise<{ error: AuthError | null }>;
 }
 
 // Create the auth context
@@ -29,6 +34,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaVerified, setMfaVerified] = useState(false);
   const router = useRouter();
 
   const supabase = getSupabaseClient();
@@ -37,7 +44,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url')
+        .select('id, full_name, avatar_url, mfa_enabled, mfa_type')
         .eq('id', user.id)
         .single();
 
@@ -46,6 +53,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const { error: insertError } = await supabase.from('profiles').insert({
           id: user.id,
           full_name: user.email, // Default to email
+          mfa_enabled: false,
+          mfa_type: null,
           updated_at: new Date().toISOString(),
         });
         if (insertError) {
@@ -53,6 +62,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       } else if (error) {
         console.error("Error fetching profile:", error);
+      } else if (data?.mfa_enabled) {
+        setMfaRequired(true);
+        setMfaVerified(false);
       }
     } catch (error) {
       console.error('Error checking user profile:', error);
@@ -90,8 +102,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log('👤 User signed in, ensuring profile exists');
           // Update user profile or create if doesn't exist
           await ensureUserProfile(session.user);
-          // Refresh the router to update server components
-          router.refresh();
+          
+          // Check if MFA is required
+          if (mfaRequired && !mfaVerified) {
+            router.push('/auth/mfa-verify');
+          } else {
+            // Refresh the router to update server components
+            router.refresh();
+          }
         }
 
         if (event === 'SIGNED_OUT') {
@@ -242,16 +260,85 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return { error: profileError ? (profileError as unknown as AuthError) : null };
   };
 
+  // MFA functions
+  const verifyMFA = async (code: string, type: 'totp' | 'sms' | 'email') => {
+    if (!user) {
+      return { error: new Error('No user found') as AuthError };
+    }
+
+    try {
+      // Verify MFA code using the MFA manager
+      const { mfaManager } = await import('@/lib/security/mfa-manager');
+      await mfaManager.verifyMFA({ user_id: user.id, mfa_type: type, code });
+      
+      setMfaVerified(true);
+      setMfaRequired(false);
+      
+      return { error: null };
+    } catch (error) {
+      return { error: error as AuthError };
+    }
+  };
+
+  const setupMFA = async (type: 'totp' | 'sms' | 'email') => {
+    if (!user) {
+      return { error: new Error('No user found') as AuthError };
+    }
+
+    try {
+      // Setup MFA using the MFA manager
+      const { mfaManager } = await import('@/lib/security/mfa-manager');
+      if (type === 'totp') {
+        await mfaManager.setupTOTP(user.id);
+      } else if (type === 'sms') {
+        await mfaManager.setupSMS(user.id, user.phone || '');
+      } else if (type === 'email') {
+        await mfaManager.setupEmail(user.id, user.email || '');
+      }
+      
+      setMfaRequired(true);
+      setMfaVerified(false);
+      
+      return { error: null };
+    } catch (error) {
+      return { error: error as AuthError };
+    }
+  };
+
+  const disableMFA = async () => {
+    if (!user) {
+      return { error: new Error('No user found') as AuthError };
+    }
+
+    try {
+      // Disable MFA using the MFA manager
+      const { mfaManager } = await import('@/lib/security/mfa-manager');
+      await mfaManager.deleteMFASession(user.id, 'totp');
+      
+      setMfaRequired(false);
+      setMfaVerified(false);
+      
+      return { error: null };
+    } catch (error) {
+      return { error: error as AuthError };
+    }
+  };
+
   const value: AuthContextType = {
     user,
     session,
     loading,
+    mfaRequired,
+    mfaVerified,
     signUp,
     signIn,
     signInWithGoogle,
     signOut,
     resetPassword,
     updateProfile,
+    verifyMFA,
+    setupMFA,
+    disableMFA,
   };
 
   return (

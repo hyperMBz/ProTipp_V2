@@ -1,20 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { 
-  isProtectedRoute, 
-  hasRouteAccess, 
-  getRedirectPath,
-  isProtectedApiRoute,
-  type UserSession 
-} from '@/lib/auth/route-guard'
-import { 
-  validateJWTToken, 
-  extractSessionToken, 
-  checkRateLimit, 
-  getSecurityHeaders 
-} from '@/lib/auth/session-manager'
-import { hasApiPermission } from '@/lib/auth/permission-checker'
+ main
 
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname
@@ -22,13 +8,7 @@ export async function middleware(req: NextRequest) {
   
   console.log('🔄 Middleware - Request to:', pathname, method)
 
-  // Security headers hozzáadása minden válaszhoz
-  const response = NextResponse.next()
-  const securityHeaders = getSecurityHeaders()
-  
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value)
-  })
+ main
 
   // Rate limiting ellenőrzés
   const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'

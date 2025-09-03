@@ -3,6 +3,8 @@
  * Lazy loading, képoptimalizálás és adatmentés
  */
 
+import { useState, useEffect } from 'react';
+
 export interface PerformanceMetrics {
   loadTime: number;
   memoryUsage: number;
@@ -430,10 +432,10 @@ export class MobilePerformanceOptimizer {
  * Hook a mobil teljesítmény optimalizáló használatához
  */
 export function useMobilePerformanceOptimizer(config?: Partial<OptimizationConfig>) {
-  const [optimizer] = React.useState(() => new MobilePerformanceOptimizer(config));
-  const [metrics, setMetrics] = React.useState(optimizer.getMetrics());
+  const [optimizer] = useState(() => new MobilePerformanceOptimizer(config));
+  const [metrics, setMetrics] = useState(optimizer.getMetrics());
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Metrikák frissítése
     const updateMetrics = () => setMetrics(optimizer.getMetrics());
     
@@ -450,14 +452,14 @@ export function useMobilePerformanceOptimizer(config?: Partial<OptimizationConfi
       updateMetrics();
     };
 
-    window.addEventListener('performance:performanceUpdate', handlePerformanceUpdate);
-    window.addEventListener('performance:networkChange', handleNetworkChange);
-    window.addEventListener('performance:batteryChange', handleBatteryChange);
+    window.addEventListener('performance:performanceUpdate', handlePerformanceUpdate as EventListener);
+    window.addEventListener('performance:networkChange', handleNetworkChange as EventListener);
+    window.addEventListener('performance:batteryChange', handleBatteryChange as EventListener);
 
     return () => {
-      window.removeEventListener('performance:performanceUpdate', handlePerformanceUpdate);
-      window.removeEventListener('performance:networkChange', handleNetworkChange);
-      window.removeEventListener('performance:batteryChange', handleBatteryChange);
+      window.removeEventListener('performance:performanceUpdate', handlePerformanceUpdate as EventListener);
+      window.removeEventListener('performance:networkChange', handleNetworkChange as EventListener);
+      window.removeEventListener('performance:batteryChange', handleBatteryChange as EventListener);
       optimizer.destroy();
     };
   }, [optimizer]);

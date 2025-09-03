@@ -109,25 +109,25 @@ export default function MobileTestPage() {
       key: "odds1" as const,
       header: "Odds 1",
       width: "15%",
-      render: (value: number) => (
-        <span className="font-mono text-sm">{value.toFixed(2)}</span>
+      render: (value: string | number) => (
+        <span className="font-mono text-sm">{typeof value === 'number' ? value.toFixed(2) : value}</span>
       ),
     },
     {
       key: "odds2" as const,
       header: "Odds 2",
       width: "15%",
-      render: (value: number) => (
-        <span className="font-mono text-sm">{value.toFixed(2)}</span>
+      render: (value: string | number) => (
+        <span className="font-mono text-sm">{typeof value === 'number' ? value.toFixed(2) : value}</span>
       ),
     },
     {
       key: "profit" as const,
       header: "Profit %",
       width: "20%",
-      render: (value: number) => (
-        <Badge variant={value > 2 ? "default" : "secondary"} className="text-xs">
-          {value.toFixed(1)}%
+      render: (value: string | number) => (
+        <Badge variant={typeof value === 'number' && value > 2 ? "default" : "secondary"} className="text-xs">
+          {typeof value === 'number' ? value.toFixed(1) : value}%
         </Badge>
       ),
     },

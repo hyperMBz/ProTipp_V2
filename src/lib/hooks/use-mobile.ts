@@ -19,6 +19,7 @@ export interface PWAStatus {
   isInstalled: boolean;
   isInstallable: boolean;
   canInstall: boolean;
+  hasServiceWorker: boolean;
   installPrompt: any | null;
 }
 
@@ -95,6 +96,7 @@ export function usePWAStatus(): PWAStatus {
     isInstalled: false,
     isInstallable: false,
     canInstall: false,
+    hasServiceWorker: false,
     installPrompt: null,
   });
 
@@ -107,10 +109,14 @@ export function usePWAStatus(): PWAStatus {
       // Check if app can be installed
       const canInstall = 'serviceWorker' in navigator && 'PushManager' in window;
 
+      // Check if service worker is registered
+      const hasServiceWorker = 'serviceWorker' in navigator;
+
       setPwaStatus(prev => ({
         ...prev,
         isInstalled,
         canInstall,
+        hasServiceWorker,
       }));
     };
 

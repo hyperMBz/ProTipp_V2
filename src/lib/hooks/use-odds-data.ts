@@ -152,9 +152,14 @@ export function useRealTimeStatus() {
   // Prevent hydration mismatch by only updating state on client
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    // Set real-time status only after client-side hydration
+    if (apiKey && apiKey !== 'your_odds_api_key_here') {
+      setIsRealTime(true);
+    }
+  }, [apiKey]);
   
-  const isDemo = !isRealTime || !apiKey || apiKey === 'your_odds_api_key_here';
+  // Ensure consistent server/client state during hydration
+  const isDemo = !isClient || !isRealTime || !apiKey || apiKey === 'your_odds_api_key_here';
   
   // Real-time connection status
   const {
@@ -169,24 +174,24 @@ export function useRealTimeStatus() {
     switchMethod,
     refreshConnection
   } = useRealTime({
-    autoConnect: true,
+    autoConnect: isClient && isRealTime, // Only auto-connect on client and when real-time is enabled
     preferredMethod: 'websocket',
     enablePolling: true
   });
   
   return {
-    isRealTime,
+    isRealTime: isClient ? isRealTime : false, // Return false during SSR
     setIsRealTime,
     toggleRealTime: () => setIsRealTime(!isRealTime),
     isDemo,
     apiConfigured: !!apiKey,
     // Real-time connection info
-    isConnected,
-    connectionStatus,
-    currentMethod,
-    latency,
-    connectionError: error,
-    isConnecting,
+    isConnected: isClient ? isConnected : false,
+    connectionStatus: isClient ? connectionStatus : 'disconnected',
+    currentMethod: isClient ? currentMethod : 'none',
+    latency: isClient ? latency : 0,
+    connectionError: isClient ? error : null,
+    isConnecting: isClient ? isConnecting : false,
     connect,
     disconnect,
     switchMethod,
