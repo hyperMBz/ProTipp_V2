@@ -1,344 +1,499 @@
 "use client";
 
-import React, { useState, useCallback } from 'react';
-import { DashboardLayout, DashboardWidget } from "@/components/dashboard/DashboardLayout";
-import { ArbitrageWidget } from "@/components/widgets/ArbitrageWidget";
-import { WidgetWrapper } from "@/components/dashboard/DashboardWidget";
-import { SupabaseStatus } from "@/components/SupabaseStatus";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, useMemo } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Activity, 
-  Bell,
-  Zap,
-  Target,
-  BarChart3,
-  Calendar,
-  Clock,
-  Users,
-  Award
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { ArbitrageTable } from "@/components/ArbitrageTable";
+import { OddsTable } from "@/components/OddsTable";
+import { ProfitCalculator } from "@/components/ProfitCalculator";
+import { BetHistoryTracker } from "@/components/BetHistoryTracker";
+import { EVBettingFinder } from "@/components/EVBettingFinder";
+import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
+import { LiveAlertsSystem } from "@/components/alerts/LiveAlertsSystem";
+import { BetTrackerPanel } from "@/components/bet-tracker/BetTrackerPanel";
+import { BetTrackerProvider } from "@/components/bet-tracker/BetTrackerProvider";
+import { sportsCategories, profitRanges, stakeRanges, timeFilters, getTimeToExpiryInHours } from "@/lib/mock-data";
 import { useArbitrageWithFallback, useRealTimeStatus, useApiUsage } from "@/lib/hooks/use-odds-data";
 import { formatNumber } from "@/lib/utils";
+import { 
+  Search,
+  TrendingUp, 
+  DollarSign, 
+  Clock,
+  Filter,
+  Settings,
+  Zap,
+  Wifi,
+  WifiOff,
+  Activity,
+  BarChart3,
+  Bell,
+  Calculator,
+  Brain,
+  Target
+} from "lucide-react";
+import { UserMenu } from "@/components/auth/UserMenu";
+import { AdvancedArbitrageTest } from "@/components/AdvancedArbitrageTest";
+import { ConnectionStatus } from "@/components/ui/connection-status";
 
-export default function DashboardPage() {
-  const [maximizedWidget, setMaximizedWidget] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+const TRACKED_SPORTS = ['soccer_epl', 'basketball_nba', 'tennis_atp', 'americanfootball_nfl'];
+
+export default function Dashboard() {
+  const [selectedSport, setSelectedSport] = useState("Összes");
+  const [selectedProfitRange, setSelectedProfitRange] = useState("Összes");
+  const [selectedStakeRange, setSelectedStakeRange] = useState("Összes");
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState("Összes");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isRealTimeActive, setIsRealTimeActive] = useState(true);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [minProfitMargin, setMinProfitMargin] = useState<string>("");
+  const [maxStake, setMaxStake] = useState<string>("");
+  const [oddsUpdateTrigger, setOddsUpdateTrigger] = useState(0);
+  const [isClient, setIsClient] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // API hooks
   const { isRealTime, isDemo } = useRealTimeStatus();
   const apiUsage = useApiUsage();
-  const arbitrageQuery = useArbitrageWithFallback(['soccer_epl', 'basketball_nba', 'tennis_atp']);
+  
+  // Memoize the sports array to prevent unnecessary re-renders
+  const trackedSports = useMemo(() => 
+    isRealTimeActive ? TRACKED_SPORTS : ['demo'], 
+    [isRealTimeActive]
+  );
+  
+  const arbitrageQuery = useArbitrageWithFallback(trackedSports);
 
-  // Refresh kezelése
-  const handleRefresh = useCallback(() => {
-    setIsRefreshing(true);
-    arbitrageQuery.refetch();
-    setTimeout(() => setIsRefreshing(false), 1000);
-  }, [arbitrageQuery]);
-
-  // Widget maximize/minimize kezelése
-  const handleMaximize = useCallback((widgetId: string) => {
-    setMaximizedWidget(widgetId);
-  }, []);
-
-  const handleMinimize = useCallback(() => {
-    setMaximizedWidget(null);
-  }, []);
-
-  // Adatok
-  const opportunities = arbitrageQuery.data || [];
-  const totalOpportunities = opportunities.length;
-  const avgProfitMargin = totalOpportunities > 0 
-    ? opportunities.reduce((sum, opp) => sum + opp.profitMargin, 0) / totalOpportunities 
-    : 0;
-  const maxProfitMargin = totalOpportunities > 0 
-    ? Math.max(...opportunities.map(opp => opp.profitMargin)) 
-    : 0;
-
-  // Widget definíciók
-  const widgets = [
-    // Supabase Status Widget
-    {
-      id: "supabase-status-widget",
-      title: "Supabase Kapcsolat",
-      description: "Adatbázis kapcsolat állapota",
-      component: <SupabaseStatus />,
-      w: 6,
-      h: 4,
-      x: 0,
-      y: 0,
-      minW: 3,
-      minH: 3
-    },
-
-    // Arbitrage Widget
-    {
-      id: "arbitrage-widget",
-      title: "Arbitrage Lehetőségek",
-      description: "Valós idejű arbitrage lehetőségek",
-      component: (
-        <ArbitrageWidget
-          id="arbitrage-widget"
-          onRefresh={handleRefresh}
-          onMaximize={() => handleMaximize("arbitrage-widget")}
-          onMinimize={handleMinimize}
-          isMaximized={maximizedWidget === "arbitrage-widget"}
-          showFilters={true}
-          showSearch={true}
-          autoRefresh={true}
-          refreshInterval={30000}
-        />
-      ),
-      w: 12,
-      h: 8,
-      x: 0,
-      y: 4,
-      minW: 6,
-      minH: 4
-    },
-
-    // Profit Stats Widget
-    {
-      id: "profit-stats-widget",
-      title: "Profit Statisztikák",
-      description: "Átlagos és maximális profitok",
-      component: (
-        <WidgetWrapper>
-          <div className="h-full flex flex-col justify-center space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="gradient-bg border-primary/20">
-                <CardContent className="p-4 text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <TrendingUp className="h-6 w-6 text-green-400" />
-                  </div>
-                  <div className="text-2xl font-bold text-green-400">
-                    {avgProfitMargin.toFixed(2)}%
-                  </div>
-                  <div className="text-xs text-muted-foreground">Átlagos profit</div>
-                </CardContent>
-              </Card>
-
-              <Card className="gradient-bg border-primary/20">
-                <CardContent className="p-4 text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <Target className="h-6 w-6 text-yellow-400" />
-                  </div>
-                  <div className="text-2xl font-bold text-yellow-400">
-                    {maxProfitMargin.toFixed(2)}%
-                  </div>
-                  <div className="text-xs text-muted-foreground">Maximális profit</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="text-center">
-              <div className="text-lg font-bold text-primary">{totalOpportunities}</div>
-              <div className="text-xs text-muted-foreground">Aktív lehetőség</div>
-            </div>
-          </div>
-        </WidgetWrapper>
-      ),
-      w: 6,
-      h: 4,
-      x: 6,
-      y: 0,
-      minW: 3,
-      minH: 3
-    },
-
-    // Real-time Status Widget
-    {
-      id: "realtime-status-widget",
-      title: "Real-time Állapot",
-      description: "Kapcsolat és API állapot",
-      component: (
-        <WidgetWrapper>
-          <div className="h-full flex flex-col justify-center space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${isRealTime ? 'bg-green-400' : 'bg-red-400'}`} />
-                <span className="text-sm font-medium">
-                  {isRealTime ? 'Kapcsolódva' : 'Kapcsolat nélkül'}
-                </span>
-              </div>
-              <Badge variant={isRealTime ? "default" : "secondary"} className="text-xs">
-                <Zap className="h-3 w-3 mr-1" />
-                {isRealTime ? 'Real-time' : 'Demo'}
-              </Badge>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">API használat:</span>
-                <span className="font-medium">{apiUsage.data?.requestsUsed || 0}/{apiUsage.data?.requestsRemaining || 1000}</span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2">
-                <div 
-                  className="bg-primary h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${((apiUsage.data?.requestsUsed || 0) / (apiUsage.data?.requestsRemaining || 1000)) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">
-                Utolsó frissítés: {new Date().toLocaleTimeString('hu-HU')}
-              </div>
-            </div>
-          </div>
-        </WidgetWrapper>
-      ),
-      w: 6,
-      h: 4,
-      x: 0,
-      y: 4,
-      minW: 3,
-      minH: 3
-    },
-
-    // Quick Actions Widget
-    {
-      id: "quick-actions-widget",
-      title: "Gyors Műveletek",
-      description: "Gyakran használt funkciók",
-      component: (
-        <WidgetWrapper>
-          <div className="h-full flex flex-col justify-center space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" className="h-10">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Analytics
-              </Button>
-              <Button variant="outline" size="sm" className="h-10">
-                <Calendar className="h-4 w-4 mr-2" />
-                Naptár
-              </Button>
-              <Button variant="outline" size="sm" className="h-10">
-                <Users className="h-4 w-4 mr-2" />
-                Profil
-              </Button>
-              <Button variant="outline" size="sm" className="h-10">
-                <Award className="h-4 w-4 mr-2" />
-                Eredmények
-              </Button>
-            </div>
-
-            <div className="flex items-center justify-center space-x-2">
-              <Button 
-                variant="default" 
-                size="sm" 
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="flex-1"
-              >
-                <Activity className="h-4 w-4 mr-2" />
-                {isRefreshing ? 'Frissítés...' : 'Frissítés'}
-              </Button>
-            </div>
-          </div>
-        </WidgetWrapper>
-      ),
-      w: 6,
-      h: 4,
-      x: 6,
-      y: 4,
-      minW: 3,
-      minH: 3
-    },
-
-    // Notifications Widget
-    {
-      id: "notifications-widget",
-      title: "Értesítések",
-      description: "Legutóbbi riasztások",
-      component: (
-        <WidgetWrapper>
-          <div className="h-full flex flex-col justify-center space-y-3">
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2 p-2 bg-green-400/10 border border-green-400/20 rounded-md">
-                <div className="w-2 h-2 bg-green-400 rounded-full" />
-                <div className="flex-1">
-                  <div className="text-xs font-medium">Új arbitrage lehetőség</div>
-                  <div className="text-xs text-muted-foreground">Manchester United vs Liverpool</div>
-                </div>
-                <div className="text-xs text-muted-foreground">2p</div>
-              </div>
-
-              <div className="flex items-center space-x-2 p-2 bg-yellow-400/10 border border-yellow-400/20 rounded-md">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full" />
-                <div className="flex-1">
-                  <div className="text-xs font-medium">Odds változás</div>
-                  <div className="text-xs text-muted-foreground">Barcelona vs Real Madrid</div>
-                </div>
-                <div className="text-xs text-muted-foreground">5p</div>
-              </div>
-
-              <div className="flex items-center space-x-2 p-2 bg-blue-400/10 border border-blue-400/20 rounded-md">
-                <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                <div className="flex-1">
-                  <div className="text-xs font-medium">API frissítés</div>
-                  <div className="text-xs text-muted-foreground">Új bookmaker hozzáadva</div>
-                </div>
-                <div className="text-xs text-muted-foreground">10p</div>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <Button variant="ghost" size="sm" className="text-xs">
-                Összes megjelenítése
-              </Button>
-            </div>
-          </div>
-        </WidgetWrapper>
-      ),
-      w: 6,
-      h: 4,
-      x: 0,
-      y: 8,
-      minW: 3,
-      minH: 3
+  // Real-time odds updates trigger
+  useEffect(() => {
+    if (isRealTimeActive) {
+      const interval = setInterval(() => {
+        setOddsUpdateTrigger(prev => prev + 1);
+      }, 3000);
+      return () => clearInterval(interval);
     }
-  ];
+  }, [isRealTimeActive]);
 
-interface LayoutItem {
-  i: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
+  // Get opportunities data
+  const opportunities = arbitrageQuery.data || [];
+  const isLoading = arbitrageQuery.isLoading;
+  const error = arbitrageQuery.error;
 
-  // Layout változás kezelése
-  const handleLayoutChange = useCallback((newLayout: LayoutItem[]) => {
-    console.log('Layout changed:', newLayout);
-    // Itt lehetne menteni a layout-ot localStorage-ba vagy adatbázisba
-  }, []);
+  // Filter arbitrage opportunities with advanced filters
+  const filteredOpportunities = opportunities.filter(opp => {
+    const sportMatch = selectedSport === "Összes" || opp.sport === selectedSport;
 
-  // Widget resize kezelése
-  const handleWidgetResize = useCallback((widgetId: string, size: { w: number; h: number }) => {
-    console.log('Widget resized:', widgetId, size);
-  }, []);
+    const profitRange = profitRanges.find(range => range.label === selectedProfitRange);
+    const profitMatch = !profitRange || (opp.profitMargin >= profitRange.min && opp.profitMargin <= profitRange.max);
 
-  // Widget move kezelése
-  const handleWidgetMove = useCallback((widgetId: string, position: { x: number; y: number }) => {
-    console.log('Widget moved:', widgetId, position);
-  }, []);
+    const stakeRange = stakeRanges.find(range => range.label === selectedStakeRange);
+    const stakeMatch = !stakeRange || (opp.totalStake >= stakeRange.min && opp.totalStake <= stakeRange.max);
+
+    const timeFilter = timeFilters.find(filter => filter.label === selectedTimeFilter);
+    const timeMatch = !timeFilter || getTimeToExpiryInHours(opp.timeToExpiry) <= timeFilter.hours;
+
+    const searchMatch = searchTerm === "" ||
+      opp.event.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      opp.outcome.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Advanced filters
+    const minProfitMatch = minProfitMargin === "" || opp.profitMargin >= parseFloat(minProfitMargin);
+    const maxStakeMatch = maxStake === "" || opp.totalStake <= parseFloat(maxStake);
+
+    return sportMatch && profitMatch && stakeMatch && timeMatch && searchMatch && minProfitMatch && maxStakeMatch;
+  });
+
+  // Calculate stats
+  const totalOpportunities = filteredOpportunities.length;
+  const avgProfit = filteredOpportunities.reduce((sum, opp) => sum + opp.profitMargin, 0) / totalOpportunities || 0;
+  const totalStake = filteredOpportunities.reduce((sum, opp) => sum + opp.stakes.bet1.stake + opp.stakes.bet2.stake, 0);
+  const bestOpportunity = filteredOpportunities.reduce((best, opp) =>
+    opp.profitMargin > best.profitMargin ? opp : best,
+    { profitMargin: 0, expectedProfit: 0 }
+  );
+
+  const clearAllFilters = () => {
+    setSelectedSport("Összes");
+    setSelectedProfitRange("Összes");
+    setSelectedStakeRange("Összes");
+    setSelectedTimeFilter("Összes");
+    setSearchTerm("");
+    setMinProfitMargin("");
+    setMaxStake("");
+  };
 
   return (
-    <DashboardLayout
-      widgets={widgets}
-      onLayoutChange={handleLayoutChange}
-      onWidgetResize={handleWidgetResize}
-      onWidgetMove={handleWidgetMove}
-      showControls={true}
-      autoRefresh={true}
-      refreshInterval={30000}
-      className="min-h-screen"
-    />
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
+                ProTipp V2 Dashboard
+              </h1>
+              <Badge
+                variant={isRealTimeActive ? "default" : "secondary"}
+                className={isRealTimeActive ? "animate-pulse" : ""}
+              >
+                {isRealTimeActive ? "🟢 ÉLŐ" : "⏸️ SZÜNET"}
+              </Badge>
+              {isDemo && (
+                <Badge variant="outline" className="border-yellow-500 text-yellow-500">
+                  Demo mód
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsRealTimeActive(!isRealTimeActive)}
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                {isRealTimeActive ? "Szünet" : "Indítás"}
+              </Button>
+              <UserMenu />
+            </div>
+                  </div>
+                  </div>
+      </header>
+
+      <div className="container mx-auto px-6 py-6">
+
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <Card className="gradient-bg border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Arbitrage Lehetőségek</CardTitle>
+              <TrendingUp className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{totalOpportunities}</div>
+              <p className="text-xs text-muted-foreground">
+                Aktív lehetőségek most
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="gradient-bg border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Átlag Profit</CardTitle>
+              <DollarSign className="h-4 w-4 text-green-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-400">{avgProfit.toFixed(1)}%</div>
+              <p className="text-xs text-muted-foreground">
+                Szűrt lehetőségek átlaga
+              </p>
+                </CardContent>
+              </Card>
+
+              <Card className="gradient-bg border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Legjobb Lehetőség</CardTitle>
+              <Zap className="h-4 w-4 text-yellow-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-400">
+                {bestOpportunity.profitMargin ? `${bestOpportunity.profitMargin.toFixed(1)}%` : '0%'}
+                  </div>
+              <p className="text-xs text-muted-foreground">
+                {bestOpportunity.expectedProfit ? `+${formatNumber(bestOpportunity.expectedProfit)} Ft` : 'Nincs adat'}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="gradient-bg border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Kapcsolat</CardTitle>
+              <ConnectionStatus isRealTime={isClient && isRealTime} />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${isClient && isRealTime ? 'text-green-400' : 'text-red-400'}`}>
+                {isClient && isRealTime ? 'ÉLŐ' : 'OFFLINE'}
+                  </div>
+              <p className="text-xs text-muted-foreground">
+                {apiUsage.data ? `${apiUsage.data.requestsUsed}/${apiUsage.data.requestsRemaining} API hívás` : 'API státusz'}
+              </p>
+                </CardContent>
+              </Card>
+            </div>
+
+        {/* Filters */}
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Filter className="h-5 w-5 text-primary" />
+                <CardTitle>Szűrők</CardTitle>
+              </div>
+              <Button 
+                variant="outline"
+                size="sm" 
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Speciális szűrők
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Basic Filters */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Keresés</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Keresés mérkőzésre..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+            </div>
+          </div>
+
+            <div className="space-y-2">
+                  <label className="text-sm font-medium">Sport</label>
+                  <Select value={selectedSport} onValueChange={(value: string) => setSelectedSport(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sportsCategories.map((sport) => (
+                        <SelectItem key={sport} value={sport}>
+                          {sport}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Profit Margin</label>
+                  <Select value={selectedProfitRange} onValueChange={(value: string) => setSelectedProfitRange(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {profitRanges.map((range) => (
+                        <SelectItem key={range.label} value={range.label}>
+                          {range.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+              </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Tét Méret</label>
+                  <Select value={selectedStakeRange} onValueChange={(value: string) => setSelectedStakeRange(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {stakeRanges.map((range) => (
+                        <SelectItem key={range.label} value={range.label}>
+                          {range.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+              </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Lejárat</label>
+                  <Select value={selectedTimeFilter} onValueChange={(value: string) => setSelectedTimeFilter(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeFilters.map((filter) => (
+                        <SelectItem key={filter.label} value={filter.label}>
+                          {filter.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Advanced Filters */}
+              {showAdvancedFilters && (
+                <div className="border-t pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Min. Profit Margin (%)</label>
+                      <Input
+                        type="number"
+                        placeholder="pl. 2.5"
+                        value={minProfitMargin}
+                        onChange={(e) => setMinProfitMargin(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Max. Tét (Ft)</label>
+                      <Input
+                        type="number"
+                        placeholder="pl. 100000"
+                        value={maxStake}
+                        onChange={(e) => setMaxStake(e.target.value)}
+                      />
+            </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Műveletek</label>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={clearAllFilters}
+                      >
+                        Minden szűrő törlése
+              </Button>
+            </div>
+          </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="arbitrage" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-8">
+            <TabsTrigger value="arbitrage" className="flex items-center space-x-2">
+              <Zap className="h-4 w-4" />
+              <span>Arbitrage</span>
+            </TabsTrigger>
+            <TabsTrigger value="ev-betting" className="flex items-center space-x-2">
+              <TrendingUp className="h-4 w-4" />
+              <span>EV Betting</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center space-x-2">
+              <BarChart3 className="h-4 w-4" />
+              <span>Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="alerts" className="flex items-center space-x-2">
+              <Bell className="h-4 w-4" />
+              <span>Alerts</span>
+            </TabsTrigger>
+            <TabsTrigger value="odds" className="flex items-center space-x-2">
+              <Activity className="h-4 w-4" />
+              <span>Odds</span>
+            </TabsTrigger>
+            <TabsTrigger value="bet-tracker" className="flex items-center space-x-2">
+              <Target className="h-4 w-4" />
+              <span>Bet Tracker</span>
+            </TabsTrigger>
+            <TabsTrigger value="history" className="flex items-center space-x-2">
+              <Clock className="h-4 w-4" />
+              <span>Előzmények</span>
+            </TabsTrigger>
+            <TabsTrigger value="calculator" className="flex items-center space-x-2">
+              <Calculator className="h-4 w-4" />
+              <span>Kalkulátor</span>
+            </TabsTrigger>
+            <TabsTrigger value="advanced" className="flex items-center space-x-2">
+              <Brain className="h-4 w-4" />
+              <span>Advanced</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="arbitrage" className="space-y-6">
+            <BetTrackerProvider>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Zap className="h-5 w-5 text-primary" />
+                    <span>Arbitrage Lehetőségek</span>
+                    {isRealTimeActive && (
+                      <Badge variant="outline" className="animate-pulse">
+                        Real-time frissítés
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    Real-time arbitrage lehetőségek különböző fogadóirodák között
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ArbitrageTable
+                    opportunities={filteredOpportunities}
+                    oddsUpdateTrigger={oddsUpdateTrigger}
+                  />
+                </CardContent>
+              </Card>
+            </BetTrackerProvider>
+          </TabsContent>
+
+          <TabsContent value="ev-betting" className="space-y-6">
+            <EVBettingFinder />
+          </TabsContent>
+
+          {/* NEW: Analytics Dashboard */}
+          <TabsContent value="analytics" className="space-y-6">
+            <AnalyticsDashboard userId="mock-user-id" />
+          </TabsContent>
+
+          {/* NEW: Live Alerts System */}
+          <TabsContent value="alerts" className="space-y-6">
+            <LiveAlertsSystem />
+          </TabsContent>
+
+          <TabsContent value="odds" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Odds Összehasonlítás</CardTitle>
+                <CardDescription>
+                  Hasonlítsd össze az odds-okat különböző fogadóirodák között
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <OddsTable />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="bet-tracker" className="space-y-6">
+            <BetTrackerProvider>
+              <BetTrackerPanel />
+            </BetTrackerProvider>
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-6">
+            <BetHistoryTracker />
+          </TabsContent>
+
+          <TabsContent value="calculator" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Arbitrage Kalkulátor</CardTitle>
+                <CardDescription>
+                  Számítsd ki a tét elosztást és a várható profitot
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ProfitCalculator />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="advanced" className="space-y-6">
+            <AdvancedArbitrageTest />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
   );
 }

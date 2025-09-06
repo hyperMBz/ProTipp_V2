@@ -74,9 +74,13 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npm run dev',
+    command: 'bun run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },
+  
+  /* Global setup and teardown */
+  globalSetup: require.resolve('./src/tests/global-setup.ts'),
+  globalTeardown: require.resolve('./src/tests/global-teardown.ts'),
 });

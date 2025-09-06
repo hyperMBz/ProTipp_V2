@@ -1,430 +1,304 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { formatNumber } from "@/lib/utils";
-import { UnifiedBetHistory } from '@/lib/types/bet-history';
-import {
-  TrendingUp,
-  TrendingDown,
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  TrendingUp, 
+  TrendingDown, 
   Target,
-  Activity,
   DollarSign,
-  Calendar,
+  Percent,
   BarChart3,
-  Award,
-  AlertTriangle,
-  CheckCircle
-} from 'lucide-react';
+  AlertCircle,
+  Loader2,
+  Trophy,
+  Zap
+} from "lucide-react";
+import { PerformanceMetrics as PerformanceMetricsType } from "@/lib/types/analytics";
+import { formatCurrency, formatPercentage, getProfitColor } from "@/lib/utils/analytics";
 
 interface PerformanceMetricsProps {
-  betHistory: UnifiedBetHistory[];
-  stats: {
-    totalBets: number;
-    totalProfit: number;
-    totalStaked: number;
-    winRate: number;
-    avgCLV: number;
-  };
+  metrics: PerformanceMetricsType | null;
+  isLoading?: boolean;
   className?: string;
 }
 
-export function PerformanceMetrics({ betHistory, stats, className }: PerformanceMetricsProps) {
-
-  const metrics = useMemo(() => {
-    if (betHistory.length === 0) {
-      // Demo metrics
-      return {
-        roi: 12.5,
-        sharpeRatio: 1.35,
-        maxDrawdown: 8.2,
-        avgStake: 25000,
-        avgOdds: 2.15,
-        profitPerBet: 1200,
-        bestStreak: 8,
-        worstStreak: 3,
-        consistency: 78,
-        riskScore: 65,
-        kellyPercent: 2.8,
-        expectancy: 850,
-        profitFactor: 1.45,
-        variance: 15.2,
-        daysSinceLastBet: 2,
-        avgBetsPerWeek: 8.5,
-        marketEfficiency: 92
-      };
-    }
-
-    const settledBets = betHistory.filter(bet => ['won', 'lost'].includes(bet.status));
-
-    const totalStaked = stats.totalStaked;
-    const totalProfit = stats.totalProfit;
-    const roi = totalStaked > 0 ? (totalProfit / totalStaked) * 100 : 0;
-
-    const avgStake = settledBets.length > 0 ? totalStaked / settledBets.length : 0;
-    const avgOdds = settledBets.length > 0
-      ? settledBets.reduce((sum, bet) => sum + bet.odds, 0) / settledBets.length
-      : 0;
-
-    const profitPerBet = settledBets.length > 0 ? totalProfit / settledBets.length : 0;
-
-    // Calculate streaks
-    let currentStreak = 0;
-    let bestStreak = 0;
-    let worstStreak = 0;
-    let tempWorstStreak = 0;
-
-    settledBets.forEach(bet => {
-      if (bet.status === 'won') {
-        currentStreak++;
-        tempWorstStreak = 0;
-        bestStreak = Math.max(bestStreak, currentStreak);
-      } else {
-        currentStreak = 0;
-        tempWorstStreak++;
-        worstStreak = Math.max(worstStreak, tempWorstStreak);
-      }
-    });
-
-    // Calculate consistency (% of profitable weeks)
-    const weeklyProfits = new Map<string, number>();
-    betHistory.forEach(bet => {
-      const weekKey = new Date(bet.placed_at || bet.placedAt || new Date()).toISOString().slice(0, 10);
-      weeklyProfits.set(weekKey, (weeklyProfits.get(weekKey) || 0) + (bet.profit || 0));
-    });
-
-    const profitableWeeks = Array.from(weeklyProfits.values()).filter(profit => profit > 0).length;
-    const totalWeeks = weeklyProfits.size;
-    const consistency = totalWeeks > 0 ? (profitableWeeks / totalWeeks) * 100 : 0;
-
-    // Risk metrics
-    const profits = settledBets.map(bet => bet.profit || 0);
-    const variance = profits.length > 1
-      ? profits.reduce((sum, profit) => sum + Math.pow(profit - profitPerBet, 2), 0) / (profits.length - 1)
-      : 0;
-
-    const stdDev = Math.sqrt(variance);
-    const sharpeRatio = stdDev > 0 ? (profitPerBet / stdDev) * Math.sqrt(252) : 0; // Annualized
-
-    // Kelly Criterion estimation
-    const winningBets = settledBets.filter(bet => bet.status === 'won');
-    const avgWinAmount = winningBets.length > 0
-      ? winningBets.reduce((sum, bet) => sum + (bet.profit || 0), 0) / winningBets.length
-      : 0;
-
-    const losingBets = settledBets.filter(bet => bet.status === 'lost');
-    const avgLossAmount = losingBets.length > 0
-      ? Math.abs(losingBets.reduce((sum, bet) => sum + (bet.profit || 0), 0) / losingBets.length)
-      : 0;
-
-    const kellyPercent = avgLossAmount > 0 && avgOdds > 1
-      ? ((stats.winRate / 100) * avgOdds - 1) / (avgOdds - 1) * 100
-      : 0;
-
-    // Expectancy
-    const expectancy = (stats.winRate / 100) * avgWinAmount - ((100 - stats.winRate) / 100) * avgLossAmount;
-
-    // Profit Factor
-    const grossProfit = winningBets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
-    const grossLoss = Math.abs(losingBets.reduce((sum, bet) => sum + (bet.profit || 0), 0));
-    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : 0;
-
-    // Max Drawdown calculation
-    let maxDrawdown = 0;
-    let peak = 0;
-    let cumulative = 0;
-
-    settledBets.forEach(bet => {
-      cumulative += bet.profit || 0;
-      if (cumulative > peak) peak = cumulative;
-      const drawdown = peak - cumulative;
-      if (drawdown > maxDrawdown) maxDrawdown = drawdown;
-    });
-
-    const maxDrawdownPercent = totalStaked > 0 ? (maxDrawdown / totalStaked) * 100 : 0;
-
-    // Risk Score (0-100, lower is better)
-    const riskScore = Math.min(100,
-      (maxDrawdownPercent * 2) +
-      (stdDev / avgStake * 20) +
-      ((100 - consistency) / 2)
+export function PerformanceMetrics({ metrics, isLoading = false, className }: PerformanceMetricsProps) {
+  // Performance rating számítása
+  const performanceRating = useMemo(() => {
+    if (!metrics) return { rating: 0, label: 'N/A', color: 'text-gray-400' };
+    
+    const { winRate, roi, profitMargin } = metrics;
+    
+    // Összetett rating számítás (0-100)
+    const rating = Math.round(
+      (winRate * 0.4) + // Win rate 40%
+      (Math.max(0, Math.min(100, roi + 50)) * 0.3) + // ROI 30% (normalizálva)
+      (Math.max(0, Math.min(100, profitMargin + 50)) * 0.3) // Profit margin 30% (normalizálva)
     );
+    
+    let label: string;
+    let color: string;
+    
+    if (rating >= 80) {
+      label = 'Kiváló';
+      color = 'text-green-400';
+    } else if (rating >= 60) {
+      label = 'Jó';
+      color = 'text-blue-400';
+    } else if (rating >= 40) {
+      label = 'Átlagos';
+      color = 'text-yellow-400';
+    } else if (rating >= 20) {
+      label = 'Gyenge';
+      color = 'text-orange-400';
+    } else {
+      label = 'Rossz';
+      color = 'text-red-400';
+    }
+    
+    return { rating, label, color };
+  }, [metrics]);
 
-    // Days since last bet
-    const lastBetDate = settledBets.length > 0
-      ? new Date(settledBets[settledBets.length - 1].placed_at || settledBets[settledBets.length - 1].placedAt || new Date())
-      : new Date();
-    const daysSinceLastBet = Math.floor((Date.now() - lastBetDate.getTime()) / (1000 * 60 * 60 * 24));
+  // ROI kategória meghatározása
+  const roiCategory = useMemo(() => {
+    if (!metrics) return { category: 'N/A', color: 'text-gray-400' };
+    
+    const { roi } = metrics;
+    
+    if (roi >= 20) {
+      return { category: 'Kiváló', color: 'text-green-400' };
+    } else if (roi >= 10) {
+      return { category: 'Jó', color: 'text-blue-400' };
+    } else if (roi >= 0) {
+      return { category: 'Pozitív', color: 'text-yellow-400' };
+    } else if (roi >= -10) {
+      return { category: 'Negatív', color: 'text-orange-400' };
+    } else {
+      return { category: 'Rossz', color: 'text-red-400' };
+    }
+  }, [metrics]);
 
-    // Betting frequency
-    const firstBetDate = settledBets.length > 0
-      ? new Date(settledBets[0].placed_at || settledBets[0].placedAt || new Date())
-      : new Date();
-    const totalDays = Math.max(1, Math.floor((Date.now() - firstBetDate.getTime()) / (1000 * 60 * 60 * 24)));
-    const avgBetsPerWeek = (settledBets.length / totalDays) * 7;
+  if (isLoading) {
+    return (
+      <div className={`flex items-center justify-center h-64 ${className}`}>
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-primary" />
+          <p className="text-sm text-muted-foreground">Teljesítmény mutatók betöltése...</p>
+        </div>
+      </div>
+    );
+  }
 
-    // Market efficiency (based on CLV)
-    const marketEfficiency = Math.min(100, Math.max(0, 50 + stats.avgCLV * 10));
-
-    return {
-      roi,
-      sharpeRatio,
-      maxDrawdown: maxDrawdownPercent,
-      avgStake,
-      avgOdds,
-      profitPerBet,
-      bestStreak,
-      worstStreak,
-      consistency,
-      riskScore,
-      kellyPercent: Math.max(0, Math.min(10, kellyPercent)), // Cap at 10%
-      expectancy,
-      profitFactor,
-      variance: stdDev,
-      daysSinceLastBet,
-      avgBetsPerWeek,
-      marketEfficiency
-    };
-  }, [betHistory, stats]);
-
-  const getRiskLevel = (riskScore: number) => {
-    if (riskScore <= 30) return { level: 'Alacsony', color: 'text-green-400', bgColor: 'bg-green-500/20' };
-    if (riskScore <= 60) return { level: 'Közepes', color: 'text-yellow-400', bgColor: 'bg-yellow-500/20' };
-    return { level: 'Magas', color: 'text-red-400', bgColor: 'bg-red-500/20' };
-  };
-
-  const getGradeFromScore = (score: number) => {
-    if (score >= 90) return { grade: 'A+', color: 'text-green-400' };
-    if (score >= 80) return { grade: 'A', color: 'text-green-400' };
-    if (score >= 70) return { grade: 'B+', color: 'text-blue-400' };
-    if (score >= 60) return { grade: 'B', color: 'text-blue-400' };
-    if (score >= 50) return { grade: 'C', color: 'text-yellow-400' };
-    return { grade: 'D', color: 'text-red-400' };
-  };
-
-  const riskLevel = getRiskLevel(metrics.riskScore);
-  const performanceGrade = getGradeFromScore(metrics.consistency);
+  if (!metrics) {
+    return (
+      <div className={className}>
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Nincsenek elérhető teljesítmény mutatók.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      {/* Key Performance Indicators */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="gradient-bg border-primary/20">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-green-400" />
-              <div className="flex-1">
-                <div className="text-sm text-muted-foreground">Sharpe Ratio</div>
-                <div className="text-xl font-bold text-green-400">
-                  {metrics.sharpeRatio.toFixed(2)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {metrics.sharpeRatio > 1 ? 'Kiváló' : metrics.sharpeRatio > 0.5 ? 'Jó' : 'Gyenge'}
-                </div>
-              </div>
+    <div className={className}>
+      {/* Performance Rating */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold flex items-center space-x-2">
+            <Trophy className="h-5 w-5 text-primary" />
+            <span>Teljesítmény Értékelés</span>
+          </h3>
+          <Badge variant="outline" className={performanceRating.color}>
+            {performanceRating.label}
+          </Badge>
+        </div>
+        <Progress value={performanceRating.rating} className="h-2" />
+        <p className="text-sm text-muted-foreground mt-1">
+          Összesített pontszám: {performanceRating.rating}/100
+        </p>
+      </div>
+
+      {/* Key Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Win Rate */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center space-x-2">
+              <Target className="h-4 w-4 text-primary" />
+              <span>Sikerességi Arány</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">
+              {formatPercentage(metrics.winRate)}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {metrics.totalBets} fogadásból
+            </p>
+            <Progress 
+              value={metrics.winRate} 
+              className="h-1 mt-2" 
+            />
           </CardContent>
         </Card>
 
-        <Card className="gradient-bg border-primary/20">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Target className="h-5 w-5 text-blue-400" />
-              <div className="flex-1">
-                <div className="text-sm text-muted-foreground">Kelly %</div>
-                <div className="text-xl font-bold text-blue-400">
-                  {metrics.kellyPercent.toFixed(1)}%
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Ajánlott tét méret
-                </div>
-              </div>
+        {/* ROI */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center space-x-2">
+              <Percent className="h-4 w-4 text-primary" />
+              <span>ROI (Return on Investment)</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${getProfitColor(metrics.roi)}`}>
+              {formatPercentage(metrics.roi)}
             </div>
+            <p className={`text-xs mt-1 ${roiCategory.color}`}>
+              {roiCategory.category} kategória
+            </p>
+            <Progress 
+              value={Math.max(0, Math.min(100, metrics.roi + 50))} 
+              className="h-1 mt-2" 
+            />
           </CardContent>
         </Card>
 
-        <Card className="gradient-bg border-primary/20">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Award className="h-5 w-5 text-purple-400" />
-              <div className="flex-1">
-                <div className="text-sm text-muted-foreground">Profit Factor</div>
-                <div className="text-xl font-bold text-purple-400">
-                  {metrics.profitFactor.toFixed(2)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {metrics.profitFactor > 1.5 ? 'Kiváló' : metrics.profitFactor > 1 ? 'Pozitív' : 'Negatív'}
-                </div>
-              </div>
+        {/* Total Profit */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center space-x-2">
+              <DollarSign className="h-4 w-4 text-primary" />
+              <span>Összes Profit</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${getProfitColor(metrics.totalProfit)}`}>
+              {formatCurrency(metrics.totalProfit)}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Átlag: {formatCurrency(metrics.avgProfitPerBet)} / fogadás
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="gradient-bg border-primary/20">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className={`h-5 w-5 ${riskLevel.color}`} />
-              <div className="flex-1">
-                <div className="text-sm text-muted-foreground">Kockázati szint</div>
-                <div className={`text-xl font-bold ${riskLevel.color}`}>
-                  {riskLevel.level}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {(100 - metrics.riskScore).toFixed(0)}/100
-                </div>
-              </div>
+        {/* Profit Margin */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center space-x-2">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              <span>Profit Margin</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${getProfitColor(metrics.profitMargin)}`}>
+              {formatPercentage(metrics.profitMargin)}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Profit / Kifizetés aránya
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Detailed Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Trading Statistics */}
-        <Card className="gradient-bg border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              <span>Kereskedési statisztikák</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Átlag tét</span>
-              <span className="font-semibold">{formatNumber(metrics.avgStake)} Ft</span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Átlag odds</span>
-              <span className="font-semibold">{metrics.avgOdds.toFixed(2)}</span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Profit/fogadás</span>
-              <span className={`font-semibold ${metrics.profitPerBet >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {metrics.profitPerBet >= 0 ? '+' : ''}{formatNumber(metrics.profitPerBet)} Ft
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Várható érték</span>
-              <span className={`font-semibold ${metrics.expectancy >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {metrics.expectancy >= 0 ? '+' : ''}{formatNumber(metrics.expectancy)} Ft
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Heti fogadások</span>
-              <span className="font-semibold text-blue-400">{metrics.avgBetsPerWeek.toFixed(1)}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Performance Analysis */}
-        <Card className="gradient-bg border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Activity className="h-5 w-5 text-primary" />
-              <span>Teljesítmény elemzés</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-muted-foreground">Konzisztencia</span>
-                <span className={`font-semibold ${performanceGrade.color}`}>
-                  {metrics.consistency.toFixed(0)}% ({performanceGrade.grade})
-                </span>
+      {/* Performance Insights */}
+      <div className="mt-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center space-x-2">
+          <Zap className="h-5 w-5 text-primary" />
+          <span>Teljesítmény Elemzés</span>
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Best Performance */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-green-400">
+                Legjobb Teljesítmény
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Legnagyobb profit:</span>
+                  <span className="text-sm font-medium text-green-400">
+                    {formatCurrency(metrics.maxProfit)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Sikerességi arány:</span>
+                  <span className="text-sm font-medium">
+                    {formatPercentage(metrics.winRate)}
+                  </span>
+                </div>
               </div>
-              <Progress value={metrics.consistency} className="h-2" />
-            </div>
+            </CardContent>
+          </Card>
 
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-muted-foreground">Piac hatékonyság</span>
-                <span className="font-semibold text-purple-400">{metrics.marketEfficiency.toFixed(0)}%</span>
+          {/* Risk Assessment */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-orange-400">
+                Kockázat Elemzés
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Legnagyobb veszteség:</span>
+                  <span className="text-sm font-medium text-red-400">
+                    {formatCurrency(metrics.maxLoss)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Profit/veszteség arány:</span>
+                  <span className="text-sm font-medium">
+                    {metrics.maxLoss !== 0 ? (metrics.maxProfit / Math.abs(metrics.maxLoss)).toFixed(2) : 'N/A'}
+                  </span>
+                </div>
               </div>
-              <Progress value={metrics.marketEfficiency} className="h-2" />
-            </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Legjobb sorozat</span>
-              <Badge variant="outline" className="border-green-400 text-green-400">
-                {metrics.bestStreak} nyert
-              </Badge>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Legrosszabb sorozat</span>
-              <Badge variant="outline" className="border-red-400 text-red-400">
-                {metrics.worstStreak} vesztett
-              </Badge>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Max Drawdown</span>
-              <span className="font-semibold text-red-400">{metrics.maxDrawdown.toFixed(1)}%</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Risk Management */}
-        <Card className="gradient-bg border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <AlertTriangle className="h-5 w-5 text-primary" />
-              <span>Kockázatkezelés</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-muted-foreground">Kockázati pontszám</span>
-                <span className={`font-semibold ${riskLevel.color}`}>
-                  {metrics.riskScore.toFixed(0)}/100
-                </span>
-              </div>
-              <Progress value={100 - metrics.riskScore} className="h-2" />
-              <div className="text-xs text-muted-foreground mt-1">
-                Alacsonyabb jobb
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Volatilitás</span>
-              <span className="font-semibold text-yellow-400">
-                {metrics.variance.toFixed(0)} Ft
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Kelly Criterion</span>
-              <Badge variant="outline" className="border-blue-400 text-blue-400">
-                {metrics.kellyPercent.toFixed(1)}%
-              </Badge>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Utolsó fogadás</span>
-              <span className="text-sm">
-                {metrics.daysSinceLastBet === 0 ? 'Ma' :
-                 metrics.daysSinceLastBet === 1 ? 'Tegnap' :
-                 `${metrics.daysSinceLastBet} napja`}
-              </span>
-            </div>
-
-            <div className="pt-2 border-t border-border">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-4 w-4 text-green-400" />
-                <span className="text-sm text-green-400 font-medium">
-                  Ajánlás: {metrics.kellyPercent.toFixed(1)}% tét méret
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Performance Tips */}
+      <div className="mt-6">
+        <h3 className="text-lg font-semibold mb-4">Teljesítmény Tippek</h3>
+        <div className="space-y-2">
+          {metrics.winRate < 50 && (
+            <Alert>
+              <TrendingDown className="h-4 w-4" />
+              <AlertDescription>
+                A sikerességi arányod alacsonyabb, mint 50%. Érdemes lehet átgondolni a fogadási stratégiádat.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {metrics.roi < 0 && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                A ROI negatív. Jelenleg veszteséges a fogadási tevékenységed. Fontolja meg a stratégia módosítását.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {metrics.winRate >= 60 && metrics.roi > 10 && (
+            <Alert>
+              <TrendingUp className="h-4 w-4" />
+              <AlertDescription>
+                Kiváló teljesítmény! Magas sikerességi arány és pozitív ROI. Folytasd így!
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
       </div>
     </div>
   );

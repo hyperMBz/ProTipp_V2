@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { LogIn, LogOut, User, Settings, CreditCard, BarChart3, Loader2 } from "lucide-react";
+import { LogIn, LogOut, User, Settings, CreditCard, BarChart3, Loader2, TrendingUp } from "lucide-react";
 
 export function UserMenu() {
   const { user, loading, signOut } = useAuth();
@@ -109,23 +109,29 @@ export function UserMenu() {
 
         <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = '/profile'}>
           <User className="mr-2 h-4 w-4" />
-          <span>Profil</span>
+          <span>Profil áttekintés</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = '/profile'}>
+        <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = '/profile/history'}>
           <BarChart3 className="mr-2 h-4 w-4" />
-          <span>Statisztikák</span>
+          <span>Fogadási előzmények</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = '/profile'}>
+        <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = '/analytics'}>
+          <TrendingUp className="mr-2 h-4 w-4" />
+          <span>Analytics Dashboard</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = '/profile/settings'}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Beállítások</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = '/profile'}>
+        <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = '/profile/subscriptions'}>
           <CreditCard className="mr-2 h-4 w-4" />
-          <span>Előfizetés</span>
+          <span>Előfizetések</span>
         </DropdownMenuItem>
+
 
         <DropdownMenuSeparator />
 

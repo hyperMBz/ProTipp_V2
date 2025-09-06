@@ -7,6 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, Clock, TrendingUp, Target, Zap } from "lucide-react";
+import { BetTrackerButton } from "@/components/bet-tracker/BetTrackerButton";
+import { CalculatorButton, CalculatorModal } from "@/components/calculator";
 
 interface ArbitrageTableProps {
   opportunities: ArbitrageOpportunity[];
@@ -64,6 +66,10 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
   const [selectedOpportunity, setSelectedOpportunity] = useState<string | null>(null);
   const [lastUpdateTrigger, setLastUpdateTrigger] = useState(0);
   const [updatingRows, setUpdatingRows] = useState<Set<string>>(new Set());
+  const [calculatorModal, setCalculatorModal] = useState<{
+    isOpen: boolean;
+    opportunity: ArbitrageOpportunity | null;
+  }>({ isOpen: false, opportunity: null });
 
   // Memoize opportunities to prevent unnecessary re-renders
   const memoizedOpportunities = useMemo(() => opportunities, [opportunities]);
@@ -97,10 +103,18 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
   };
 
   const addToBetTracker = (opportunity: ArbitrageOpportunity) => {
-    // In a real app, this would add to bet tracker
+    // This function is now handled by BetTrackerButton component
     console.log("Adding to bet tracker:", opportunity);
     setSelectedOpportunity(opportunity.id);
     setTimeout(() => setSelectedOpportunity(null), 1000);
+  };
+
+  const openCalculator = (opportunity: ArbitrageOpportunity) => {
+    setCalculatorModal({ isOpen: true, opportunity });
+  };
+
+  const closeCalculator = () => {
+    setCalculatorModal({ isOpen: false, opportunity: null });
   };
 
   if (opportunities.length === 0) {
@@ -116,162 +130,173 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
   }
 
   return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-            <TableHead className="font-semibold">Sport</TableHead>
-            <TableHead className="font-semibold">Mérkőzés</TableHead>
-            <TableHead className="font-semibold">Piac</TableHead>
-            <TableHead className="font-semibold">Fogadóiroda 1</TableHead>
-            <TableHead className="font-semibold">Fogadóiroda 2</TableHead>
-            <TableHead className="font-semibold">Profit</TableHead>
-            <TableHead className="font-semibold">Tét</TableHead>
-            <TableHead className="font-semibold">Lejárat</TableHead>
-            <TableHead className="font-semibold">Státusz</TableHead>
-            <TableHead className="font-semibold">Műveletek</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {opportunities.map((opportunity) => {
-            const isUpdating = updatingRows.has(opportunity.id);
+    <>
+      <div className="rounded-lg border border-border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-secondary/50 hover:bg-secondary/50">
+              <TableHead className="font-semibold">Sport</TableHead>
+              <TableHead className="font-semibold">Mérkőzés</TableHead>
+              <TableHead className="font-semibold">Piac</TableHead>
+              <TableHead className="font-semibold">Fogadóiroda 1</TableHead>
+              <TableHead className="font-semibold">Fogadóiroda 2</TableHead>
+              <TableHead className="font-semibold">Profit</TableHead>
+              <TableHead className="font-semibold">Tét</TableHead>
+              <TableHead className="font-semibold">Lejárat</TableHead>
+              <TableHead className="font-semibold">Státusz</TableHead>
+              <TableHead className="font-semibold">Műveletek</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {opportunities.map((opportunity) => {
+              const isUpdating = updatingRows.has(opportunity.id);
 
-            return (
-              <TableRow
-                key={opportunity.id}
-                className={`hover:bg-secondary/30 transition-all duration-300 border-border/50 ${
-                  isUpdating ? 'bg-primary/5 border-primary/20' : ''
-                }`}
-              >
-                <TableCell>
-                  <Badge variant="outline" className="text-xs">
-                    {opportunity.sport}
-                  </Badge>
-                </TableCell>
+              return (
+                <TableRow
+                  key={opportunity.id}
+                  className={`hover:bg-secondary/30 transition-all duration-300 border-border/50 ${
+                    isUpdating ? 'bg-primary/5 border-primary/20' : ''
+                  }`}
+                >
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">
+                      {opportunity.sport}
+                    </Badge>
+                  </TableCell>
 
-                <TableCell className="font-medium">
-                  <div className="max-w-[200px]">
-                    <div className="text-sm font-semibold truncate">{opportunity.event}</div>
-                    <div className="text-xs text-muted-foreground">{opportunity.outcome}</div>
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  <div className="text-xs text-muted-foreground">
-                    {opportunity.outcome}
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {opportunity.bet1.bookmaker}
-                      </Badge>
-                      <OddsAnimation
-                        initialOdds={opportunity.bet1.odds}
-                        isUpdating={isUpdating}
-                        direction={Math.random() > 0.5 ? 'up' : 'down'}
-                      />
-                      {isUpdating && <Zap className="h-3 w-3 text-primary animate-pulse" />}
+                  <TableCell className="font-medium">
+                    <div className="max-w-[200px]">
+                      <div className="text-sm font-semibold truncate">{opportunity.event}</div>
+                      <div className="text-xs text-muted-foreground">{opportunity.outcome}</div>
                     </div>
+                  </TableCell>
+
+                  <TableCell>
                     <div className="text-xs text-muted-foreground">
-                      {opportunity.bet1.outcome}
+                      {opportunity.outcome}
                     </div>
-                    <div className="text-xs text-primary">
-                      {formatNumber(opportunity.stakes.bet1.stake)} Ft
-                    </div>
-                  </div>
-                </TableCell>
+                  </TableCell>
 
-                <TableCell>
-                  <div className="space-y-1">
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {opportunity.bet1.bookmaker}
+                        </Badge>
+                        <OddsAnimation
+                          initialOdds={opportunity.bet1.odds}
+                          isUpdating={isUpdating}
+                          direction={Math.random() > 0.5 ? 'up' : 'down'}
+                        />
+                        {isUpdating && <Zap className="h-3 w-3 text-primary animate-pulse" />}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {opportunity.bet1.outcome}
+                      </div>
+                      <div className="text-xs text-primary">
+                        {formatNumber(opportunity.stakes.bet1.stake)} Ft
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {opportunity.bet2.bookmaker}
+                        </Badge>
+                        <OddsAnimation
+                          initialOdds={opportunity.bet2.odds}
+                          isUpdating={isUpdating}
+                          direction={Math.random() > 0.5 ? 'up' : 'down'}
+                        />
+                        {isUpdating && <Zap className="h-3 w-3 text-primary animate-pulse" />}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {opportunity.bet2.outcome}
+                      </div>
+                      <div className="text-xs text-primary">
+                        {formatNumber(opportunity.stakes.bet2.stake)} Ft
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className={`text-sm font-bold ${getProfitColor(opportunity.profitMargin)} ${
+                        isUpdating ? 'animate-pulse' : ''
+                      }`}>
+                        {opportunity.profitMargin.toFixed(1)}%
+                      </div>
+                      <div className="text-xs text-green-400">
+                        +{formatNumber(opportunity.expectedProfit)} Ft
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className="text-sm font-semibold">
+                        {formatNumber(opportunity.totalStake)} Ft
+                      </div>
+                      <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                        <TrendingUp className="h-3 w-3" />
+                        <span>ROI: {opportunity.profitMargin.toFixed(1)}%</span>
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {opportunity.bet2.bookmaker}
-                      </Badge>
-                      <OddsAnimation
-                        initialOdds={opportunity.bet2.odds}
-                        isUpdating={isUpdating}
-                        direction={Math.random() > 0.5 ? 'up' : 'down'}
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className={`text-sm font-mono text-orange-400 ${
+                        isUpdating ? 'animate-pulse' : ''
+                      }`}>
+                        {opportunity.timeToExpiry}
+                      </span>
+                    </div>
+                  </TableCell>
+
+                  <TableCell>
+                    <Badge
+                      className={`text-xs ${getStatusColor(opportunity.probability)} ${
+                        isUpdating ? 'animate-pulse' : ''
+                      }`}
+                    >
+                      {opportunity.probability}%
+                    </Badge>
+                  </TableCell>
+
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <BetTrackerButton
+                        opportunity={opportunity}
+                        isAdded={selectedOpportunity === opportunity.id}
+                        size="sm"
+                        variant="outline"
                       />
-                      {isUpdating && <Zap className="h-3 w-3 text-primary animate-pulse" />}
+                      <CalculatorButton
+                        opportunity={opportunity}
+                        onOpen={openCalculator}
+                        size="sm"
+                      />
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {opportunity.bet2.outcome}
-                    </div>
-                    <div className="text-xs text-primary">
-                      {formatNumber(opportunity.stakes.bet2.stake)} Ft
-                    </div>
-                  </div>
-                </TableCell>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
 
-                <TableCell>
-                  <div className="space-y-1">
-                    <div className={`text-sm font-bold ${getProfitColor(opportunity.profitMargin)} ${
-                      isUpdating ? 'animate-pulse' : ''
-                    }`}>
-                      {opportunity.profitMargin.toFixed(1)}%
-                    </div>
-                    <div className="text-xs text-green-400">
-                      +{formatNumber(opportunity.expectedProfit)} Ft
-                    </div>
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  <div className="space-y-1">
-                    <div className="text-sm font-semibold">
-                      {formatNumber(opportunity.totalStake)} Ft
-                    </div>
-                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                      <TrendingUp className="h-3 w-3" />
-                      <span>ROI: {opportunity.profitMargin.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className={`text-sm font-mono text-orange-400 ${
-                      isUpdating ? 'animate-pulse' : ''
-                    }`}>
-                      {opportunity.timeToExpiry}
-                    </span>
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  <Badge
-                    className={`text-xs ${getStatusColor(opportunity.probability)} ${
-                      isUpdating ? 'animate-pulse' : ''
-                    }`}
-                  >
-                    {opportunity.probability}%
-                  </Badge>
-                </TableCell>
-
-                <TableCell>
-                  <Button
-                    size="sm"
-                    variant={selectedOpportunity === opportunity.id ? "default" : "outline"}
-                    onClick={() => addToBetTracker(opportunity)}
-                    className="h-8 w-8 p-0"
-                    disabled={selectedOpportunity === opportunity.id}
-                  >
-                    {selectedOpportunity === opportunity.id ? (
-                      <span className="text-xs">✓</span>
-                    ) : (
-                      <Plus className="h-4 w-4" />
-                    )}
-                  </Button>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+      {/* Kalkulátor Modal */}
+      {calculatorModal.isOpen && calculatorModal.opportunity && (
+        <CalculatorModal
+          isOpen={calculatorModal.isOpen}
+          onClose={closeCalculator}
+          opportunity={calculatorModal.opportunity}
+        />
+      )}
+    </>
   );
 }

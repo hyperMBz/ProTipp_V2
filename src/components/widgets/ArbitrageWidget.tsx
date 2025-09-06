@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { DashboardWidget, WidgetWrapper } from "@/components/dashboard/DashboardWidget";
 import { ArbitrageTable } from "@/components/ArbitrageTable";
+import { BetTrackerProvider } from "@/components/bet-tracker/BetTrackerProvider";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -214,11 +215,13 @@ export function ArbitrageWidget({
             </div>
           ) : (
             <div className="h-full overflow-hidden">
-                                <ArbitrageTable
-                    opportunities={filteredOpportunities.slice(0, isMaximized ? 20 : 5)}
-                    // compact={!isMaximized}
-                    // showPagination={false}
-                  />
+              <BetTrackerProvider>
+                <ArbitrageTable
+                  opportunities={filteredOpportunities.slice(0, isMaximized ? 20 : 5)}
+                  // compact={!isMaximized}
+                  // showPagination={false}
+                />
+              </BetTrackerProvider>
             </div>
           )}
         </div>
