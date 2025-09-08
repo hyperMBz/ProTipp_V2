@@ -1,13 +1,12 @@
 # 🚀 ProTipp V2 - Netlify Configuration
 
 [build]
-  command = "bun run build"
+  command = "npm run build"
   publish = ".next"
 
 # Build environment - Bundle Size Optimization
 [build.environment]
   NODE_VERSION = "20"
-  BUN_VERSION = "latest"
   NODE_ENV = "production"
   NEXT_TELEMETRY_DISABLED = "1"
   # Bundle Size Optimization settings
