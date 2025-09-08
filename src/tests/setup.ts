@@ -10,6 +10,7 @@ import { vi } from 'vitest';
 import React from 'react';
 
 // Make jest available globally for backward compatibility
+// @ts-ignore - Vitest compatibility with Jest
 global.jest = vi;
 
 // Mock Next.js router
