@@ -1,7 +1,7 @@
 # 🚀 ProTipp V2 - Netlify Configuration
 
 [build]
-  command = "bun run netlify:build"
+  command = "bun run build"
   publish = ".next"
 
 # Build environment - Bundle Size Optimization

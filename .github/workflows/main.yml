@@ -41,7 +41,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: 🧹 Lint code
-        run: bun run lint
+        run: next lint
 
       - name: 🔬 Type check
         run: bunx tsc --noEmit
