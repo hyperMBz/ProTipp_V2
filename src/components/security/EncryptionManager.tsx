@@ -25,7 +25,7 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import { useAuth } from '@/lib/providers/auth-provider';
+import { useAuth } from '@/lib/auth/unified-auth-provider';
 import { 
   encryptionManager, 
   EncryptionKey, 

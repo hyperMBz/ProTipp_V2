@@ -119,10 +119,10 @@ export function calculateResult(
   options: CalculatorOptions = DEFAULT_CALCULATOR_OPTIONS
 ): CalculatorResult {
   const { stake, opportunity } = input;
-  const { odds } = opportunity;
+  const { bet1, bet2 } = opportunity;
 
   // Validáció
-  if (stake <= 0 || odds <= 0) {
+  if (stake <= 0 || bet1.odds <= 0 || bet2.odds <= 0) {
     return {
       stake: 0,
       payout: 0,
@@ -132,7 +132,7 @@ export function calculateResult(
     };
   }
 
-  const payout = calculatePayout(stake, odds, options);
+  const payout = calculatePayout(stake, bet1.odds, options);
   const profit = calculateProfit(stake, payout, options);
   const profitPercentage = calculateProfitPercentage(stake, profit, options);
   const roi = calculateROI(stake, payout, options);
@@ -264,6 +264,9 @@ export function formatCurrency(
   currency: 'HUF' | 'EUR' | 'USD' = 'HUF',
   options: Intl.NumberFormatOptions = {}
 ): string {
+  // Biztonságos amount kezelés
+  const safeAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
+  
   const defaultOptions: Intl.NumberFormatOptions = {
     style: 'currency',
     currency: currency,
@@ -272,7 +275,7 @@ export function formatCurrency(
     ...options,
   };
 
-  return new Intl.NumberFormat('hu-HU', defaultOptions).format(amount);
+  return new Intl.NumberFormat('hu-HU', defaultOptions).format(safeAmount);
 }
 
 /**
@@ -285,6 +288,9 @@ export function formatPercentage(
   percentage: number,
   options: Intl.NumberFormatOptions = {}
 ): string {
+  // Biztonságos percentage kezelés
+  const safePercentage = typeof percentage === 'number' && !isNaN(percentage) ? percentage : 0;
+  
   const defaultOptions: Intl.NumberFormatOptions = {
     style: 'percent',
     minimumFractionDigits: 1,
@@ -292,7 +298,7 @@ export function formatPercentage(
     ...options,
   };
 
-  return new Intl.NumberFormat('hu-HU', defaultOptions).format(percentage / 100);
+  return new Intl.NumberFormat('hu-HU', defaultOptions).format(safePercentage / 100);
 }
 
 /**

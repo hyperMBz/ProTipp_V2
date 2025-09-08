@@ -259,7 +259,7 @@ export function PerformanceMetrics({ metrics, isLoading = false, className }: Pe
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Profit/veszteség arány:</span>
                   <span className="text-sm font-medium">
-                    {metrics.maxLoss !== 0 ? (metrics.maxProfit / Math.abs(metrics.maxLoss)).toFixed(2) : 'N/A'}
+                    {metrics.maxLoss !== 0 ? (typeof (metrics.maxProfit / Math.abs(metrics.maxLoss)) === 'number' && !isNaN(metrics.maxProfit / Math.abs(metrics.maxLoss)) ? (metrics.maxProfit / Math.abs(metrics.maxLoss)).toFixed(2) : 'N/A') : 'N/A'}
                   </span>
                 </div>
               </div>

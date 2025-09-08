@@ -98,6 +98,12 @@ export class MLArbitrageDetector {
 
   private async initializeModel() {
     try {
+      // Check if model is already initialized
+      if (this.isModelLoaded && this.model) {
+        console.log('ML model already initialized, skipping...');
+        return;
+      }
+
       // In production, load a pre-trained model
       // this.model = await tf.loadLayersModel('/models/arbitrage-detector.json');
       
@@ -112,33 +118,44 @@ export class MLArbitrageDetector {
   }
 
   private createSimpleModel(): tf.LayersModel {
-    const model = tf.sequential({
-      layers: [
-        tf.layers.dense({
-          inputShape: [8], // 8 features
-          units: 16,
-          activation: 'relu'
-        }),
-        tf.layers.dropout({ rate: 0.2 }),
-        tf.layers.dense({
-          units: 8,
-          activation: 'relu'
-        }),
-        tf.layers.dropout({ rate: 0.2 }),
-        tf.layers.dense({
-          units: 1,
-          activation: 'sigmoid'
-        })
-      ]
-    });
+    try {
+      // Clear any existing models to prevent conflicts
+      tf.disposeVariables();
+      
+      const model = tf.sequential({
+        layers: [
+          tf.layers.dense({
+            inputShape: [8], // 8 features
+            units: 16,
+            activation: 'relu',
+            name: 'dense_1' // Add unique name
+          }),
+          tf.layers.dropout({ rate: 0.2, name: 'dropout_1' }),
+          tf.layers.dense({
+            units: 8,
+            activation: 'relu',
+            name: 'dense_2' // Add unique name
+          }),
+          tf.layers.dropout({ rate: 0.2, name: 'dropout_2' }),
+          tf.layers.dense({
+            units: 1,
+            activation: 'sigmoid',
+            name: 'dense_3' // Add unique name
+          })
+        ]
+      });
 
-    model.compile({
-      optimizer: tf.train.adam(0.001),
-      loss: 'binaryCrossentropy',
-      metrics: ['accuracy']
-    });
+      model.compile({
+        optimizer: tf.train.adam(0.001),
+        loss: 'binaryCrossentropy',
+        metrics: ['accuracy']
+      });
 
-    return model;
+      return model;
+    } catch (error) {
+      console.error('Error creating TensorFlow model:', error);
+      throw error;
+    }
   }
 
   // Extract features from arbitrage opportunity

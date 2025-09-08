@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from 'react';
-import { useAuth } from '@/lib/providers/auth-provider';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth/unified-auth-provider';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,15 +16,22 @@ interface LoginDialogProps {
   children: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  initialMode?: 'login' | 'register';
+  onModeChange?: (mode: 'login' | 'register') => void;
 }
 
-export function LoginDialog({ children, open, onOpenChange }: LoginDialogProps) {
-  const { signIn, signUp, signInWithGoogle, loading } = useAuth();
+export function LoginDialog({ children, open, onOpenChange, initialMode = 'login', onModeChange }: LoginDialogProps) {
+  const { user, loading, error: authError, signIn, signUp, signInWithGoogle } = useAuth();
+  const router = useRouter();
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('login');
+  const [activeTab, setActiveTab] = useState(initialMode);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Figyeljük az initialMode változását
+  useEffect(() => {
+    setActiveTab(initialMode);
+  }, [initialMode]);
 
   // Form states
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -35,7 +43,6 @@ export function LoginDialog({ children, open, onOpenChange }: LoginDialogProps) 
   });
 
   const handleOpenChange = (newOpen: boolean) => {
-    setIsOpen(newOpen);
     onOpenChange?.(newOpen);
 
     if (!newOpen) {
@@ -50,19 +57,26 @@ export function LoginDialog({ children, open, onOpenChange }: LoginDialogProps) 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
 
     if (!loginForm.email || !loginForm.password) {
       setError('Kérjük töltse ki az összes mezőt');
       return;
     }
 
-    const { error } = await signIn(loginForm.email, loginForm.password);
+    console.log('🔐 LoginDialog - Attempting login for:', loginForm.email);
+    const result = await signIn(loginForm.email, loginForm.password);
 
-    if (error) {
-      setError('Hibás email vagy jelszó');
+    if (result.success) {
+      setSuccess('Sikeres bejelentkezés! Átirányítás a dashboard-ra...');
+      console.log('✅ LoginDialog - Login successful, closing dialog');
+      // Dialog bezárása - az átirányítás a AuthProvider-ben történik
+      setTimeout(() => {
+        handleOpenChange(false);
+      }, 1000);
     } else {
-      setSuccess('Sikeres bejelentkezés!');
-      setTimeout(() => handleOpenChange(false), 1000);
+      setError(result.error || 'Hibás email vagy jelszó');
+      console.error('❌ LoginDialog - Login failed:', result.error);
     }
   };
 
@@ -85,35 +99,29 @@ export function LoginDialog({ children, open, onOpenChange }: LoginDialogProps) 
       return;
     }
 
-    const { error } = await signUp(registerForm.email, registerForm.password, {
-      full_name: registerForm.fullName,
-    });
+    const result = await signUp(registerForm.email, registerForm.password, registerForm.fullName);
 
-    if (error) {
-      setError(error.message || 'Hiba történt a regisztrálás során');
-    } else {
+    if (result.success) {
       setSuccess('Regisztráció sikeres! Ellenőrizze az email fiókját a megerősítéshez.');
       setActiveTab('login');
+    } else {
+      setError(result.error || 'Hiba történt a regisztrálás során');
     }
   };
 
   const handleGoogleAuth = async () => {
     setError(null);
 
-    const { error } = await signInWithGoogle();
+    const result = await signInWithGoogle();
 
-    if (error) {
-      setError('Hiba történt a Google bejelentkezés során');
+    if (!result.success) {
+      setError(result.error || 'Hiba történt a Google bejelentkezés során');
     }
   };
 
-  const actualOpen = open !== undefined ? open : isOpen;
-
   return (
-    <Dialog open={actualOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {children}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
@@ -125,7 +133,10 @@ export function LoginDialog({ children, open, onOpenChange }: LoginDialogProps) 
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => {
+          setActiveTab(value as 'login' | 'register');
+          onModeChange?.(value as 'login' | 'register');
+        }} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login" className="flex items-center space-x-2">
               <LogIn className="h-4 w-4" />

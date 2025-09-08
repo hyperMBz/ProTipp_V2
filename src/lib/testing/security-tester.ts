@@ -5,9 +5,8 @@
  * Comprehensive security vulnerability testing
  */
 
-import { execSync } from 'child_process';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join } from 'path';
+// Server-side only imports
+const isServer = typeof window === 'undefined';
 
 export interface SecurityVulnerability {
   id: string;
@@ -63,6 +62,11 @@ export class SecurityTester {
    * Run comprehensive security tests
    */
   async runSecurityTests(): Promise<SecurityReport> {
+    if (!isServer) {
+      console.warn('Security testing is only available on the server side');
+      return this.getEmptyReport();
+    }
+
     console.log('🔒 Starting security tests...');
 
     const tests: SecurityTest[] = [];
@@ -108,7 +112,7 @@ export class SecurityTester {
       status
     };
 
-    this.saveReport(report);
+    await this.saveReport(report);
     return report;
   }
 
@@ -127,34 +131,36 @@ export class SecurityTester {
     let failedChecks = 0;
 
     try {
+      const { execSync } = await import('child_process');
+      
       // Run npm audit
       const auditResult = execSync('npm audit --json', { encoding: 'utf8' });
       const auditData = JSON.parse(auditResult);
 
       if (auditData.vulnerabilities) {
-        Object.entries(auditData.vulnerabilities).forEach(([packageName, vuln]: [string, any]) => {
+        for (const [packageName, vuln] of Object.entries(auditData.vulnerabilities)) {
           totalChecks++;
           failedChecks++;
 
           vulnerabilities.push({
             id: `dep-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type: 'dependency',
-            severity: vuln.severity || 'low',
-            title: vuln.title || `Vulnerability in ${packageName}`,
-            description: vuln.description || `Security vulnerability found in ${packageName}`,
-            recommendation: vuln.recommendation || 'Update to latest version',
-            cve: vuln.cves?.[0],
+            severity: (vuln as any).severity || 'low',
+            title: (vuln as any).title || `Vulnerability in ${packageName}`,
+            description: (vuln as any).description || `Security vulnerability found in ${packageName}`,
+            recommendation: (vuln as any).recommendation || 'Update to latest version',
+            cve: (vuln as any).cves?.[0],
             package: packageName,
-            version: vuln.installedVersion
+            version: (vuln as any).installedVersion
           });
-        });
+        }
       }
 
       // Check for outdated packages
       const outdatedResult = execSync('npm outdated --json', { encoding: 'utf8' });
       const outdatedData = JSON.parse(outdatedResult);
 
-      Object.entries(outdatedData).forEach(([packageName, data]: [string, any]) => {
+      for (const [packageName, data] of Object.entries(outdatedData)) {
         totalChecks++;
         if (this.isSecurityUpdate(data)) {
           failedChecks++;
@@ -164,14 +170,14 @@ export class SecurityTester {
             severity: 'medium',
             title: `Outdated package: ${packageName}`,
             description: `${packageName} is outdated and may contain security vulnerabilities`,
-            recommendation: `Update ${packageName} from ${data.current} to ${data.latest}`,
+            recommendation: `Update ${packageName} from ${(data as any).current} to ${(data as any).latest}`,
             package: packageName,
-            version: data.current
+            version: (data as any).current
           });
         } else {
           passedChecks++;
         }
-      });
+      }
 
     } catch (error) {
       console.warn('Could not run dependency scan:', error);
@@ -248,13 +254,14 @@ export class SecurityTester {
     ];
 
     // Scan source files
-    const sourceFiles = this.getSourceFiles();
+    const sourceFiles = await this.getSourceFiles();
     
-    sourceFiles.forEach(file => {
+    for (const file of sourceFiles) {
       try {
-        const content = readFileSync(file, 'utf8');
+        const fs = await import('fs');
+        const content = fs.readFileSync(file, 'utf8');
         
-        securityPatterns.forEach(pattern => {
+        for (const pattern of securityPatterns) {
           const matches = content.match(pattern.pattern);
           if (matches) {
             totalChecks++;
@@ -273,11 +280,11 @@ export class SecurityTester {
             totalChecks++;
             passedChecks++;
           }
-        });
+        }
       } catch (error) {
         console.warn(`Could not read file ${file}:`, error);
       }
-    });
+    }
 
     const status = this.determineTestStatus(vulnerabilities);
 
@@ -317,11 +324,14 @@ export class SecurityTester {
       'vitest.config.ts'
     ];
 
-    configFiles.forEach(file => {
-      const filePath = join(this.projectRoot, file);
-      if (existsSync(filePath)) {
-        try {
-          const content = readFileSync(filePath, 'utf8');
+    for (const file of configFiles) {
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        const filePath = path.join(this.projectRoot, file);
+        if (fs.existsSync(filePath)) {
+          const content = fs.readFileSync(filePath, 'utf8');
           
           // Check for exposed secrets
           const secretPatterns = [
@@ -331,7 +341,7 @@ export class SecurityTester {
             /token\s*[:=]\s*['"`][^'"`]+['"`]/gi
           ];
 
-          secretPatterns.forEach(pattern => {
+          for (const pattern of secretPatterns) {
             const matches = content.match(pattern);
             if (matches) {
               totalChecks++;
@@ -350,12 +360,12 @@ export class SecurityTester {
               totalChecks++;
               passedChecks++;
             }
-          });
-        } catch (error) {
-          console.warn(`Could not read config file ${file}:`, error);
+          }
         }
+      } catch (error) {
+        console.warn(`Could not read config file ${file}:`, error);
       }
-    });
+    }
 
     const status = this.determineTestStatus(vulnerabilities);
 
@@ -394,11 +404,15 @@ export class SecurityTester {
       '.env.production'
     ];
 
-    envFiles.forEach(file => {
-      const filePath = join(this.projectRoot, file);
-      if (existsSync(filePath)) {
-        try {
-          const content = readFileSync(filePath, 'utf8');
+    for (const file of envFiles) {
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const { execSync } = await import('child_process');
+        
+        const filePath = path.join(this.projectRoot, file);
+        if (fs.existsSync(filePath)) {
+          const content = fs.readFileSync(filePath, 'utf8');
           
           // Check if env file is committed to git
           const gitResult = execSync(`git ls-files ${file}`, { encoding: 'utf8' });
@@ -419,13 +433,13 @@ export class SecurityTester {
             totalChecks++;
             passedChecks++;
           }
-        } catch (error) {
-          // File not in git, which is good
-          totalChecks++;
-          passedChecks++;
         }
+      } catch (error) {
+        // File not in git, which is good
+        totalChecks++;
+        passedChecks++;
       }
-    });
+    }
 
     const status = this.determineTestStatus(vulnerabilities);
 
@@ -457,11 +471,12 @@ export class SecurityTester {
     let failedChecks = 0;
 
     // Check API endpoints for common security issues
-    const apiFiles = this.getAPIFiles();
+    const apiFiles = await this.getAPIFiles();
     
-    apiFiles.forEach(file => {
+    for (const file of apiFiles) {
       try {
-        const content = readFileSync(file, 'utf8');
+        const fs = await import('fs');
+        const content = fs.readFileSync(file, 'utf8');
         
         // Check for missing input validation
         if (content.includes('req.body') && !content.includes('validate') && !content.includes('zod')) {
@@ -523,7 +538,7 @@ export class SecurityTester {
       } catch (error) {
         console.warn(`Could not read API file ${file}:`, error);
       }
-    });
+    }
 
     const status = this.determineTestStatus(vulnerabilities);
 
@@ -543,20 +558,27 @@ export class SecurityTester {
   /**
    * Get source files for scanning
    */
-  private getSourceFiles(): string[] {
+  private async getSourceFiles(): Promise<string[]> {
     const files: string[] = [];
     
     // Add common source directories
     const sourceDirs = ['src', 'app', 'components', 'lib'];
     
-    sourceDirs.forEach(dir => {
-      const dirPath = join(this.projectRoot, dir);
-      if (existsSync(dirPath)) {
-        // This is a simplified file discovery
-        // In production, use a proper file walker
-        files.push(join(dirPath, '**/*.{ts,tsx,js,jsx}'));
+    for (const dir of sourceDirs) {
+      try {
+        const path = await import('path');
+        const fs = await import('fs');
+        
+        const dirPath = path.join(this.projectRoot, dir);
+        if (fs.existsSync(dirPath)) {
+          // This is a simplified file discovery
+          // In production, use a proper file walker
+          files.push(path.join(dirPath, '**/*.{ts,tsx,js,jsx}'));
+        }
+      } catch (error) {
+        console.warn(`Could not check directory ${dir}:`, error);
       }
-    });
+    }
 
     return files;
   }
@@ -564,14 +586,21 @@ export class SecurityTester {
   /**
    * Get API files for scanning
    */
-  private getAPIFiles(): string[] {
+  private async getAPIFiles(): Promise<string[]> {
     const files: string[] = [];
     
-    const apiDir = join(this.projectRoot, 'src/app/api');
-    if (existsSync(apiDir)) {
-      // This is a simplified file discovery
-      // In production, use a proper file walker
-      files.push(join(apiDir, '**/*.{ts,tsx,js,jsx}'));
+    try {
+      const path = await import('path');
+      const fs = await import('fs');
+      
+      const apiDir = path.join(this.projectRoot, 'src/app/api');
+      if (fs.existsSync(apiDir)) {
+        // This is a simplified file discovery
+        // In production, use a proper file walker
+        files.push(path.join(apiDir, '**/*.{ts,tsx,js,jsx}'));
+      }
+    } catch (error) {
+      console.warn('Could not get API files:', error);
     }
 
     return files;
@@ -694,10 +723,41 @@ export class SecurityTester {
   /**
    * Save security report
    */
-  private saveReport(report: SecurityReport): void {
-    const reportPath = join(this.projectRoot, 'security-report.json');
-    writeFileSync(reportPath, JSON.stringify(report, null, 2));
-    console.log(`📊 Security report saved to ${reportPath}`);
+  private async saveReport(report: SecurityReport): Promise<void> {
+    if (!isServer) return;
+    
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      const reportPath = path.join(this.projectRoot, 'security-report.json');
+      fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+      console.log(`📊 Security report saved to ${reportPath}`);
+    } catch (error) {
+      console.error('Error saving security report:', error);
+    }
+  }
+
+  /**
+   * Get empty report for client-side usage
+   */
+  private getEmptyReport(): SecurityReport {
+    return {
+      summary: {
+        total_tests: 0,
+        passed: 0,
+        failed: 0,
+        warning: 0,
+        total_vulnerabilities: 0,
+        critical_vulnerabilities: 0,
+        high_vulnerabilities: 0,
+        medium_vulnerabilities: 0,
+        low_vulnerabilities: 0
+      },
+      tests: [],
+      recommendations: ['Security testing is only available on the server side'],
+      status: 'warning'
+    };
   }
 }
 

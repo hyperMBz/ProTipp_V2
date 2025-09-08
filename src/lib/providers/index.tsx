@@ -1,29 +1,24 @@
 "use client";
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { QueryProvider } from './query-provider';
-import { AuthProvider } from './auth-provider';
-import { AuthProvider as NewAuthProvider } from '@/components/auth/AuthProvider';
-import { AuthErrorBoundary, setupGlobalErrorHandler } from '@/components/auth/AuthErrorBoundary';
+import { UnifiedAuthProvider } from '@/lib/auth/unified-auth-provider';
+import { AuthErrorBoundary } from '@/components/auth/AuthErrorBoundary';
+import { BetTrackerProvider } from '@/components/bet-tracker/BetTrackerProvider';
 
 interface ProvidersProps {
   children: ReactNode;
 }
 
 export function Providers({ children }: ProvidersProps) {
-  // Global error handler beállítása
-  useEffect(() => {
-    setupGlobalErrorHandler();
-  }, []);
-
   return (
     <AuthErrorBoundary>
       <QueryProvider>
-        <NewAuthProvider>
-          <AuthProvider>
+        <UnifiedAuthProvider>
+          <BetTrackerProvider>
             {children}
-          </AuthProvider>
-        </NewAuthProvider>
+          </BetTrackerProvider>
+        </UnifiedAuthProvider>
       </QueryProvider>
     </AuthErrorBoundary>
   );

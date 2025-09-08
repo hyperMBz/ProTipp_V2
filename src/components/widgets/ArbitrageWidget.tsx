@@ -113,11 +113,11 @@ export function ArbitrageWidget({
               <div className="text-xs text-muted-foreground">Lehetőség</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-green-400">{avgProfitMargin.toFixed(2)}%</div>
+              <div className="text-lg font-bold text-green-400">{typeof avgProfitMargin === 'number' && !isNaN(avgProfitMargin) ? avgProfitMargin.toFixed(2) : '0.00'}%</div>
               <div className="text-xs text-muted-foreground">Átlag profit</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-yellow-400">{maxProfitMargin.toFixed(2)}%</div>
+              <div className="text-lg font-bold text-yellow-400">{typeof maxProfitMargin === 'number' && !isNaN(maxProfitMargin) ? maxProfitMargin.toFixed(2) : '0.00'}%</div>
               <div className="text-xs text-muted-foreground">Max profit</div>
             </div>
           </div>

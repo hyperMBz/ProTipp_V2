@@ -3,8 +3,7 @@
  * JWT token kezelés és session validáció
  */
 
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 import { UserSession, UserRole } from './route-guard';
 import type { Database } from '@/lib/supabase/client';
 
@@ -19,7 +18,10 @@ export interface SessionValidationResult {
  */
 export async function validateSession(): Promise<SessionValidationResult> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies });
+    const supabase = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
     
     const {
       data: { session },
@@ -62,10 +64,10 @@ export async function validateSession(): Promise<SessionValidationResult> {
     // UserSession objektum összeállítása
     const userSession: UserSession = {
       id: session.user.id,
-      email: session.user.email || profile.email,
+      email: session.user.email || (profile as any).email,
       role: determineUserRole(profile),
-      subscription_tier: profile.subscription_tier,
-      subscription_ends_at: profile.subscription_ends_at || undefined,
+      subscription_tier: (profile as any).subscription_tier,
+      subscription_ends_at: (profile as any).subscription_ends_at || undefined,
     };
     
     return {
@@ -111,7 +113,10 @@ function determineUserRole(profile: any): UserRole {
  */
 export async function refreshTokenIfNeeded(): Promise<boolean> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies });
+    const supabase = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
     
     const {
       data: { session },
@@ -135,7 +140,10 @@ export async function refreshTokenIfNeeded(): Promise<boolean> {
  */
 export async function invalidateSession(): Promise<boolean> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies });
+    const supabase = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
     
     const { error } = await supabase.auth.signOut();
     
@@ -156,8 +164,39 @@ export async function invalidateSession(): Promise<boolean> {
  */
 export async function validateJWTToken(token: string): Promise<SessionValidationResult> {
   try {
+    // Token format ellenőrzés
+    if (!token || typeof token !== 'string') {
+      return {
+        isValid: false,
+        user: null,
+        error: 'Invalid token format',
+      };
+    }
+    
+    // Token expiry ellenőrzés (ha JWT formátum)
+    if (token.includes('.')) {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+            return {
+              isValid: false,
+              user: null,
+              error: 'Token expired',
+            };
+          }
+        }
+      } catch (e) {
+        // Ha nem JWT formátum, folytatjuk a Supabase validációval
+      }
+    }
+    
     // Supabase JWT token dekódolás és validáció
-    const supabase = createServerComponentClient<Database>({ cookies });
+    const supabase = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
     
     const {
       data: { user },
@@ -189,10 +228,10 @@ export async function validateJWTToken(token: string): Promise<SessionValidation
     
     const userSession: UserSession = {
       id: user.id,
-      email: user.email || profile.email,
+      email: user.email || (profile as any).email,
       role: determineUserRole(profile),
-      subscription_tier: profile.subscription_tier,
-      subscription_ends_at: profile.subscription_ends_at || undefined,
+      subscription_tier: (profile as any).subscription_tier,
+      subscription_ends_at: (profile as any).subscription_ends_at || undefined,
     };
     
     return {
@@ -254,23 +293,35 @@ export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   resetTime: number;
+  retryAfter?: number;
 }
 
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+const rateLimitStore = new Map<string, { count: number; resetTime: number; windowStart: number }>();
 
 export function checkRateLimit(
   identifier: string,
   maxRequests: number = 100,
-  windowMs: number = 15 * 60 * 1000 // 15 perc
+  windowMs: number = 15 * 60 * 1000, // 15 perc
+  burstLimit: number = 10 // Burst protection
 ): RateLimitResult {
   const now = Date.now();
   const windowStart = now - windowMs;
   
   let record = rateLimitStore.get(identifier);
   
-  if (!record || record.resetTime < windowStart) {
-    record = { count: 0, resetTime: now + windowMs };
+  if (!record || record.windowStart < windowStart) {
+    record = { count: 0, resetTime: now + windowMs, windowStart: now };
     rateLimitStore.set(identifier, record);
+  }
+  
+  // Burst protection
+  if (record.count >= burstLimit && (now - record.windowStart) < 60000) { // 1 perc
+    return {
+      allowed: false,
+      remaining: 0,
+      resetTime: record.resetTime,
+      retryAfter: Math.ceil((record.resetTime - now) / 1000)
+    };
   }
   
   record.count++;
@@ -282,7 +333,29 @@ export function checkRateLimit(
     allowed,
     remaining,
     resetTime: record.resetTime,
+    retryAfter: allowed ? undefined : Math.ceil((record.resetTime - now) / 1000)
   };
+}
+
+// Per-user rate limiting
+export function checkUserRateLimit(
+  userId: string,
+  action: string,
+  maxRequests: number = 50,
+  windowMs: number = 15 * 60 * 1000
+): RateLimitResult {
+  const identifier = `user:${userId}:${action}`;
+  return checkRateLimit(identifier, maxRequests, windowMs);
+}
+
+// Per-IP rate limiting
+export function checkIPRateLimit(
+  ip: string,
+  maxRequests: number = 200,
+  windowMs: number = 15 * 60 * 1000
+): RateLimitResult {
+  const identifier = `ip:${ip}`;
+  return checkRateLimit(identifier, maxRequests, windowMs);
 }
 
 /**
@@ -295,5 +368,10 @@ export function getSecurityHeaders(): Record<string, string> {
     'X-XSS-Protection': '1; mode=block',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co;",
+    'Cross-Origin-Embedder-Policy': 'require-corp',
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'Cross-Origin-Resource-Policy': 'same-origin',
   };
 }

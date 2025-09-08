@@ -47,7 +47,7 @@ export class AuthErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('🚫 Auth Error Boundary caught error:', error);
-    console.error('Error Info:', errorInfo);
+    console.error('Error Info:', errorInfo && Object.keys(errorInfo).length > 0 ? errorInfo : 'No error info available');
     
     this.setState({
       error,
@@ -233,24 +233,33 @@ function isNetworkError(error: Error): boolean {
  * Global Error Handler - Window error events kezelése
  */
 export function setupGlobalErrorHandler() {
-  // Unhandled promise rejections
-  window.addEventListener('unhandledrejection', (event) => {
-    console.error('🚫 Unhandled Promise Rejection:', event.reason);
-    
-    if (isAuthError(event.reason)) {
-      event.preventDefault(); // Megakadályozzuk a default error handling-et
-      window.location.href = '/?error=auth_failed';
-    }
-  });
+  // Ellenőrizzük, hogy a window objektum elérhető-e
+  if (typeof window === 'undefined') {
+    return;
+  }
 
-  // JavaScript errors
-  window.addEventListener('error', (event) => {
-    console.error('🚫 Global JavaScript Error:', event.error);
-    
-    if (event.error && isAuthError(event.error)) {
-      window.location.href = '/?error=auth_failed';
-    }
-  });
+  try {
+    // Unhandled promise rejections
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('🚫 Unhandled Promise Rejection:', event.reason);
+      
+      if (isAuthError(event.reason)) {
+        event.preventDefault(); // Megakadályozzuk a default error handling-et
+        window.location.href = '/?error=auth_failed';
+      }
+    });
+
+    // JavaScript errors
+    window.addEventListener('error', (event) => {
+      console.error('🚫 Global JavaScript Error:', event.error);
+      
+      if (event.error && isAuthError(event.error)) {
+        window.location.href = '/?error=auth_failed';
+      }
+    });
+  } catch (error) {
+    console.error('Error setting up global error handler:', error);
+  }
 }
 
 /**

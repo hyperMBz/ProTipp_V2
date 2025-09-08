@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArbitrageTable } from '@/components/ArbitrageTable';
-import { BetTrackerProvider } from '@/components/bet-tracker/BetTrackerProvider';
 import { mockArbitrageOpportunities } from '@/lib/mock-data';
 import { 
   TrendingUp, 
@@ -237,9 +236,7 @@ export function ArbitragePageContent() {
               </div>
             </CardHeader>
             <CardContent>
-              <BetTrackerProvider>
-                <ArbitrageTable opportunities={mockArbitrageOpportunities} />
-              </BetTrackerProvider>
+              <ArbitrageTable opportunities={mockArbitrageOpportunities} />
             </CardContent>
           </Card>
         </TabsContent>

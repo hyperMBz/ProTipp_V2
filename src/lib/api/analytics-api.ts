@@ -286,11 +286,7 @@ export async function fetchAnalyticsDataFromSupabase(
     const supabase = createSupabaseClient();
     let query = supabase
       .from('bet_history')
-      .select(`
-        *,
-        sport:sports(name),
-        bookmaker:bookmakers(name)
-      `)
+      .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
     
@@ -303,17 +299,17 @@ export async function fetchAnalyticsDataFromSupabase(
     
     // Sport szűrés
     if (filters?.sport) {
-      query = query.eq('sport_id', filters.sport);
+      query = query.eq('sport', filters.sport);
     }
     
     // Bookmaker szűrés
     if (filters?.bookmaker) {
-      query = query.eq('bookmaker_id', filters.bookmaker);
+      query = query.eq('bookmaker', filters.bookmaker);
     }
     
     // Eredmény szűrés
     if (filters?.result && filters.result !== 'all') {
-      query = query.eq('result', filters.result);
+      query = query.eq('status', filters.result);
     }
     
     const { data, error } = await query;
@@ -442,6 +438,7 @@ export function subscribeToAnalyticsUpdates(
   userId: string,
   callback: (payload: any) => void
 ): () => void {
+  const supabase = createSupabaseClient();
   const subscription = supabase
     .channel('analytics-updates')
     .on('postgres_changes', {

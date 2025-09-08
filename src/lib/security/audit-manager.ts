@@ -215,7 +215,7 @@ class AuditManager {
         throw error;
       }
 
-      const logs = data ? data.map(log => ({
+      const logs = data ? data.map((log: any) => ({
         ...log,
         timestamp: new Date(log.timestamp),
         archived_at: log.archived_at ? new Date(log.archived_at) : undefined

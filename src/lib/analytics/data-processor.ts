@@ -223,7 +223,7 @@ export class AnalyticsDataProcessor {
     reportType: 'daily' | 'weekly' | 'monthly'
   ): PerformanceReport {
     const filteredBets = betHistory.filter(bet => {
-      const betDate = new Date('placedAt' in bet ? bet.placedAt : bet.placed_at);
+      const betDate = new Date('placedAt' in bet ? bet.placedAt : (bet.placed_at || bet.created_at));
       return betDate >= startDate && betDate <= endDate;
     });
 
@@ -273,7 +273,7 @@ export class AnalyticsDataProcessor {
     const groups: Record<string, UnifiedBetHistory[]> = {};
 
     betHistory.forEach(bet => {
-      const date = new Date('placedAt' in bet ? bet.placedAt : bet.placed_at);
+      const date = new Date('placedAt' in bet ? bet.placedAt : (bet.placed_at || bet.created_at));
       let period: string;
 
       switch (timeframe) {
@@ -310,10 +310,11 @@ export class AnalyticsDataProcessor {
     const groups: Record<string, UnifiedBetHistory[]> = {};
     
     betHistory.forEach(bet => {
-      if (!groups[bet.sport]) {
-        groups[bet.sport] = [];
+      const sport = bet.sport || 'Unknown';
+      if (!groups[sport]) {
+        groups[sport] = [];
       }
-      groups[bet.sport].push(bet);
+      groups[sport].push(bet);
     });
     
     return groups;

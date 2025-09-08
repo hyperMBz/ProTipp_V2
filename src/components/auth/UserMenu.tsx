@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useAuth } from '@/lib/providers/auth-provider';
+import { useAuth } from '@/lib/auth/unified-auth-provider';
 import { LoginDialog } from './LoginDialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -10,15 +10,17 @@ import { Badge } from "@/components/ui/badge";
 import { LogIn, LogOut, User, Settings, CreditCard, BarChart3, Loader2, TrendingUp } from "lucide-react";
 
 export function UserMenu() {
+  // Auth context használata
   const { user, loading, signOut } = useAuth();
+  
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
 
-    const { error } = await signOut();
-
-    if (error) {
+    try {
+      await signOut();
+    } catch (error) {
       console.error('Error signing out:', error);
     }
 

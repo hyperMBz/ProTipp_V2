@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProTipp V2 - Bejelentkezési Teszt</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #444;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background: #333;
+            color: #fff;
+            box-sizing: border-box;
+        }
+        button {
+            background: #8b5cf6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background: #7c3aed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #333;
+            border: 1px solid #555;
+        }
+        .success { border-color: #10b981; background: #064e3b; }
+        .error { border-color: #ef4444; background: #7f1d1d; }
+        .info { border-color: #3b82f6; background: #1e3a8a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 ProTipp V2 - Bejelentkezési Teszt</h1>
+        <p>Ez az oldal teszteli a bejelentkezési funkciót és a session kezelést.</p>
+        
+        <div class="form-group">
+            <label for="email">Email cím:</label>
+            <input type="email" id="email" placeholder="test@example.com" value="test@protipp.com">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Jelszó:</label>
+            <input type="password" id="password" placeholder="Jelszó" value="testpassword123">
+        </div>
+        
+        <button onclick="testLogin()">🔐 Bejelentkezés Tesztelése</button>
+        <button onclick="testLogout()" style="margin-top: 10px; background: #ef4444;">🚪 Kijelentkezés</button>
+        <button onclick="checkSession()" style="margin-top: 10px; background: #3b82f6;">🔍 Session Ellenőrzés</button>
+        
+        <div id="status" class="status info">
+            <strong>Állapot:</strong> Várakozás...
+        </div>
+        
+        <div id="logs" style="margin-top: 20px; font-family: monospace; font-size: 12px; background: #000; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto;">
+            <strong>Logok:</strong><br>
+        </div>
+    </div>
+
+    <script>
+        // Supabase konfiguráció
+        const supabaseUrl = 'https://aizdpdhzprvcwdqqrolr.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpemRwZGh6cHJ2Y3dkcXFyb2xyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMzkyNzAsImV4cCI6MjA3MTgxNTI3MH0.xkDghVzfEVXk2KN-Q2vOLWM0qa4toC3kbmOhiKrgu0Q';
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        function log(message) {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logsDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function setStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<strong>Állapot:</strong> ${message}`;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                setStatus('Kérjük töltse ki az összes mezőt!', 'error');
+                return;
+            }
+            
+            setStatus('Bejelentkezés folyamatban...', 'info');
+            log('🔐 Bejelentkezési kísérlet: ' + email);
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    log('❌ Bejelentkezési hiba: ' + error.message);
+                    setStatus('Bejelentkezési hiba: ' + error.message, 'error');
+                    return;
+                }
+                
+                if (data.user) {
+                    log('✅ Bejelentkezés sikeres: ' + data.user.id);
+                    log('🔑 Session token: ' + (data.session?.access_token ? 'Jelen' : 'Hiányzik'));
+                    
+                    // Session mentése localStorage-ba
+                    if (data.session) {
+                        localStorage.setItem('sb-auth-token', JSON.stringify(data.session));
+                        log('💾 Session mentve localStorage-ba');
+                        
+                        // Cookie beállítása
+                        document.cookie = `sb-auth-token=${data.session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+                        document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+                        log('🍪 Cookie-k beállítva');
+                    }
+                    
+                    setStatus('Bejelentkezés sikeres! Átirányítás a dashboard-ra...', 'success');
+                    
+                    // Átirányítás a dashboard-ra
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 2000);
+                }
+            } catch (err) {
+                log('💥 Bejelentkezési hiba: ' + err.message);
+                setStatus('Bejelentkezési hiba: ' + err.message, 'error');
+            }
+        }
+        
+        async function testLogout() {
+            setStatus('Kijelentkezés folyamatban...', 'info');
+            log('🚪 Kijelentkezési kísérlet');
+            
+            try {
+                const { error } = await supabase.auth.signOut();
+                
+                if (error) {
+                    log('❌ Kijelentkezési hiba: ' + error.message);
+                    setStatus('Kijelentkezési hiba: ' + error.message, 'error');
+                    return;
+                }
+                
+                // Session törlése
+                localStorage.removeItem('sb-auth-token');
+                document.cookie = 'sb-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                
+                log('✅ Kijelentkezés sikeres');
+                log('🧹 Session törölve localStorage-ból és cookie-kból');
+                setStatus('Kijelentkezés sikeres!', 'success');
+            } catch (err) {
+                log('💥 Kijelentkezési hiba: ' + err.message);
+                setStatus('Kijelentkezési hiba: ' + err.message, 'error');
+            }
+        }
+        
+        async function checkSession() {
+            setStatus('Session ellenőrzése...', 'info');
+            log('🔍 Session ellenőrzés');
+            
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    log('❌ Session hiba: ' + error.message);
+                    setStatus('Session hiba: ' + error.message, 'error');
+                    return;
+                }
+                
+                if (session?.user) {
+                    log('✅ Aktív session találva: ' + session.user.id);
+                    log('🔑 Access token: ' + (session.access_token ? 'Jelen' : 'Hiányzik'));
+                    log('🔄 Refresh token: ' + (session.refresh_token ? 'Jelen' : 'Hiányzik'));
+                    setStatus('Aktív session találva!', 'success');
+                } else {
+                    log('⚠️ Nincs aktív session');
+                    
+                    // localStorage ellenőrzése
+                    const savedSession = localStorage.getItem('sb-auth-token');
+                    if (savedSession) {
+                        log('💾 Mentett session találva localStorage-ban');
+                        try {
+                            const sessionData = JSON.parse(savedSession);
+                            log('👤 Mentett felhasználó: ' + sessionData.user?.id);
+                        } catch (e) {
+                            log('❌ Hiba a mentett session olvasásakor');
+                        }
+                    } else {
+                        log('❌ Nincs mentett session localStorage-ban');
+                    }
+                    
+                    setStatus('Nincs aktív session', 'error');
+                }
+            } catch (err) {
+                log('💥 Session ellenőrzési hiba: ' + err.message);
+                setStatus('Session ellenőrzési hiba: ' + err.message, 'error');
+            }
+        }
+        
+        // Oldal betöltésekor session ellenőrzése
+        window.onload = function() {
+            log('🚀 Oldal betöltve, session ellenőrzése...');
+            checkSession();
+        };
+    </script>
+</body>
+</html>

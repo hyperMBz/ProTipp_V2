@@ -10,6 +10,7 @@ import { Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { CalculatorButtonProps } from '@/lib/types/calculator';
+import { useHydrationSafeString, useHydrationSafeField } from '@/lib/utils/hydration-safe';
 
 /**
  * Kalkulátor gomb komponens
@@ -48,8 +49,19 @@ export function CalculatorButton({
     lg: 'h-5 w-5'
   };
 
-  // Hydration-safe event name - mindkét oldalon ugyanazt az értéket használjuk
-  const eventName = opportunity.event || 'Mérkőzés';
+
+  // Hydration-safe értékek generálása
+  const eventName = useHydrationSafeField(opportunity, 'event', 'Mérkőzés');
+  const sportName = useHydrationSafeField(opportunity, 'sport', 'Sport');
+  
+  // Elsődleges név: event, ha nincs akkor sport, ha az sincs akkor alapértelmezett
+  const displayName = eventName !== 'Mérkőzés' ? eventName : 
+                     sportName !== 'Sport' ? sportName : 'Mérkőzés';
+  
+  const stableValues = React.useMemo(() => ({
+    ariaLabel: `Kalkulátor megnyitása: ${displayName}`,
+    title: `Profit számítás: ${displayName}`
+  }), [displayName]);
 
   return (
     <Button
@@ -57,6 +69,8 @@ export function CalculatorButton({
       size="icon"
       onClick={handleClick}
       disabled={disabled}
+      aria-label={stableValues.ariaLabel}
+      title={stableValues.title}
       className={cn(
         "transition-all duration-200 hover:scale-105 hover:bg-primary/10 hover:border-primary/30",
         "focus:ring-2 focus:ring-primary/20 focus:ring-offset-2 focus:ring-offset-background",
@@ -65,8 +79,6 @@ export function CalculatorButton({
         disabled && "opacity-50 cursor-not-allowed",
         className
       )}
-      aria-label={`Kalkulátor megnyitása: ${eventName}`}
-      title={`Profit számítás: ${eventName}`}
     >
       <Calculator 
         className={cn(
@@ -86,7 +98,7 @@ export function CalculatorButton({
 export const MemoizedCalculatorButton = React.memo(CalculatorButton, (prevProps, nextProps) => {
   return (
     prevProps.opportunity.id === nextProps.opportunity.id &&
-    prevProps.opportunity.odds === nextProps.opportunity.odds &&
+    prevProps.opportunity.profitMargin === nextProps.opportunity.profitMargin &&
     prevProps.disabled === nextProps.disabled &&
     prevProps.size === nextProps.size
   );

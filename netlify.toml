@@ -1,13 +1,20 @@
 # 🚀 ProTipp V2 - Netlify Configuration
 
 [build]
-  command = "bun run build"
+  command = "bun run netlify:build"
   publish = ".next"
 
-# Build environment
+# Build environment - Bundle Size Optimization
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
   BUN_VERSION = "latest"
+  NODE_ENV = "production"
+  NEXT_TELEMETRY_DISABLED = "1"
+  # Bundle Size Optimization settings
+  ANALYZE = "false"
+  GENERATE_SOURCEMAP = "false"
+  # Performance optimizations
+  NEXT_PRIVATE_SKIP_SIZE_LIMIT = "true"
 
 # Next.js plugin for optimal deployment
 [[plugins]]
@@ -26,23 +33,55 @@
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.odds-api.com;"
 
-# Cache optimization for static assets
+# Cache optimization for static assets - Bundle Size Optimization
 [[headers]]
   for = "/_next/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+    # Bundle size optimization headers
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
 
 [[headers]]
   for = "/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+    X-Content-Type-Options = "nosniff"
+
+# Optimized chunks caching
+[[headers]]
+  for = "/_next/static/chunks/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    # Compression hints for bundle optimization
+    Vary = "Accept-Encoding"
+
+# Image optimization
+[[headers]]
+  for = "/_next/image*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
 
 # API routes caching
 [[headers]]
   for = "/api/*"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+
+# HTML pages caching
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Service worker caching
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 # Image optimization redirects
 [[redirects]]

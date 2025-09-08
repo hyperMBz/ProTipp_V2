@@ -9,10 +9,81 @@ import { Button } from "@/components/ui/button";
 import { Plus, Clock, TrendingUp, Target, Zap } from "lucide-react";
 import { BetTrackerButton } from "@/components/bet-tracker/BetTrackerButton";
 import { CalculatorButton, CalculatorModal } from "@/components/calculator";
+import { HydrationSafeTableWrapper } from "@/components/ui/hydration-safe-wrapper";
+// Hydration-safe utility függvények közvetlen implementálása
+function safeToFixed(value: number | undefined | null, decimals: number = 2): string {
+  if (typeof value === 'number' && !isNaN(value)) {
+    return value.toFixed(decimals);
+  }
+  return '0.00';
+}
+
+function stableOddsDirection(odds: number, previousOdds?: number): 'up' | 'down' | 'neutral' {
+  if (typeof previousOdds !== 'number' || isNaN(previousOdds)) {
+    return 'neutral';
+  }
+  
+  if (typeof odds !== 'number' || isNaN(odds)) {
+    return 'neutral';
+  }
+  
+  if (odds > previousOdds) return 'up';
+  if (odds < previousOdds) return 'down';
+  return 'neutral';
+}
+
+function stableOddsChange(odds: number, previousOdds?: number): number {
+  if (typeof previousOdds !== 'number' || isNaN(previousOdds)) {
+    return 0;
+  }
+  
+  if (typeof odds !== 'number' || isNaN(odds)) {
+    return 0;
+  }
+  
+  return odds - previousOdds;
+}
+
+function useHydrationSafeField<T>(
+  obj: T | undefined | null,
+  field: keyof T,
+  fallback: string = ''
+): string {
+  // useMemo használata hydration során stabil értékek biztosítására
+  return useMemo(() => {
+    if (!obj || typeof obj !== 'object') {
+      return fallback;
+    }
+    
+    const value = obj[field];
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+    
+    return fallback;
+  }, [obj, field, fallback]);
+}
 
 interface ArbitrageTableProps {
   opportunities: ArbitrageOpportunity[];
   oddsUpdateTrigger?: number;
+}
+
+/**
+ * Hydration-safe opportunity adatok megjelenítése
+ */
+function HydrationSafeOpportunityDisplay({ opportunity }: { opportunity: ArbitrageOpportunity }) {
+  const eventName = useHydrationSafeField(opportunity, 'event', 'Mérkőzés');
+  const outcomeName = useHydrationSafeField(opportunity, 'outcome', 'Eredmény');
+  const sportName = useHydrationSafeField(opportunity, 'sport', 'Sport');
+  
+  // Memoized JSX hydration során stabil megjelenítés biztosítására
+  return useMemo(() => (
+    <>
+      <div className="text-sm font-semibold truncate">{eventName}</div>
+      <div className="text-xs text-muted-foreground">{outcomeName}</div>
+    </>
+  ), [eventName, outcomeName]);
 }
 
 function OddsAnimation({
@@ -30,7 +101,8 @@ function OddsAnimation({
   useEffect(() => {
     if (isUpdating) {
       setIsFlashing(true);
-      const change = (Math.random() - 0.5) * 0.08; // Smaller changes for realism
+      // Deterministic change based on initial odds to avoid hydration mismatch
+      const change = stableOddsChange(initialOdds, initialOdds * 0.95);
       const newOdds = Math.max(1.01, initialOdds + change);
 
       setTimeout(() => {
@@ -76,9 +148,10 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
 
   useEffect(() => {
     if (oddsUpdateTrigger !== lastUpdateTrigger && oddsUpdateTrigger > 0) {
-      // Randomly select 2-3 opportunities to update
-      const shuffled = [...memoizedOpportunities].sort(() => 0.5 - Math.random());
-      const toUpdate = shuffled.slice(0, Math.min(3, Math.floor(Math.random() * 3) + 1));
+      // Deterministically select 2-3 opportunities to update
+      const shuffled = [...memoizedOpportunities].sort((a, b) => a.id.localeCompare(b.id));
+      const updateCount = Math.min(3, (oddsUpdateTrigger % 3) + 1);
+      const toUpdate = shuffled.slice(0, updateCount);
 
       setUpdatingRows(new Set(toUpdate.map(opp => opp.id)));
       setLastUpdateTrigger(oddsUpdateTrigger);
@@ -131,7 +204,10 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
 
   return (
     <>
-      <div className="rounded-lg border border-border overflow-hidden">
+      <HydrationSafeTableWrapper 
+        className="rounded-lg border border-border overflow-hidden"
+        columns={10}
+      >
         <Table>
           <TableHeader>
             <TableRow className="bg-secondary/50 hover:bg-secondary/50">
@@ -166,14 +242,13 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
 
                   <TableCell className="font-medium">
                     <div className="max-w-[200px]">
-                      <div className="text-sm font-semibold truncate">{opportunity.event}</div>
-                      <div className="text-xs text-muted-foreground">{opportunity.outcome}</div>
+                      <HydrationSafeOpportunityDisplay opportunity={opportunity} />
                     </div>
                   </TableCell>
 
                   <TableCell>
                     <div className="text-xs text-muted-foreground">
-                      {opportunity.outcome}
+                      {opportunity.outcome || 'Eredmény'}
                     </div>
                   </TableCell>
 
@@ -186,7 +261,7 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
                         <OddsAnimation
                           initialOdds={opportunity.bet1.odds}
                           isUpdating={isUpdating}
-                          direction={Math.random() > 0.5 ? 'up' : 'down'}
+                          direction={stableOddsDirection(opportunity.bet1.odds, opportunity.bet1.odds * 0.95)}
                         />
                         {isUpdating && <Zap className="h-3 w-3 text-primary animate-pulse" />}
                       </div>
@@ -208,7 +283,7 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
                         <OddsAnimation
                           initialOdds={opportunity.bet2.odds}
                           isUpdating={isUpdating}
-                          direction={Math.random() > 0.5 ? 'up' : 'down'}
+                          direction={stableOddsDirection(opportunity.bet2.odds, opportunity.bet2.odds * 1.05)}
                         />
                         {isUpdating && <Zap className="h-3 w-3 text-primary animate-pulse" />}
                       </div>
@@ -226,7 +301,7 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
                       <div className={`text-sm font-bold ${getProfitColor(opportunity.profitMargin)} ${
                         isUpdating ? 'animate-pulse' : ''
                       }`}>
-                        {opportunity.profitMargin.toFixed(1)}%
+                        {safeToFixed(opportunity.profitMargin, 1)}%
                       </div>
                       <div className="text-xs text-green-400">
                         +{formatNumber(opportunity.expectedProfit)} Ft
@@ -241,7 +316,7 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
                       </div>
                       <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                         <TrendingUp className="h-3 w-3" />
-                        <span>ROI: {opportunity.profitMargin.toFixed(1)}%</span>
+                        <span>ROI: {safeToFixed(opportunity.profitMargin, 1)}%</span>
                       </div>
                     </div>
                   </TableCell>
@@ -287,7 +362,7 @@ export function ArbitrageTable({ opportunities, oddsUpdateTrigger = 0 }: Arbitra
             })}
           </TableBody>
         </Table>
-      </div>
+      </HydrationSafeTableWrapper>
 
       {/* Kalkulátor Modal */}
       {calculatorModal.isOpen && calculatorModal.opportunity && (

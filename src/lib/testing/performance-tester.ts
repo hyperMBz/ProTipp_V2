@@ -5,9 +5,12 @@
  * Comprehensive performance testing and validation
  */
 
-import { execSync } from 'child_process';
-import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { writeFileSync } from 'fs';
+import { execSync } from 'child_process';
+
+// Server-side only imports
+const isServer = typeof window === 'undefined';
 
 export interface PerformanceMetrics {
   avg_response_time: number;
@@ -60,6 +63,11 @@ export class PerformanceTester {
    * Run comprehensive performance tests
    */
   async runPerformanceTests(): Promise<PerformanceReport> {
+    if (!isServer) {
+      console.warn('Performance testing is only available on the server side');
+      return this.getEmptyReport();
+    }
+
     console.log('⚡ Starting performance tests...');
 
     const tests: PerformanceTest[] = [];
@@ -120,7 +128,7 @@ export class PerformanceTester {
       status
     };
 
-    this.saveReport(report);
+    await this.saveReport(report);
     return report;
   }
 
@@ -137,16 +145,21 @@ export class PerformanceTester {
     console.log(`🔄 Running ${config.name}...`);
 
     const k6Script = this.generateLoadTestScript(config);
-    const scriptPath = join(process.cwd(), `k6-${config.name.toLowerCase().replace(/\s+/g, '-')}.js`);
-    writeFileSync(scriptPath, k6Script);
-
+    
     try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const { execSync } = await import('child_process');
+      
+      const scriptPath = path.join(process.cwd(), `k6-${config.name.toLowerCase().replace(/\s+/g, '-')}.js`);
+      fs.writeFileSync(scriptPath, k6Script);
+
       const result = execSync(`k6 run --out json=k6-results-${config.name.toLowerCase().replace(/\s+/g, '-')}.json ${scriptPath}`, {
         encoding: 'utf8',
         timeout: (config.duration_seconds + 30) * 1000
       });
 
-      const metrics = this.parseK6Results(`k6-results-${config.name.toLowerCase().replace(/\s+/g, '-')}.json`);
+      const metrics = this.parseK6Results(`k6-results-${config.name.toLowerCase().replace(/\s+/g, '-')}.json`, fs);
       const status = this.determineTestStatus(metrics, config.threshold_ms);
 
       return {
@@ -198,7 +211,7 @@ export class PerformanceTester {
         timeout: (config.duration_seconds + 30) * 1000
       });
 
-      const metrics = this.parseK6Results(`k6-results-${config.name.toLowerCase().replace(/\s+/g, '-')}.json`);
+      const metrics = this.parseK6Results(`k6-results-${config.name.toLowerCase().replace(/\s+/g, '-')}.json`, require('fs'));
       const status = this.determineTestStatus(metrics, config.threshold_ms);
 
       return {
@@ -250,7 +263,7 @@ export class PerformanceTester {
         timeout: (config.duration_seconds + 30) * 1000
       });
 
-      const metrics = this.parseK6Results(`k6-results-${config.name.toLowerCase().replace(/\s+/g, '-')}.json`);
+      const metrics = this.parseK6Results(`k6-results-${config.name.toLowerCase().replace(/\s+/g, '-')}.json`, require('fs'));
       const status = this.determineTestStatus(metrics, config.threshold_ms);
 
       return {
@@ -443,10 +456,10 @@ export default function () {
   /**
    * Parse k6 results from JSON file
    */
-  private parseK6Results(resultsPath: string): PerformanceMetrics {
+  private parseK6Results(resultsPath: string, fs: any): PerformanceMetrics {
     try {
-      if (existsSync(resultsPath)) {
-        const data = JSON.parse(readFileSync(resultsPath, 'utf8'));
+      if (fs.existsSync(resultsPath)) {
+        const data = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
         const metrics = data.metrics || {};
         
         return {
@@ -573,10 +586,19 @@ export default function () {
   /**
    * Save performance report
    */
-  private saveReport(report: PerformanceReport): void {
-    const reportPath = join(process.cwd(), 'performance-report.json');
-    writeFileSync(reportPath, JSON.stringify(report, null, 2));
-    console.log(`📊 Performance report saved to ${reportPath}`);
+  private async saveReport(report: PerformanceReport): Promise<void> {
+    if (!isServer) return;
+    
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      const reportPath = path.join(process.cwd(), 'performance-report.json');
+      fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+      console.log(`📊 Performance report saved to ${reportPath}`);
+    } catch (error) {
+      console.error('Error saving performance report:', error);
+    }
   }
 
   /**
@@ -600,6 +622,25 @@ export default function () {
       default:
         throw new Error(`Unknown test type: ${config.testType}`);
     }
+  }
+
+  /**
+   * Get empty report for client-side usage
+   */
+  private getEmptyReport(): PerformanceReport {
+    return {
+      summary: {
+        total_tests: 0,
+        passed: 0,
+        failed: 0,
+        warning: 0,
+        avg_response_time: 0,
+        max_concurrent_users: 0
+      },
+      tests: [],
+      recommendations: ['Performance testing is only available on the server side'],
+      status: 'warning'
+    };
   }
 }
 

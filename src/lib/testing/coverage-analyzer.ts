@@ -5,8 +5,8 @@
  * Analyzes test coverage and provides detailed reports
  */
 
-import { readFileSync, existsSync, writeFileSync } from 'fs';
-import { join } from 'path';
+// Server-side only imports
+const isServer = typeof window === 'undefined';
 
 export interface CoverageData {
   totalStatements: number;
@@ -72,15 +72,23 @@ export class CoverageAnalyzer {
    * Analyze coverage from coverage report
    */
   async analyzeCoverage(): Promise<CoverageReport> {
-    console.log('📊 Analyzing test coverage...');
-
-    if (!existsSync(this.coveragePath)) {
-      console.warn(`⚠️ Coverage file not found: ${this.coveragePath}`);
+    if (!isServer) {
+      console.warn('Coverage analysis is only available on the server side');
       return this.generateEmptyReport();
     }
 
+    console.log('📊 Analyzing test coverage...');
+
     try {
-      const coverageData = JSON.parse(readFileSync(this.coveragePath, 'utf8'));
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      if (!fs.existsSync(this.coveragePath)) {
+        console.warn(`⚠️ Coverage file not found: ${this.coveragePath}`);
+        return this.generateEmptyReport();
+      }
+
+      const coverageData = JSON.parse(fs.readFileSync(this.coveragePath, 'utf8'));
       const files = this.parseCoverageData(coverageData);
       const summary = this.calculateSummary(files);
       const recommendations = this.generateRecommendations(files, summary);
@@ -94,7 +102,7 @@ export class CoverageAnalyzer {
         status
       };
 
-      this.saveReport(report);
+      this.saveReport(report, fs, path);
       return report;
     } catch (error) {
       console.error('❌ Error analyzing coverage:', error);
@@ -218,7 +226,7 @@ export class CoverageAnalyzer {
    */
   private findUncoveredBranches(branches: any): number[] {
     return Object.entries(branches)
-      .filter(([_, counts]) => counts.every((count: any) => count === 0))
+      .filter(([_, counts]) => Array.isArray(counts) && counts.every((count: any) => count === 0))
       .map(([branch]) => parseInt(branch))
       .sort((a, b) => a - b);
   }
@@ -327,9 +335,9 @@ export class CoverageAnalyzer {
   /**
    * Save coverage report
    */
-  private saveReport(report: CoverageReport): void {
-    const reportPath = join(process.cwd(), 'coverage-report.json');
-    writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  private saveReport(report: CoverageReport, fs: any, path: any): void {
+    const reportPath = path.join(process.cwd(), 'coverage-report.json');
+    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
     console.log(`📊 Coverage report saved to ${reportPath}`);
   }
 
@@ -361,13 +369,19 @@ export class CoverageAnalyzer {
   /**
    * Get coverage for specific file
    */
-  getFileCoverage(filePath: string): FileCoverage | null {
-    if (!existsSync(this.coveragePath)) {
+  async getFileCoverage(filePath: string): Promise<FileCoverage | null> {
+    if (!isServer) {
       return null;
     }
 
     try {
-      const coverageData = JSON.parse(readFileSync(this.coveragePath, 'utf8'));
+      const fs = await import('fs');
+      
+      if (!fs.existsSync(this.coveragePath)) {
+        return null;
+      }
+
+      const coverageData = JSON.parse(fs.readFileSync(this.coveragePath, 'utf8'));
       const fileData = coverageData[filePath];
 
       if (!fileData) {
@@ -395,13 +409,19 @@ export class CoverageAnalyzer {
   /**
    * Get files with low coverage
    */
-  getLowCoverageFiles(threshold: number = 50): FileCoverage[] {
-    if (!existsSync(this.coveragePath)) {
+  async getLowCoverageFiles(threshold: number = 50): Promise<FileCoverage[]> {
+    if (!isServer) {
       return [];
     }
 
     try {
-      const coverageData = JSON.parse(readFileSync(this.coveragePath, 'utf8'));
+      const fs = await import('fs');
+      
+      if (!fs.existsSync(this.coveragePath)) {
+        return [];
+      }
+
+      const coverageData = JSON.parse(fs.readFileSync(this.coveragePath, 'utf8'));
       const files = this.parseCoverageData(coverageData);
       return files.filter(file => file.coverage.percentage < threshold);
     } catch (error) {
@@ -413,12 +433,12 @@ export class CoverageAnalyzer {
   /**
    * Get coverage trends (if historical data available)
    */
-  getCoverageTrends(): {
+  async getCoverageTrends(): Promise<{
     current: CoverageData;
     previous?: CoverageData;
     trend: 'improving' | 'declining' | 'stable';
-  } {
-    const current = this.analyzeCoverage();
+  }> {
+    const current = await this.analyzeCoverage();
     
     // In a real implementation, you would load historical data
     // For now, return current data only

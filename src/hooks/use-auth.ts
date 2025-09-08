@@ -22,7 +22,7 @@ interface AuthActions {
   signUp: (email: string, password: string, fullName?: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
-  hasPermission: (action: string, resource: string, conditions?: Record<string, any>) => boolean;
+  hasPermission: (action: string, resource: string, conditions?: Record<string, unknown>) => boolean;
   hasRole: (role: UserRole) => boolean;
   isSubscribed: (tier: 'free' | 'pro' | 'premium') => boolean;
 }
@@ -127,8 +127,8 @@ export function useAuth(): UseAuthReturn {
         id: user.id,
         email: user.email || '',
         role: determineUserRole(profile, user.email || ''),
-        subscription_tier: profile?.subscription_tier || 'free',
-        subscription_ends_at: profile?.subscription_ends_at || undefined,
+        subscription_tier: (profile as any)?.subscription_tier || 'free',
+        subscription_ends_at: (profile as any)?.subscription_ends_at || undefined,
       };
     } catch (error) {
       console.error('Build user session error:', error);
@@ -160,6 +160,8 @@ export function useAuth(): UseAuthReturn {
       if (data.user) {
         const userSession = await buildUserSession(data.user);
         setState(prev => ({ ...prev, user: userSession, loading: false, error: null }));
+        // Bejelentkezés után a Dashboard oldalra irányítás
+        router.push('/dashboard');
         return true;
       }
       

@@ -140,7 +140,7 @@ export class ExportEngine {
         bet.status,
         bet.profit || 0,
         bet.clv || 0,
-        new Date('placedAt' in bet ? bet.placedAt : bet.placed_at).toISOString(),
+        new Date('placedAt' in bet ? bet.placedAt : (bet.placed_at || bet.created_at)).toISOString(),
       ].join(','))
     ].join('\n');
 
@@ -447,7 +447,7 @@ export class ExportEngine {
                     <td>${bet.stake.toLocaleString('hu-HU')} Ft</td>
                     <td>${bet.status}</td>
                     <td class="${(bet.profit || 0) >= 0 ? 'profit-positive' : 'profit-negative'}">${(bet.profit || 0) >= 0 ? '+' : ''}${(bet.profit || 0).toLocaleString('hu-HU')} Ft</td>
-                    <td>${new Date('placedAt' in bet ? bet.placedAt : bet.placed_at).toLocaleDateString('hu-HU')}</td>
+                    <td>${new Date('placedAt' in bet ? bet.placedAt : (bet.placed_at || bet.created_at)).toLocaleDateString('hu-HU')}</td>
                   </tr>
                 `).join('')}
               </tbody>

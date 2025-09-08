@@ -1,7 +1,7 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 
-// Database types
+// Database típus definíció
 export interface Database {
   public: {
     Tables: {
@@ -11,16 +11,8 @@ export interface Database {
           email: string;
           full_name: string | null;
           avatar_url: string | null;
-          bankroll: number;
-          timezone: string;
-          currency: string;
+          role: 'user' | 'admin';
           subscription_tier: 'free' | 'pro' | 'premium';
-          subscription_ends_at: string | null;
-          mfa_enabled: boolean;
-          mfa_type: 'totp' | 'sms' | 'email' | null;
-          mfa_secret: string | null;
-          mfa_backup_codes: string[] | null;
-          last_mfa_used: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -29,16 +21,8 @@ export interface Database {
           email: string;
           full_name?: string | null;
           avatar_url?: string | null;
-          bankroll?: number;
-          timezone?: string;
-          currency?: string;
+          role?: 'user' | 'admin';
           subscription_tier?: 'free' | 'pro' | 'premium';
-          subscription_ends_at?: string | null;
-          mfa_enabled?: boolean;
-          mfa_type?: 'totp' | 'sms' | 'email' | null;
-          mfa_secret?: string | null;
-          mfa_backup_codes?: string[] | null;
-          last_mfa_used?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -47,16 +31,46 @@ export interface Database {
           email?: string;
           full_name?: string | null;
           avatar_url?: string | null;
-          bankroll?: number;
-          timezone?: string;
-          currency?: string;
+          role?: 'user' | 'admin';
           subscription_tier?: 'free' | 'pro' | 'premium';
-          subscription_ends_at?: string | null;
-          mfa_enabled?: boolean;
-          mfa_type?: 'totp' | 'sms' | 'email' | null;
-          mfa_secret?: string | null;
-          mfa_backup_codes?: string[] | null;
-          last_mfa_used?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      bets: {
+        Row: {
+          id: string;
+          user_id: string;
+          match_id: string;
+          bookmaker: string;
+          bet_type: string;
+          odds: number;
+          stake: number;
+          status: 'pending' | 'won' | 'lost' | 'cancelled';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          match_id: string;
+          bookmaker: string;
+          bet_type: string;
+          odds: number;
+          stake: number;
+          status?: 'pending' | 'won' | 'lost' | 'cancelled';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          match_id?: string;
+          bookmaker?: string;
+          bet_type?: string;
+          odds?: number;
+          stake?: number;
+          status?: 'pending' | 'won' | 'lost' | 'cancelled';
           created_at?: string;
           updated_at?: string;
         };
@@ -65,286 +79,101 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          event_name: string;
-          sport: string;
+          match_id: string;
           bookmaker: string;
+          bet_type: string;
           odds: number;
           stake: number;
-          outcome: string;
-          status: 'pending' | 'won' | 'lost' | 'refunded' | 'cancelled';
-          placed_at: string;
-          settled_at: string | null;
-          profit: number | null;
-          clv: number | null;
-          notes: string | null;
+          potential_return: number;
+          status: 'pending' | 'won' | 'lost' | 'cancelled';
+          profit_loss: number | null;
           created_at: string;
           updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          event_name: string;
-          sport: string;
-          bookmaker: string;
-          odds: number;
-          stake: number;
-          outcome: string;
-          status?: 'pending' | 'won' | 'lost' | 'refunded' | 'cancelled';
-          placed_at: string;
-          settled_at?: string | null;
-          profit?: number | null;
-          clv?: number | null;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
+          // További mezők, amiket a kód használ
           event_name?: string;
           sport?: string;
+          outcome?: string;
+          profit?: number;
+          clv?: number;
+          placed_at?: string;
+          notes?: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          match_id: string;
+          bookmaker: string;
+          bet_type: string;
+          odds: number;
+          stake: number;
+          potential_return: number;
+          status?: 'pending' | 'won' | 'lost' | 'cancelled';
+          profit_loss?: number | null;
+          created_at?: string;
+          updated_at?: string;
+          // További mezők
+          event_name?: string;
+          sport?: string;
+          outcome?: string;
+          profit?: number;
+          clv?: number;
+          placed_at?: string;
+          notes?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          match_id?: string;
           bookmaker?: string;
+          bet_type?: string;
           odds?: number;
           stake?: number;
+          potential_return?: number;
+          status?: 'pending' | 'won' | 'lost' | 'cancelled';
+          profit_loss?: number | null;
+          created_at?: string;
+          updated_at?: string;
+          // További mezők
+          event_name?: string;
+          sport?: string;
           outcome?: string;
-          status?: 'pending' | 'won' | 'lost' | 'refunded' | 'cancelled';
+          profit?: number;
+          clv?: number;
           placed_at?: string;
-          settled_at?: string | null;
-          profit?: number | null;
-          clv?: number | null;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
+          notes?: string;
         };
       };
-      user_settings: {
+      sports: {
         Row: {
           id: string;
-          user_id: string;
-          auto_refresh: boolean;
-          notification_settings: Record<string, unknown>;
-          default_filters: Record<string, unknown>;
-          dashboard_layout: Record<string, unknown>;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          auto_refresh?: boolean;
-          notification_settings?: Record<string, unknown>;
-          default_filters?: Record<string, unknown>;
-          dashboard_layout?: Record<string, unknown>;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          auto_refresh?: boolean;
-          notification_settings?: Record<string, unknown>;
-          default_filters?: Record<string, unknown>;
-          dashboard_layout?: Record<string, unknown>;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      // Security tables
-      mfa_sessions: {
-        Row: {
-          id: string;
-          user_id: string;
-          mfa_type: 'totp' | 'sms' | 'email';
-          verified: boolean;
-          expires_at: string;
+          name: string;
           created_at: string;
         };
         Insert: {
           id?: string;
-          user_id: string;
-          mfa_type: 'totp' | 'sms' | 'email';
-          verified?: boolean;
-          expires_at: string;
+          name: string;
           created_at?: string;
         };
         Update: {
           id?: string;
-          user_id?: string;
-          mfa_type?: 'totp' | 'sms' | 'email';
-          verified?: boolean;
-          expires_at?: string;
+          name?: string;
           created_at?: string;
         };
       };
-      encryption_keys: {
+      bookmakers: {
         Row: {
           id: string;
-          user_id: string;
-          key_name: string;
-          key_type: 'master' | 'session';
-          encrypted_key: string;
-          salt: string;
-          iterations: number;
-          created_at: string;
-          expires_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          key_name: string;
-          key_type: 'master' | 'session';
-          encrypted_key: string;
-          salt: string;
-          iterations: number;
-          created_at?: string;
-          expires_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          key_name?: string;
-          key_type?: 'master' | 'session';
-          encrypted_key?: string;
-          salt?: string;
-          iterations?: number;
-          created_at?: string;
-          expires_at?: string | null;
-        };
-      };
-      api_keys: {
-        Row: {
-          id: string;
-          user_id: string;
-          key_name: string;
-          hashed_key: string;
-          permissions: string[];
-          active: boolean;
-          last_used: string | null;
-          created_at: string;
-          expires_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          key_name: string;
-          hashed_key: string;
-          permissions: string[];
-          active?: boolean;
-          last_used?: string | null;
-          created_at?: string;
-          expires_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          key_name?: string;
-          hashed_key?: string;
-          permissions?: string[];
-          active?: boolean;
-          last_used?: string | null;
-          created_at?: string;
-          expires_at?: string | null;
-        };
-      };
-      security_events: {
-        Row: {
-          id: string;
-          user_id: string | null;
-          event_type: string;
-          severity: 'low' | 'medium' | 'high' | 'critical';
-          description: string;
-          metadata: Record<string, unknown>;
-          resolved: boolean;
-          created_at: string;
-          resolved_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          user_id?: string | null;
-          event_type: string;
-          severity: 'low' | 'medium' | 'high' | 'critical';
-          description: string;
-          metadata?: Record<string, unknown>;
-          resolved?: boolean;
-          created_at?: string;
-          resolved_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          user_id?: string | null;
-          event_type?: string;
-          severity?: 'low' | 'medium' | 'high' | 'critical';
-          description?: string;
-          metadata?: Record<string, unknown>;
-          resolved?: boolean;
-          created_at?: string;
-          resolved_at?: string | null;
-        };
-      };
-      audit_logs: {
-        Row: {
-          id: string;
-          user_id: string | null;
-          action: string;
-          resource_type: string;
-          resource_id: string | null;
-          details: Record<string, unknown>;
-          ip_address: string | null;
-          user_agent: string | null;
+          name: string;
           created_at: string;
         };
         Insert: {
           id?: string;
-          user_id?: string | null;
-          action: string;
-          resource_type: string;
-          resource_id?: string | null;
-          details?: Record<string, unknown>;
-          ip_address?: string | null;
-          user_agent?: string | null;
+          name: string;
           created_at?: string;
         };
         Update: {
           id?: string;
-          user_id?: string | null;
-          action?: string;
-          resource_type?: string;
-          resource_id?: string | null;
-          details?: Record<string, unknown>;
-          ip_address?: string | null;
-          user_agent?: string | null;
-          created_at?: string;
-        };
-      };
-      user_sessions: {
-        Row: {
-          id: string;
-          user_id: string;
-          session_token: string;
-          ip_address: string;
-          user_agent: string;
-          last_activity: string;
-          expires_at: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          session_token: string;
-          ip_address: string;
-          user_agent: string;
-          last_activity?: string;
-          expires_at: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          session_token?: string;
-          ip_address?: string;
-          user_agent?: string;
-          last_activity?: string;
-          expires_at?: string;
+          name?: string;
           created_at?: string;
         };
       };
@@ -361,9 +190,16 @@ export interface Database {
   };
 }
 
-// Client-side Supabase client
+// Client-side Supabase client using SSR package
 export const createSupabaseClient = () => {
-  return createClientComponentClient<Database>();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
 };
 
 // Server-side Supabase client for admin operations
@@ -375,7 +211,24 @@ export const createSupabaseAdminClient = () => {
     throw new Error('Missing Supabase environment variables');
   }
 
-  return createClient<Database>(supabaseUrl, supabaseServiceKey, {
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+};
+
+// Server-side Supabase client for server components
+export const createSupabaseServerClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -389,25 +242,15 @@ export const getSecurityHeaders = () => ({
   'X-Frame-Options': 'DENY',
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
 });
 
-// Rate limiting helper
-export const createRateLimitedClient = (maxRequests: number = 100, windowMs: number = 60000) => {
-  const client = createSupabaseClient();
-  let requestCount = 0;
-  let windowStart = Date.now();
-
-  return {
-    ...client,
-    // Custom rate limiting logic can be implemented here
-    getRequestCount: () => requestCount,
-    resetRequestCount: () => {
-      requestCount = 0;
-      windowStart = Date.now();
-    }
-  };
+// Auth helper functions
+export const isAuthenticated = async (supabase: any) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return !!session;
 };
 
-// Default export for easy importing
-export default createSupabaseClient;
+export const getCurrentUser = async (supabase: any) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+};

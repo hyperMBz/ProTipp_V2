@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useUser } from '@/lib/providers/auth-provider';
+import { useAuth } from '@/lib/hooks/use-auth';
 import { useArbitrageWithFallback } from '@/lib/hooks/use-odds-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,7 @@ interface LiveAlert {
 }
 
 export function LiveAlertsSystem() {
-  const user = useUser();
+  const { user } = useAuth();
   const [isEnabled, setIsEnabled] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [alerts, setAlerts] = useState<LiveAlert[]>([]);

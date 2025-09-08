@@ -1,9 +1,21 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/lib/providers";
+import { UnifiedNavigation } from "@/components/navigation/UnifiedNavigation";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const inter = Inter({ subsets: ["latin"] });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+  themeColor: "#8b5cf6",
+  colorScheme: "dark",
+};
 
 export const metadata: Metadata = {
   title: "ProTipp V2 - Professional Arbitrage Platform",
@@ -60,15 +72,6 @@ export const metadata: Metadata = {
   },
   // PWA Meta Tags
   manifest: "/manifest.json",
-  themeColor: "#8b5cf6",
-  colorScheme: "dark",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-    viewportFit: "cover",
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -135,6 +138,41 @@ export default function RootLayout({
         {/* Performance optimizations */}
         <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         
+        {/* React DevTools letiltása hydration hibák elkerülésére */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined') {
+                // React DevTools letiltása development módban is
+                if (process.env.NODE_ENV === 'development') {
+                  window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+                    isDisabled: true,
+                    supportsFiber: true,
+                    inject: function() {},
+                    onCommitFiberRoot: function() {},
+                    onCommitFiberUnmount: function() {},
+                  };
+                }
+                
+                // data-react-source attribútumok eltávolítása
+                const observer = new MutationObserver(function(mutations) {
+                  mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'data-react-source') {
+                      mutation.target.removeAttribute('data-react-source');
+                    }
+                  });
+                });
+                
+                observer.observe(document.body, {
+                  attributes: true,
+                  attributeFilter: ['data-react-source'],
+                  subtree: true
+                });
+              }
+            `,
+          }}
+        />
+        
         {/* Structured Data */}
         <script
           type="application/ld+json"
@@ -161,11 +199,19 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className} suppressHydrationWarning>
-        <Providers>
-          <div className="min-h-screen bg-background text-foreground">
-            {children}
-          </div>
-        </Providers>
+        <ErrorBoundary>
+          <Providers>
+            <div className="min-h-screen bg-background text-foreground flex">
+              {/* Sidebar Navigation - csak bejelentkezett felhasználóknak */}
+              <UnifiedNavigation className="hidden md:flex w-64 flex-shrink-0" />
+              
+              {/* Main Content */}
+              <div className="flex-1 flex flex-col min-w-0">
+                {children}
+              </div>
+            </div>
+          </Providers>
+        </ErrorBoundary>
         
         {/* PWA Service Worker Registration */}
         <script

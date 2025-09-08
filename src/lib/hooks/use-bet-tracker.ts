@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/lib/providers/auth-provider';
+import { useAuth } from '@/lib/auth/unified-auth-provider';
 import { betTrackerAPI } from '@/lib/api/bet-tracker-api';
+import { useHydrationSafeString } from '@/lib/utils/hydration-safe';
 import { 
   BetTrackerItem, 
   BetTrackerContextType, 
@@ -12,7 +13,17 @@ import {
 import { ArbitrageOpportunity } from '@/lib/mock-data';
 
 export function useBetTracker(): BetTrackerContextType {
-  const { user } = useAuth();
+  // Hydration-safe auth hook használata
+  let user = null;
+  try {
+    const authData = useAuth();
+    user = authData?.user || null;
+  } catch (error) {
+    // Ha nincs AuthProvider, akkor null user-t használunk
+    console.warn('useAuth hook not available, using null user');
+    user = null;
+  }
+  
   const [trackedBets, setTrackedBets] = useState<BetTrackerItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -177,7 +188,17 @@ export function useBetTracker(): BetTrackerContextType {
 
 // Bet Tracker statisztikák hook
 export function useBetTrackerStats() {
-  const { user } = useAuth();
+  // Hydration-safe auth hook használata
+  let user = null;
+  try {
+    const authData = useAuth();
+    user = authData?.user || null;
+  } catch (error) {
+    // Ha nincs AuthProvider, akkor null user-t használunk
+    console.warn('useAuth hook not available, using null user');
+    user = null;
+  }
+  
   const [stats, setStats] = useState<BetTrackerStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

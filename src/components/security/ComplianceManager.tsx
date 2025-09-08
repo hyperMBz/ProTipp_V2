@@ -31,7 +31,7 @@ import {
   EyeOff,
   Copy
 } from 'lucide-react';
-import { useAuth } from '@/lib/providers/auth-provider';
+import { useAuth } from '@/lib/auth/unified-auth-provider';
 import { 
   complianceManager, 
   DataRetentionPolicy,

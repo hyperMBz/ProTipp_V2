@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useUser } from '@/lib/providers/auth-provider';
+import { useAuth } from '@/lib/hooks/use-auth';
 import { getSupabaseClient } from '@/lib/supabase-singleton';
 import type { Database } from '@/lib/supabase/client';
 import { BetHistoryItem } from '@/lib/mock-data';
@@ -24,7 +24,7 @@ export function useBetHistory(filters?: {
   dateFrom?: string;
   dateTo?: string;
 }) {
-  const user = useUser();
+  const { user } = useAuth();
   const supabase = getSupabaseClient();
 
   return useQuery({
@@ -73,7 +73,7 @@ export function useBetHistory(filters?: {
 
 // Hook to get user's bet history statistics
 export function useBetHistoryStats() {
-  const user = useUser();
+  const { user } = useAuth();
   const supabase = getSupabaseClient();
 
   return useQuery({
@@ -106,7 +106,7 @@ export function useBetHistoryStats() {
 
 // Hook to add a new bet
 export function useAddBet() {
-  const user = useUser();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const supabase = getSupabaseClient();
 
@@ -141,7 +141,7 @@ export function useAddBet() {
 
 // Hook to update a bet
 export function useUpdateBet() {
-  const user = useUser();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const supabase = getSupabaseClient();
 
@@ -174,7 +174,7 @@ export function useUpdateBet() {
 
 // Hook to delete a bet
 export function useDeleteBet() {
-  const user = useUser();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const supabase = getSupabaseClient();
 
@@ -209,7 +209,7 @@ export function useBetHistoryWithFallback(filters?: {
   dateFrom?: string;
   dateTo?: string;
 }) {
-  const user = useUser();
+  const { user } = useAuth();
   const realDataQuery = useBetHistory(filters);
 
   // Import mock data dynamically to avoid bundle issues

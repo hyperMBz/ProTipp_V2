@@ -4,8 +4,9 @@ import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/lib/auth/unified-auth-provider";
 import { 
-  Home, 
+  LayoutDashboard, 
   TrendingUp, 
   BarChart3, 
   Settings, 
@@ -30,7 +31,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { id: "home", label: "Főoldal", icon: Home, route: "/" },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, route: "/dashboard" },
   { id: "arbitrage", label: "Arbitrage", icon: TrendingUp, route: "/arbitrage" },
   { id: "analytics", label: "Analytics", icon: BarChart3, route: "/analytics" },
   { id: "profile", label: "Profil", icon: User, route: "/profile" },
@@ -43,11 +44,17 @@ export function MobileNavigation({
   currentRoute = "/",
 }: MobileNavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   const handleNavClick = (route: string) => {
     onNavigate?.(route);
     setIsMenuOpen(false);
   };
+
+  // Ha loading állapotban van vagy nincs bejelentkezve, ne jelenjen meg a navigáció
+  if (loading || !user) {
+    return null; // Teljesen elrejtjük a navigációt, hogy ne legyen flash effect
+  }
 
   return (
     <>

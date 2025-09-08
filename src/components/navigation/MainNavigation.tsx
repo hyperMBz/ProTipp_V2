@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth/unified-auth-provider";
 import { 
   LayoutDashboard, 
   TrendingUp, 
@@ -15,7 +16,6 @@ import {
   Menu,
   X,
   Zap,
-  Home,
   Target,
   Calendar,
   Users,
@@ -23,7 +23,11 @@ import {
   Info,
   Mail,
   FileText,
-  Shield
+  Shield,
+  Calculator,
+  Activity,
+  History,
+  AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,17 +41,10 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   {
-    href: "/",
-    label: "Főoldal",
-    icon: <Home className="h-4 w-4" />,
-    description: "Üdvözlő oldal"
-  },
-  {
     href: "/dashboard",
     label: "Dashboard",
     icon: <LayoutDashboard className="h-4 w-4" />,
-    badge: "Új",
-    description: "Professzionális dashboard"
+    description: "Áttekintés és gyors műveletek"
   },
   {
     href: "/arbitrage",
@@ -56,22 +53,46 @@ const navigationItems: NavigationItem[] = [
     description: "Arbitrage lehetőségek"
   },
   {
+    href: "/ev-betting",
+    label: "EV Betting",
+    icon: <Target className="h-4 w-4" />,
+    description: "Value betting keresés"
+  },
+  {
+    href: "/bet-tracker",
+    label: "Bet Tracker",
+    icon: <History className="h-4 w-4" />,
+    description: "Fogadás követés"
+  },
+  {
+    href: "/calculator",
+    label: "Kalkulátor",
+    icon: <Calculator className="h-4 w-4" />,
+    description: "Profit számítás"
+  },
+  {
+    href: "/odds",
+    label: "Odds",
+    icon: <Activity className="h-4 w-4" />,
+    description: "Valós idejű odds"
+  },
+  {
+    href: "/alerts",
+    label: "Alerts",
+    icon: <Bell className="h-4 w-4" />,
+    description: "Értesítések"
+  },
+  {
     href: "/analytics",
     label: "Analytics",
     icon: <BarChart3 className="h-4 w-4" />,
     description: "Részletes elemzések"
   },
   {
-    href: "/profile",
-    label: "Profil",
-    icon: <User className="h-4 w-4" />,
-    description: "Felhasználói profil"
-  },
-  {
     href: "/settings",
     label: "Beállítások",
     icon: <Settings className="h-4 w-4" />,
-    description: "Alkalmazás beállítások"
+    description: "Profil és alkalmazás beállítások"
   }
 ];
 
@@ -118,6 +139,12 @@ export function MainNavigation({
 }: MainNavigationProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user, loading } = useAuth();
+
+  // Ha loading állapotban van vagy nincs bejelentkezve, ne jelenjen meg a navigáció
+  if (loading || !user) {
+    return null; // Teljesen elrejtjük a navigációt, hogy ne legyen flash effect
+  }
 
   return (
     <nav className={cn("bg-card border-r border-border", className)}>

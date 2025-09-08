@@ -1,10 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Play, Mail } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth/unified-auth-provider";
+import { LoginDialog } from "@/components/auth/LoginDialog";
 
 export function CallToActionSection() {
+  const { user } = useAuth();
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+
+  const handleRegisterClick = () => {
+    setLoginDialogOpen(true);
+  };
+
   return (
     <section className="py-16 bg-gradient-to-r from-primary/10 to-purple-500/10">
       <div className="container mx-auto px-4 text-center">
@@ -22,14 +32,12 @@ export function CallToActionSection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
             {/* Elsődleges gomb - Ingyenes Regisztráció */}
             <Button 
-              asChild 
+              onClick={handleRegisterClick}
               size="lg" 
               className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold"
             >
-              <Link href="/dashboard">
-                <UserPlus className="mr-2 h-5 w-5" />
-                Ingyenes Regisztráció
-              </Link>
+              <UserPlus className="mr-2 h-5 w-5" />
+              Ingyenes Regisztráció
             </Button>
             
             {/* Másodlagos gomb - Demo Megtekintése */}
@@ -67,6 +75,15 @@ export function CallToActionSection() {
           </div>
         </div>
       </div>
+
+      {/* Login Dialog */}
+      <LoginDialog 
+        open={loginDialogOpen} 
+        onOpenChange={setLoginDialogOpen}
+        initialMode="register"
+      >
+        <div />
+      </LoginDialog>
     </section>
   );
 }

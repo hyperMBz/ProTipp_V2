@@ -20,6 +20,7 @@ import { BetTrackerItem as BetTrackerItemType } from '@/lib/types/bet-tracker';
 import { useBetTrackerActions } from './BetTrackerProvider';
 import { formatNumber } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { safeToFixed } from '@/lib/utils/hydration-safe';
 
 interface BetTrackerItemProps {
   bet: BetTrackerItemType;
@@ -136,7 +137,7 @@ export function BetTrackerItem({
                 {bet.bookmaker}
               </span>
               <span className="font-mono">
-                {bet.odds ? bet.odds.toFixed(2) : 'N/A'}
+                {safeToFixed(bet.odds, 2)}
               </span>
               <span className="flex items-center gap-1">
                 <DollarSign className="h-3 w-3" />

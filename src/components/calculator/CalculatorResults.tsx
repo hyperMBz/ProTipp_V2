@@ -27,6 +27,7 @@ import {
   getProfitColorClass, 
   getProfitCategory 
 } from '@/lib/utils/calculator';
+import { useHydrationSafeNumber } from '@/lib/utils/hydration-safe';
 
 /**
  * Kalkulátor eredmények komponens
@@ -38,8 +39,12 @@ export function CalculatorResults({
   onSave,
   onShare
 }: CalculatorResultsProps) {
-  const profitCategory = getProfitCategory(result.profit);
-  const profitColorClass = getProfitColorClass(result.profit);
+  const profitCategory = result ? getProfitCategory(result.profit) : 'neutral';
+  const profitColorClass = result ? getProfitColorClass(result.profit) : 'text-muted-foreground';
+
+  // Hydration-safe odds értékek
+  const bet1Odds = useHydrationSafeNumber(opportunity?.bet1?.odds, 0);
+  const bet2Odds = useHydrationSafeNumber(opportunity?.bet2?.odds, 0);
 
   const getProfitIcon = () => {
     switch (profitCategory) {
@@ -77,24 +82,24 @@ export function CalculatorResults({
       <CardContent className="space-y-4">
         {/* Mérkőzés információk */}
         <div className="space-y-2">
-          <h4 className="font-medium text-sm">{opportunity.event}</h4>
+          <h4 className="font-medium text-sm">{opportunity?.event || 'N/A'}</h4>
           <div className="flex items-center space-x-2">
             <Badge variant="outline" className="text-xs">
-              {opportunity.sport}
+              {opportunity?.sport || 'N/A'}
             </Badge>
             <Badge variant="secondary" className="text-xs">
-              {opportunity.bet1?.bookmaker || 'N/A'}
+              {opportunity?.bet1?.bookmaker || 'N/A'}
             </Badge>
             <Badge variant="outline" className="text-xs font-mono">
-              {opportunity.bet1?.odds ? opportunity.bet1.odds.toFixed(2) : 'N/A'}
+              {bet1Odds > 0 ? bet1Odds.toFixed(2) : 'N/A'}
             </Badge>
           </div>
           <div className="flex items-center space-x-2">
             <Badge variant="outline" className="text-xs">
-              {opportunity.bet2?.bookmaker || 'N/A'}
+              {opportunity?.bet2?.bookmaker || 'N/A'}
             </Badge>
             <Badge variant="outline" className="text-xs font-mono">
-              {opportunity.bet2?.odds ? opportunity.bet2.odds.toFixed(2) : 'N/A'}
+              {bet2Odds > 0 ? bet2Odds.toFixed(2) : 'N/A'}
             </Badge>
           </div>
         </div>
@@ -110,7 +115,7 @@ export function CalculatorResults({
               <span className="text-sm text-muted-foreground">Tét</span>
             </div>
             <p className="text-lg font-semibold">
-              {formatCurrency(result.stake)}
+              {result ? formatCurrency(result.stake) : '0'}
             </p>
           </div>
 
@@ -121,7 +126,7 @@ export function CalculatorResults({
               <span className="text-sm text-muted-foreground">Kifizetés</span>
             </div>
             <p className="text-lg font-semibold">
-              {formatCurrency(result.payout)}
+              {result ? formatCurrency(result.payout) : '0'}
             </p>
           </div>
         </div>
@@ -138,10 +143,10 @@ export function CalculatorResults({
             </div>
             <div className="text-right">
               <p className={cn("text-lg font-semibold", profitColorClass)}>
-                {formatCurrency(result.profit)}
+                {result ? formatCurrency(result.profit) : '0'}
               </p>
               <p className={cn("text-xs", profitColorClass)}>
-                {formatPercentage(result.profitPercentage)}
+                {result ? formatPercentage(result.profitPercentage) : '0%'}
               </p>
             </div>
           </div>
@@ -153,7 +158,7 @@ export function CalculatorResults({
               variant={getProfitBadgeVariant()}
               className="text-xs"
             >
-              {formatPercentage(result.roi)}
+              {result ? formatPercentage(result.roi) : '0%'}
             </Badge>
           </div>
         </div>
@@ -223,10 +228,10 @@ export function CalculatorResults({
  */
 export const MemoizedCalculatorResults = React.memo(CalculatorResults, (prevProps, nextProps) => {
   return (
-    prevProps.result.stake === nextProps.result.stake &&
-    prevProps.result.payout === nextProps.result.payout &&
-    prevProps.result.profit === nextProps.result.profit &&
-    prevProps.opportunity.id === nextProps.opportunity.id
+    prevProps.result?.stake === nextProps.result?.stake &&
+    prevProps.result?.payout === nextProps.result?.payout &&
+    prevProps.result?.profit === nextProps.result?.profit &&
+    prevProps.opportunity?.id === nextProps.opportunity?.id
   );
 });
 

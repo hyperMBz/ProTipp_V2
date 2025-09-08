@@ -421,7 +421,7 @@ class SessionManager {
         throw error;
       }
 
-      return data ? data.map(session => ({
+      return data ? data.map((session: any) => ({
         ...session,
         created_at: new Date(session.created_at),
         last_activity: new Date(session.last_activity),
@@ -475,7 +475,7 @@ class SessionManager {
         .eq('is_active', true);
 
       const concurrentSessions = concurrentData 
-        ? Math.max(...concurrentData.map(s => s.concurrent_sessions))
+        ? Math.max(...concurrentData.map((s: any) => s.concurrent_sessions))
         : 0;
 
       // Átlagos session időtartam
@@ -485,14 +485,14 @@ class SessionManager {
         .eq('is_active', false)
         .limit(1000);
 
-      const durations = durationData?.map(session => {
+      const durations = durationData?.map((session: any) => {
         const created = new Date(session.created_at);
         const lastActivity = new Date(session.last_activity);
         return lastActivity.getTime() - created.getTime();
       }) || [];
 
       const averageDuration = durations.length > 0
-        ? durations.reduce((sum, duration) => sum + duration, 0) / durations.length
+        ? durations.reduce((sum: any, duration: any) => sum + duration, 0) / durations.length
         : 0;
 
       // Top lokációk és eszközök (mock data)

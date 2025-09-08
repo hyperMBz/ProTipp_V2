@@ -23,21 +23,26 @@ import {
 import { cn } from '@/lib/utils';
 import { CalculatorFormProps } from '@/lib/types/calculator';
 import { validateStake, formatCurrency } from '@/lib/utils/calculator';
+import { useHydrationSafeNumber } from '@/lib/utils/hydration-safe';
 
 /**
  * Kalkulátor form komponens
  * Tét bevitel és számítás indítása
  */
 export function CalculatorForm({
-  opportunity,
-  onCalculate,
-  onReset,
+  opportunity = null,
+  onCalculate = () => {},
+  onReset = () => {},
   isLoading = false,
   error = null
 }: CalculatorFormProps) {
   const [stake, setStake] = useState<string>('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState<boolean>(false);
+
+  // Hydration-safe odds értékek - null check hozzáadva
+  const bet1Odds = useHydrationSafeNumber(opportunity?.bet1?.odds, 0);
+  const bet2Odds = useHydrationSafeNumber(opportunity?.bet2?.odds, 0);
 
   // Tét validálása
   useEffect(() => {
@@ -90,6 +95,28 @@ export function CalculatorForm({
     setStake(amount.toString());
   };
 
+  // Ha nincs opportunity, akkor egy üzenetet jelenítünk meg
+  if (!opportunity) {
+    return (
+      <Card className="gradient-bg border-primary/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center space-x-2">
+            <Calculator className="h-5 w-5 text-primary" />
+            <span>Profit Kalkulátor</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Válasszon ki egy arbitrage lehetőséget a számításhoz.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="gradient-bg border-primary/20">
       <CardHeader className="pb-3">
@@ -111,7 +138,7 @@ export function CalculatorForm({
               {opportunity.bet1?.bookmaker || 'N/A'}
             </Badge>
             <Badge variant="outline" className="text-xs font-mono">
-              {opportunity.bet1?.odds ? opportunity.bet1.odds.toFixed(2) : 'N/A'}
+              {bet1Odds > 0 ? bet1Odds.toFixed(2) : 'N/A'}
             </Badge>
           </div>
           <div className="flex items-center space-x-2">
@@ -119,7 +146,7 @@ export function CalculatorForm({
               {opportunity.bet2?.bookmaker || 'N/A'}
             </Badge>
             <Badge variant="outline" className="text-xs font-mono">
-              {opportunity.bet2?.odds ? opportunity.bet2.odds.toFixed(2) : 'N/A'}
+              {bet2Odds > 0 ? bet2Odds.toFixed(2) : 'N/A'}
             </Badge>
           </div>
         </div>
@@ -237,8 +264,8 @@ export function CalculatorForm({
  */
 export const MemoizedCalculatorForm = React.memo(CalculatorForm, (prevProps, nextProps) => {
   return (
-    prevProps.opportunity.id === nextProps.opportunity.id &&
-    prevProps.opportunity.odds === nextProps.opportunity.odds &&
+    prevProps.opportunity?.id === nextProps.opportunity?.id &&
+    prevProps.opportunity?.profitMargin === nextProps.opportunity?.profitMargin &&
     prevProps.isLoading === nextProps.isLoading &&
     prevProps.error === nextProps.error
   );

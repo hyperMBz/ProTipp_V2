@@ -188,12 +188,38 @@ export function useAuth({ redirectTo }: UseAuthOptions = {}) {
     }
   };
 
+  const signInWithGoogle = async (): Promise<AuthResult> => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) {
+        console.error('Google sign in error:', error);
+        return { error: getAuthErrorMessage(error) };
+      }
+
+      return { error: null };
+    } catch (error) {
+      console.error('Google sign in exception:', error);
+      return { error: 'Váratlan hiba történt a Google bejelentkezés során' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     user,
     isLoading,
+    loading: isLoading, // Alias for compatibility
     signIn,
     signUp,
     signOut,
+    signInWithGoogle,
     resetPassword,
     updatePassword,
     updateProfile

@@ -215,7 +215,7 @@ class SecurityMonitoringManager {
         throw error;
       }
 
-      return data ? data.map(event => ({
+      return data ? data.map((event: any) => ({
         ...event,
         timestamp: new Date(event.timestamp),
         resolved_at: event.resolved_at ? new Date(event.resolved_at) : undefined
@@ -527,7 +527,7 @@ ${event.user_id ? `**User ID**: ${event.user_id}` : ''}
         throw error;
       }
 
-      return data ? data.map(indicator => ({
+      return data ? data.map((indicator: any) => ({
         ...indicator,
         first_seen: new Date(indicator.first_seen),
         last_seen: new Date(indicator.last_seen)

@@ -178,7 +178,7 @@ export function BetTrackerPanel({ className }: BetTrackerPanelProps) {
               </div>
               <div className="text-sm">
                 <span className="text-muted-foreground">Win Rate: </span>
-                <span className="font-semibold">{stats.winRate.toFixed(1)}%</span>
+                <span className="font-semibold">{typeof stats.winRate === 'number' && !isNaN(stats.winRate) ? stats.winRate.toFixed(1) : '0.0'}%</span>
               </div>
             </div>
           </div>

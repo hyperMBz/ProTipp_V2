@@ -154,7 +154,7 @@ class ComplianceManager {
         throw error;
       }
 
-      return data ? data.map(policy => ({
+      return data ? data.map((policy: any) => ({
         ...policy,
         created_at: new Date(policy.created_at),
         updated_at: new Date(policy.updated_at)
@@ -255,7 +255,7 @@ class ComplianceManager {
         throw error;
       }
 
-      return data ? data.map(request => ({
+      return data ? data.map((request: any) => ({
         ...request,
         created_at: new Date(request.created_at),
         completed_at: request.completed_at ? new Date(request.completed_at) : undefined
@@ -463,7 +463,7 @@ class ComplianceManager {
         throw error;
       }
 
-      return data ? data.map(consent => ({
+      return data ? data.map((consent: any) => ({
         ...consent,
         granted_at: new Date(consent.granted_at),
         revoked_at: consent.revoked_at ? new Date(consent.revoked_at) : undefined
@@ -528,7 +528,7 @@ class ComplianceManager {
         throw error;
       }
 
-      return data ? data.map(activity => ({
+      return data ? data.map((activity: any) => ({
         ...activity,
         created_at: new Date(activity.created_at),
         updated_at: new Date(activity.updated_at)

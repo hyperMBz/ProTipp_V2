@@ -122,7 +122,7 @@ export function useCalculator(initialStake: number = 0): UseCalculatorReturn {
     stake,
     setStake: handleSetStake,
     result,
-    calculate,
+    calculate: (stake: number) => calculate(stake, null),
     reset,
     isLoading,
     error,

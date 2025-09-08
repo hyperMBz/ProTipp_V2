@@ -24,19 +24,29 @@ export interface UserSession {
  * Route konfigurációk - meghatározza melyik route milyen szerepet igényel
  */
 export const ROUTE_PERMISSIONS: RoutePermission[] = [
-  // Nyilvános route-ok
+  // Nyilvános oldalak - bejelentkezés nélkül is elérhetők
   { path: '/', required_role: 'public' },
-  { path: '/about', required_role: 'public' },
-  { path: '/contact', required_role: 'public' },
-  { path: '/terms', required_role: 'public' },
-  { path: '/privacy', required_role: 'public' },
-  { path: '/test', required_role: 'public' },
-  { path: '/simple-test', required_role: 'public' },
-  { path: '/mobile-test', required_role: 'public' },
+  { path: '/login', required_role: 'public' },
+  { path: '/register', required_role: 'public' },
   
-  // Felhasználói route-ok
-  { path: '/dashboard', required_role: 'user', redirect_to: '/' },
-  { path: '/profile', required_role: 'user', redirect_to: '/' },
+  // Védett oldalak - csak bejelentkezett felhasználóknak
+  { path: '/dashboard', required_role: 'user', redirect_to: '/login' },
+  { path: '/profile', required_role: 'user', redirect_to: '/login' },
+  { path: '/arbitrage', required_role: 'user', redirect_to: '/login' },
+  { path: '/ev-betting', required_role: 'user', redirect_to: '/login' },
+  { path: '/bet-tracker', required_role: 'user', redirect_to: '/login' },
+  { path: '/calculator', required_role: 'user', redirect_to: '/login' },
+  { path: '/odds', required_role: 'user', redirect_to: '/login' },
+  { path: '/alerts', required_role: 'user', redirect_to: '/login' },
+  { path: '/analytics', required_role: 'user', redirect_to: '/login' },
+  { path: '/settings', required_role: 'user', redirect_to: '/login' },
+  { path: '/about', required_role: 'user', redirect_to: '/login' },
+  { path: '/contact', required_role: 'user', redirect_to: '/login' },
+  { path: '/terms', required_role: 'user', redirect_to: '/login' },
+  { path: '/privacy', required_role: 'user', redirect_to: '/login' },
+  { path: '/test', required_role: 'user', redirect_to: '/login' },
+  { path: '/simple-test', required_role: 'user', redirect_to: '/login' },
+  { path: '/mobile-test', required_role: 'user', redirect_to: '/login' },
   
   // API route-ok
   { path: '/api/user', required_role: 'user' },
@@ -57,6 +67,15 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
 export function isProtectedRoute(pathname: string): boolean {
   const permission = getRoutePermission(pathname);
   return permission ? permission.required_role !== 'public' : false;
+}
+
+/**
+ * Ellenőrzi hogy a főoldal elérhető-e a felhasználó számára
+ * A főoldal mindig elérhető, függetlenül a bejelentkezési állapottól
+ */
+export function canAccessHomePage(userSession: UserSession | null): boolean {
+  // A főoldal mindig elérhető
+  return true;
 }
 
 /**

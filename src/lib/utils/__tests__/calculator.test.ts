@@ -137,9 +137,10 @@ describe('Calculator Utilities', () => {
       profitMargin: 5.2,
       expectedProfit: 1000,
       totalStake: 20000,
-      stakes: { bet1: { stake: 10000 }, bet2: { stake: 10000 } },
+      stakes: { bet1: { stake: 10000, profit: 5000 }, bet2: { stake: 10000, profit: 5000 } },
       probability: 95,
-      timeToExpiry: '2h 30m'
+      timeToExpiry: '2h 30m',
+      category: 'arbitrage' as const
     };
 
     it('calculates complete result correctly', () => {

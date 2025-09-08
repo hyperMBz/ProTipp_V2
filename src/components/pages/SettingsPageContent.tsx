@@ -61,10 +61,10 @@ export function SettingsPageContent() {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-            Beállítások
+            Beállítások & Profil
           </h1>
           <p className="text-muted-foreground text-lg">
-            Személyre szabd a ProTipp V2 platformot
+            Felhasználói profil és alkalmazás beállítások kezelése
           </p>
         </div>
         

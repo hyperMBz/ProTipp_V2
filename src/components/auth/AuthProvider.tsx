@@ -1,76 +1,129 @@
-/**
- * Auth Provider Component
- * Authentication context és state management
- */
+"use client";
 
-'use client';
-
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase/client';
-import type { UserSession } from '@/lib/auth/route-guard';
+import { User } from '@supabase/supabase-js';
 
+// User session interface
+export interface UserSession {
+  id: string;
+  email: string;
+  name?: string;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Auth context interface
 interface AuthContextType {
   user: UserSession | null;
   loading: boolean;
   error: string | null;
-  refreshSession: () => Promise<void>;
+  authError: string | null;
+  signIn: (email: string, password: string) => Promise<boolean>;
+  signUp: (email: string, password: string, name?: string) => Promise<boolean>;
   signOut: () => Promise<void>;
+  isLoginDialogOpen: boolean;
+  setIsLoginDialogOpen: (open: boolean) => void;
+  loginDialogMode: 'login' | 'register';
+  setLoginDialogMode: (mode: 'login' | 'register') => void;
 }
 
+// Create auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-/**
- * Auth Provider - Authentication állapot kezelés az egész alkalmazásban
- */
-export function AuthProvider({ children }: AuthProviderProps) {
+// Auth provider component
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+  const [loginDialogMode, setLoginDialogMode] = useState<'login' | 'register'>('login');
   
+  const router = useRouter();
   const supabase = createSupabaseClient();
 
-  // Session inicializálás és auth state figyelés
+  // Initialize auth state
+  // Build user session object
+  const buildUserSession = async (authUser: User): Promise<UserSession> => {
+    try {
+      // Get user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.warn('Profile fetch error:', profileError);
+      }
+
+      return {
+        id: authUser.id,
+        email: authUser.email || '',
+        name: profile?.name || authUser.user_metadata?.name || '',
+        avatar_url: profile?.avatar_url || authUser.user_metadata?.avatar_url || '',
+        created_at: authUser.created_at || new Date().toISOString(),
+        updated_at: profile?.updated_at || new Date().toISOString(),
+      };
+    } catch (err) {
+      console.error('Error building user session:', err);
+      return {
+        id: authUser.id,
+        email: authUser.email || '',
+        name: authUser.user_metadata?.name || '',
+        avatar_url: authUser.user_metadata?.avatar_url || '',
+        created_at: authUser.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
     const initializeAuth = async () => {
       try {
-        // Jelenlegi session lekérése
+        console.log('🔄 Auth inicializálás...');
+        
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (!mounted) return;
         
         if (sessionError) {
-          console.error('Auth initialization error:', sessionError);
+          console.error('❌ Session error:', sessionError);
           setError(sessionError.message);
           setLoading(false);
           return;
         }
         
         if (session?.user) {
+          console.log('✅ Aktív session találva:', session.user.id);
           const userSession = await buildUserSession(session.user);
           if (mounted) {
             setUser(userSession);
             setError(null);
+            console.log('✅ User beállítva:', userSession.id);
           }
+        } else {
+          console.log('⚠️ Nincs aktív session');
         }
         
         if (mounted) {
           setLoading(false);
+          console.log('✅ Auth inicializálás befejezve');
         }
       } catch (err) {
         if (!mounted) return;
-        console.error('Auth initialization failed:', err);
+        console.error('❌ Auth inicializálás sikertelen:', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');
         setLoading(false);
       }
     };
 
-    // Auth state változások figyelése
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
@@ -79,15 +132,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
         
         try {
           if (event === 'SIGNED_OUT' || !session?.user) {
+            console.log('🚪 User signed out');
             setUser(null);
             setError(null);
           } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            console.log('✅ User signed in or token refreshed');
+            console.log('👤 User ID:', session.user.id);
+            
             const userSession = await buildUserSession(session.user);
             setUser(userSession);
             setError(null);
+            
+            // Redirect to dashboard after sign in
+            if (event === 'SIGNED_IN' && typeof window !== 'undefined') {
+              console.log('🔄 Redirecting to dashboard...');
+              router.push('/dashboard');
+            }
           }
         } catch (err) {
-          console.error('Auth state change error:', err);
+          console.error('❌ Auth state change error:', err);
           setError(err instanceof Error ? err.message : 'Authentication error');
         }
         
@@ -101,86 +164,104 @@ export function AuthProvider({ children }: AuthProviderProps) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [buildUserSession, router, supabase.auth]);
 
-  // UserSession objektum építése
-  const buildUserSession = async (authUser: any): Promise<UserSession> => {
+  // Sign in function
+  const signIn = async (email: string, password: string): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    setAuthError(null);
+    
     try {
-      // Felhasználó profil lekérése
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('subscription_tier, subscription_ends_at')
-        .eq('id', authUser.id)
-        .single();
+      console.log('🔐 Attempting sign in for:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
       if (error) {
-        console.warn('Profile fetch error:', error);
-        // Folytatjuk alapértelmezett értékekkel
+        console.error('❌ Sign in error:', error);
+        setAuthError(error.message);
+        return false;
       }
       
-      const userSession: UserSession = {
-        id: authUser.id,
-        email: authUser.email || '',
-        role: determineUserRole(profile, authUser.email || ''),
-        subscription_tier: profile?.subscription_tier || 'free',
-        subscription_ends_at: profile?.subscription_ends_at || undefined,
-      };
+      if (data.user) {
+        console.log('✅ Sign in successful for user:', data.user.id);
+        setAuthError(null);
+        return true;
+      }
       
-      return userSession;
+      return false;
     } catch (err) {
-      console.error('Build user session error:', err);
-      // Fallback minimal session
-      return {
-        id: authUser.id,
-        email: authUser.email || '',
-        role: 'user',
-        subscription_tier: 'free',
-      };
-    }
-  };
-
-  // Session frissítés
-  const refreshSession = async () => {
-    try {
-      setLoading(true);
-      const { data: { session }, error } = await supabase.auth.refreshSession();
-      
-      if (error) {
-        console.error('Session refresh error:', error);
-        setError(error.message);
-        return;
-      }
-      
-      if (session?.user) {
-        const userSession = await buildUserSession(session.user);
-        setUser(userSession);
-        setError(null);
-      } else {
-        setUser(null);
-      }
-    } catch (err) {
-      console.error('Session refresh failed:', err);
-      setError(err instanceof Error ? err.message : 'Session refresh failed');
+      console.error('❌ Sign in failed:', err);
+      setAuthError(err instanceof Error ? err.message : 'Sign in failed');
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // Kijelentkezés
+  // Sign up function
+  const signUp = async (email: string, password: string, name?: string): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    setAuthError(null);
+    
+    try {
+      console.log('📝 Attempting sign up for:', email);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name || '',
+          },
+        },
+      });
+      
+      if (error) {
+        console.error('❌ Sign up error:', error);
+        setAuthError(error.message);
+        return false;
+      }
+      
+      if (data.user) {
+        console.log('✅ Sign up successful for user:', data.user.id);
+        setAuthError(null);
+        return true;
+      }
+      
+      return false;
+    } catch (err) {
+      console.error('❌ Sign up failed:', err);
+      setAuthError(err instanceof Error ? err.message : 'Sign up failed');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Sign out function
   const signOut = async () => {
     try {
       setLoading(true);
+      console.log('🚪 Signing out...');
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('Sign out error:', error);
+        console.error('❌ Sign out error:', error);
         setError(error.message);
       } else {
         setUser(null);
         setError(null);
+        console.log('✅ User signed out successfully');
+        router.push('/');
       }
     } catch (err) {
-      console.error('Sign out failed:', err);
+      console.error('❌ Sign out failed:', err);
       setError(err instanceof Error ? err.message : 'Sign out failed');
     } finally {
       setLoading(false);
@@ -191,8 +272,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     loading,
     error,
-    refreshSession,
+    authError,
+    signIn,
+    signUp,
     signOut,
+    isLoginDialogOpen,
+    setIsLoginDialogOpen,
+    loginDialogMode,
+    setLoginDialogMode,
   };
 
   return (
@@ -202,86 +289,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 }
 
-/**
- * Auth Context Hook
- */
-export function useAuthContext(): AuthContextType {
+// Hook to use auth context
+export function useAuthContext() {
   const context = useContext(AuthContext);
-  
   if (context === undefined) {
     throw new Error('useAuthContext must be used within an AuthProvider');
   }
-  
   return context;
-}
-
-/**
- * Helper function - user role meghatározás
- */
-function determineUserRole(profile: any, email: string): 'user' | 'premium' | 'admin' {
-  // Admin ellenőrzés
-  if (email.endsWith('@protipp.admin')) {
-    return 'admin';
-  }
-  
-  // Premium subscription ellenőrzés
-  if (profile?.subscription_tier === 'premium' || profile?.subscription_tier === 'pro') {
-    if (profile.subscription_ends_at) {
-      const expiryDate = new Date(profile.subscription_ends_at);
-      if (expiryDate > new Date()) {
-        return 'premium';
-      }
-    }
-  }
-  
-  return 'user';
-}
-
-/**
- * Auth Loading Component - Global loading állapot kezeléshez
- */
-export function AuthLoadingProvider({ children }: { children: ReactNode }) {
-  const { loading } = useAuthContext();
-  
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-sm text-muted-foreground">Alkalmazás betöltése...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  return <>{children}</>;
-}
-
-/**
- * Auth Error Boundary - Globális auth error kezelés
- */
-export function AuthErrorBoundary({ children }: { children: ReactNode }) {
-  const { error } = useAuthContext();
-  
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4 max-w-md mx-auto px-4">
-          <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center">
-            <span className="text-2xl">❌</span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Hitelesítési hiba</h1>
-          <p className="text-muted-foreground">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          >
-            Újrapróbálás
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
-  return <>{children}</>;
 }

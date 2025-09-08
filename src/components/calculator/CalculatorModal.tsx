@@ -110,7 +110,7 @@ export function CalculatorModal({
       const shareText = `Profit kalkuláció: ${opportunity.event}\n` +
         `Tét: ${result.stake.toLocaleString()} Ft\n` +
         `Kifizetés: ${result.payout.toLocaleString()} Ft\n` +
-        `Profit: ${result.profit.toLocaleString()} Ft (${result.profitPercentage ? result.profitPercentage.toFixed(2) : 'N/A'}%)`;
+        `Profit: ${result.profit.toLocaleString()} Ft (${typeof result.profitPercentage === 'number' && !isNaN(result.profitPercentage) ? result.profitPercentage.toFixed(2) : 'N/A'}%)`;
 
       if (navigator.share) {
         navigator.share({

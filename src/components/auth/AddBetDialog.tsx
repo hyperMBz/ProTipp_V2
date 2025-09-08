@@ -97,12 +97,15 @@ export function AddBetDialog({ children, open, onOpenChange }: AddBetDialogProps
         event_name: formData.event_name,
         sport: formData.sport,
         bookmaker: formData.bookmaker,
+        match_id: formData.event_name, // Using event_name as match_id for now
+        bet_type: formData.outcome,
         odds,
         stake,
+        potential_return: stake * odds,
         outcome: formData.outcome,
         status: 'pending',
         placed_at: new Date().toISOString(),
-        notes: formData.notes || null,
+        notes: formData.notes || undefined,
       });
 
       setSuccess('Fogadás sikeresen hozzáadva!');

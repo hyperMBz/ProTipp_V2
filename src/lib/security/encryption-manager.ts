@@ -119,7 +119,7 @@ class EncryptionManager {
         user_id: userId,
         key_type: 'master',
         encrypted_key: this.arrayBufferToBase64(encryptedKey),
-        iv: this.arrayBufferToBase64(iv),
+        iv: this.arrayBufferToBase64(iv as any),
         created_at: new Date(),
         is_active: true
       };
@@ -170,7 +170,7 @@ class EncryptionManager {
         user_id: userId,
         key_type: 'session',
         encrypted_key: this.arrayBufferToBase64(encryptedSessionKey),
-        iv: this.arrayBufferToBase64(iv as ArrayBuffer),
+        iv: this.arrayBufferToBase64(iv as any),
         created_at: new Date(),
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 óra
         is_active: true
@@ -213,7 +213,7 @@ class EncryptionManager {
 
       const encryptedData: EncryptedData = {
         encrypted_content: this.arrayBufferToBase64(encryptedContent),
-        iv: this.arrayBufferToBase64(iv as ArrayBuffer),
+        iv: this.arrayBufferToBase64(iv as any),
         key_id: keyId,
         algorithm: 'AES-256-GCM',
         created_at: new Date()
@@ -374,7 +374,7 @@ class EncryptionManager {
         return [];
       }
 
-      return data ? data.map(key => ({
+      return data ? data.map((key: any) => ({
         ...key,
         created_at: new Date(key.created_at),
         expires_at: key.expires_at ? new Date(key.expires_at) : undefined

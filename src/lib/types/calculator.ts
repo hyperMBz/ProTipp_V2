@@ -3,7 +3,7 @@
  * Sprint 6 - Kalkulátor Funkció Implementálása
  */
 
-import { ArbitrageOpportunity } from './arbitrage';
+import { ArbitrageOpportunity } from '../mock-data';
 
 /**
  * Kalkulátor számítási eredmények
@@ -91,16 +91,16 @@ export interface CalculatorModalProps {
 }
 
 export interface CalculatorFormProps {
-  opportunity: ArbitrageOpportunity;
-  onCalculate: (stake: number) => void;
-  onReset: () => void;
+  opportunity?: ArbitrageOpportunity | null;
+  onCalculate?: (stake: number) => void;
+  onReset?: () => void;
   isLoading?: boolean;
   error?: string | null;
 }
 
 export interface CalculatorResultsProps {
-  result: CalculatorResult;
-  opportunity: ArbitrageOpportunity;
+  result: CalculatorResult | null;
+  opportunity: ArbitrageOpportunity | null;
   onSave?: () => void;
   onShare?: () => void;
 }

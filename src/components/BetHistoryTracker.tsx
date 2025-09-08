@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { mockBetHistory, type BetHistoryItem } from "@/lib/mock-data";
 import { formatNumber } from "@/lib/utils";
 import { useBetHistoryWithFallback, useBetHistoryStats, useAddBet, useUpdateBet, useDeleteBet } from "@/lib/hooks/use-bet-history";
-import { useUser } from "@/lib/providers/auth-provider";
+import { useAuth } from "@/lib/hooks/use-auth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,7 @@ import { AddBetDialog } from "./AddBetDialog";
 import { UnifiedBetHistory, getBetEventName, getBetPlacedDate, getBetSettledDate, getBetProfit, getBetCLV } from "@/lib/types/bet-history";
 
 export function BetHistoryTracker() {
-  const user = useUser();
+  const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<string>("Összes");
   const [sportFilter, setSportFilter] = useState<string>("Összes");
   const [searchTerm, setSearchTerm] = useState<string>("");

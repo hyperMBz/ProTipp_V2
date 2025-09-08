@@ -1,0 +1,57 @@
+{
+  "timestamp": "2025-09-07T18:45:56.675Z",
+  "buildTime": 0,
+  "bundleSize": {
+    "288.dee631ab2b001d67.js": 5,
+    "[root-of-the-server]__8df7605f._.js": 1038,
+    "[root-of-the-server]__8df7605f._.js.map": 1200,
+    "[root-of-the-server]__923cb372._.js": 15,
+    "[root-of-the-server]__923cb372._.js.map": 24,
+    "app": 1,
+    "common-23c8534b71ba18c3.js": 128,
+    "main-app-07eaf189f6258f38.js": 1,
+    "main-eed176a6625b8606.js": 0,
+    "node_modules_3bfdc6a4._.js": 26,
+    "node_modules_3bfdc6a4._.js.map": 31,
+    "node_modules_react-dom_cjs_react-dom_development_ab7e073c.js": 1291,
+    "node_modules_react-dom_cjs_react-dom_development_ab7e073c.js.map": 1462,
+    "node_modules_react-dom_f14d0471._.js": 3,
+    "node_modules_react-dom_f14d0471._.js.map": 3,
+    "node_modules_react_b2385d85._.js": 165,
+    "node_modules_react_b2385d85._.js.map": 188,
+    "pages": 0,
+    "pages__error_5771e187._.js": 1,
+    "pages__error_c260eb72._.js": 65,
+    "pages__error_c260eb72._.js.map": 101,
+    "polyfills-42372ed130431b0a.js": 110,
+    "vendors-dfd6746402e8d947.js": 3513,
+    "webpack-1dedc44280b3bcf0.js": 4
+  },
+  "totalBundleSize": 9375,
+  "lighthouse": {},
+  "recommendations": [
+    "Optimize [root-of-the-server]__8df7605f._.js bundle size",
+    "Optimize [root-of-the-server]__8df7605f._.js.map bundle size",
+    "Optimize node_modules_react-dom_cjs_react-dom_development_ab7e073c.js bundle size",
+    "Optimize node_modules_react-dom_cjs_react-dom_development_ab7e073c.js.map bundle size",
+    "Optimize vendors-dfd6746402e8d947.js bundle size",
+    "Consider code splitting and lazy loading",
+    "Consider lazy loading for large dependencies"
+  ],
+  "thresholds": {
+    "bundleSize": {
+      "warning": 500,
+      "error": 1000
+    },
+    "buildTime": {
+      "warning": 120,
+      "error": 300
+    },
+    "lighthouse": {
+      "performance": 90,
+      "accessibility": 90,
+      "bestPractices": 90,
+      "seo": 90
+    }
+  }
+}

@@ -1,10 +1,31 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { UserPlus, LogIn, HelpCircle } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth/unified-auth-provider";
+import { LoginDialog } from "@/components/auth/LoginDialog";
 
 export function HeroSection() {
+  const { user } = useAuth();
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [loginMode, setLoginMode] = useState<'login' | 'register'>('login');
+
+  const handleDashboardClick = () => {
+    window.location.href = '/dashboard';
+  };
+
+  const handleLoginClick = () => {
+    setLoginMode('login');
+    setLoginDialogOpen(true);
+  };
+
+  const handleRegisterClick = () => {
+    setLoginMode('register');
+    setLoginDialogOpen(true);
+  };
+
   return (
     <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/10">
       <div className="container mx-auto px-4 text-center">
@@ -27,46 +48,78 @@ export function HeroSection() {
           
           {/* CTA gombok */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8 animate-in slide-in-from-bottom-4 duration-1000 delay-500">
-            {/* Elsődleges gomb - Ingyenes Regisztráció */}
-            <Button 
-              asChild 
-              size="lg" 
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-lg font-semibold"
-            >
-              <Link href="/dashboard">
-                <UserPlus className="mr-2 h-5 w-5" />
-                Ingyenes Regisztráció
-              </Link>
-            </Button>
-            
-            {/* Másodlagos gomb - Bejelentkezés */}
-            <Button 
-              asChild 
-              variant="outline" 
-              size="lg"
-              className="border border-border hover:bg-accent hover:text-accent-foreground px-8 py-3 text-lg font-semibold"
-            >
-              <Link href="/dashboard">
-                <LogIn className="mr-2 h-5 w-5" />
-                Bejelentkezés
-              </Link>
-            </Button>
-            
-            {/* Harmadlagos gomb - Hogyan működik */}
-            <Button 
-              asChild 
-              variant="ghost" 
-              size="lg"
-              className="hover:bg-accent hover:text-accent-foreground px-8 py-3 text-lg font-semibold"
-            >
-              <Link href="#how-it-works">
-                <HelpCircle className="mr-2 h-5 w-5" />
-                Hogyan működik?
-              </Link>
-            </Button>
+            {user ? (
+              // Bejelentkezett felhasználó gombjai
+              <>
+                <Button 
+                  onClick={handleDashboardClick}
+                  size="lg" 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-lg font-semibold"
+                >
+                  <LogIn className="mr-2 h-5 w-5" />
+                  Dashboard
+                </Button>
+                
+                <Button 
+                  asChild 
+                  variant="outline" 
+                  size="lg"
+                  className="border border-border hover:bg-accent hover:text-accent-foreground px-8 py-3 text-lg font-semibold"
+                >
+                  <Link href="#how-it-works">
+                    <HelpCircle className="mr-2 h-5 w-5" />
+                    Hogyan működik?
+                  </Link>
+                </Button>
+              </>
+            ) : (
+              // Nem bejelentkezett felhasználó gombjai
+              <>
+                <Button 
+                  onClick={handleRegisterClick}
+                  size="lg" 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-lg font-semibold"
+                >
+                  <UserPlus className="mr-2 h-5 w-5" />
+                  Ingyenes Regisztráció
+                </Button>
+                
+                <Button 
+                  onClick={handleLoginClick}
+                  variant="outline" 
+                  size="lg"
+                  className="border border-border hover:bg-accent hover:text-accent-foreground px-8 py-3 text-lg font-semibold"
+                >
+                  <LogIn className="mr-2 h-5 w-5" />
+                  Bejelentkezés
+                </Button>
+                
+                <Button 
+                  asChild 
+                  variant="ghost" 
+                  size="lg"
+                  className="hover:bg-accent hover:text-accent-foreground px-8 py-3 text-lg font-semibold"
+                >
+                  <Link href="#how-it-works">
+                    <HelpCircle className="mr-2 h-5 w-5" />
+                    Hogyan működik?
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Login Dialog */}
+      <LoginDialog 
+        open={loginDialogOpen} 
+        onOpenChange={setLoginDialogOpen}
+        initialMode={loginMode}
+        onModeChange={setLoginMode}
+      >
+        <div />
+      </LoginDialog>
     </section>
   );
 }
