@@ -1,6 +1,31 @@
 "use client";
 
 import { useState } from "react";
+
+// Analytics data types
+interface SportPerformance {
+  sport: string;
+  totalBets: number;
+  winRate: number;
+  profit: number;
+}
+
+interface BookmakerPerformance {
+  bookmaker: string;
+  totalBets: number;
+  winRate: number;
+  profit: number;
+}
+
+interface AnalyticsExportOptions {
+  format: 'pdf' | 'csv';
+  includeSummary: boolean;
+  includeMetrics: boolean;
+  includeCharts: boolean;
+  includeTrends: boolean;
+  includeSportPerformance: boolean;
+  includeBookmakerPerformance: boolean;
+}
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -259,7 +284,7 @@ export function AnalyticsDashboard({ userId, className }: AnalyticsDashboardProp
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {state.sportPerformance.map((sport: any, index: number) => (
+                  {state.sportPerformance.map((sport: SportPerformance, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <p className="font-medium">{sport.sport}</p>
@@ -290,7 +315,7 @@ export function AnalyticsDashboard({ userId, className }: AnalyticsDashboardProp
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {state.bookmakerPerformance.map((bookmaker: any, index: number) => (
+                  {state.bookmakerPerformance.map((bookmaker: BookmakerPerformance, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <p className="font-medium">{bookmaker.bookmaker}</p>
@@ -341,7 +366,7 @@ export function AnalyticsDashboard({ userId, className }: AnalyticsDashboardProp
             </CardHeader>
             <CardContent>
               <ExportPanel
-                onExport={async (options: any) => {
+                onExport={async (options: AnalyticsExportOptions) => {
                   const format = options.format;
                   await handleExport(format);
                 }}

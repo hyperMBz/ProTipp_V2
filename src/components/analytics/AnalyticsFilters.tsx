@@ -67,7 +67,7 @@ export function AnalyticsFilters({
   const handleResultChange = (result: string) => {
     onFiltersChange({
       ...filters,
-      result: result as any
+      result: result as 'won' | 'lost' | 'pending' | 'all'
     });
   };
 
