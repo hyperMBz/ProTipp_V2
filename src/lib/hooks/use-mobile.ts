@@ -45,9 +45,9 @@ export function useDeviceInfo(): DeviceInfo {
   });
 
   useEffect(() => {
+    const hasWindow = typeof window !== 'undefined';
     const updateDeviceInfo = () => {
       const hasNavigator = typeof navigator !== 'undefined';
-      const hasWindow = typeof window !== 'undefined';
       const userAgent = hasNavigator ? navigator.userAgent : '';
       const isTouch = hasWindow ? ('ontouchstart' in window || (hasNavigator && navigator.maxTouchPoints > 0)) : false;
       
@@ -77,13 +77,17 @@ export function useDeviceInfo(): DeviceInfo {
     // Initial update
     updateDeviceInfo();
 
-    // Listen for resize events
-    window.addEventListener('resize', updateDeviceInfo);
-    window.addEventListener('orientationchange', updateDeviceInfo);
+    // Listen for resize events (browser only)
+    if (hasWindow) {
+      window.addEventListener('resize', updateDeviceInfo);
+      window.addEventListener('orientationchange', updateDeviceInfo);
+    }
 
     return () => {
-      window.removeEventListener('resize', updateDeviceInfo);
-      window.removeEventListener('orientationchange', updateDeviceInfo);
+      if (hasWindow) {
+        window.removeEventListener('resize', updateDeviceInfo);
+        window.removeEventListener('orientationchange', updateDeviceInfo);
+      }
     };
   }, []);
 
@@ -103,6 +107,11 @@ export function usePWAStatus(): PWAStatus {
   });
 
   useEffect(() => {
+    // Böngésző ellenőrzés SSR ellen
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      return;
+    }
+
     const updatePWAStatus = () => {
       // Check if app is installed
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
@@ -171,6 +180,11 @@ export function useOfflineStatus(): OfflineStatus {
   });
 
   useEffect(() => {
+    // Böngésző ellenőrzés SSR ellen
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const updateOnlineStatus = () => {
       const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
       setOfflineStatus(prev => ({
@@ -288,6 +302,11 @@ export function useMobilePerformance() {
   });
 
   useEffect(() => {
+    // Böngésző ellenőrzés SSR ellen
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      return;
+    }
+
     const updatePerformanceMetrics = () => {
       // Load time
       const loadTime = performance.now();
@@ -338,6 +357,11 @@ export function useMobilePreferences() {
   });
 
   useEffect(() => {
+    // Böngésző ellenőrzés SSR ellen
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     // Check for user preferences
     const mediaQueries = {
       dataSaver: window.matchMedia('(prefers-reduced-data: reduce)'),
