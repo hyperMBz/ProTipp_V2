@@ -74,12 +74,19 @@ jobs:
       - name: 🏗️ Build application
         run: bun run build
 
+      - name: 📂 Verify build output exists
+        run: |
+          echo "Repository root contents:" && ls -la
+          echo "\n.next contents:" && ls -la .next || (echo ".next directory is missing" && exit 1)
+
       - name: 📤 Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-files
-          path: .next/
-          retention-days: 1
+          path: .next
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 3
 
   # 3. DEPLOYMENT (csak main branch push esetén)
   deploy:
@@ -98,7 +105,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-files
-          path: .next/
+          path: .next
+
+      - name: 📂 Inspect downloaded artifact
+        run: |
+          echo "Repository root contents after download:" && ls -la
+          echo "\n.next contents after download:" && ls -la .next || (echo "Failed to find downloaded .next" && exit 1)
 
       - name: 🚀 Deploy to Netlify
         uses: nwtgck/actions-netlify@v2.0
