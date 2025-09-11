@@ -14,6 +14,14 @@ concurrency:
 env:
   NODE_VERSION: '18'
   BUN_VERSION: 'latest'
+  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  SMTP_HOST: ${{ secrets.SMTP_HOST }}
+  SMTP_PORT: ${{ secrets.SMTP_PORT }}
+  SMTP_USER: ${{ secrets.SMTP_USER }}
+  SMTP_PASS: ${{ secrets.SMTP_PASS }}
+  SMTP_FROM: ${{ secrets.SMTP_FROM }}
 
 jobs:
   # 1. CODE QUALITY & TESTING
@@ -70,10 +78,6 @@ jobs:
 
       - name: 🏗️ Build application
         run: bun run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_ODDS_API_KEY: ${{ secrets.NEXT_PUBLIC_ODDS_API_KEY }}
 
       - name: 📤 Upload build artifacts
         uses: actions/upload-artifact@v4

@@ -6,6 +6,23 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+
+// Compliance types
+interface GDPRComplianceSummary {
+  data_retention_policies: unknown[];
+  data_processing_activities: unknown[];
+  active_consents: number;
+  pending_requests: number;
+}
+
+interface ComplianceReport {
+  id: string;
+  type: string;
+  status: string;
+  generatedAt: Date;
+  data: Record<string, unknown>;
+  gdpr_compliance?: GDPRComplianceSummary; // opcionális mező a megjelenítéshez
+}
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,7 +64,7 @@ export default function ComplianceManagerComponent() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [config, setConfig] = useState<ComplianceConfig | null>(null);
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<ComplianceReport | null>(null);
   
   // Data Subject Request
   const [requestType, setRequestType] = useState<'access' | 'rectification' | 'erasure' | 'portability' | 'restriction'>('access');
@@ -694,25 +711,25 @@ export default function ComplianceManagerComponent() {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="p-4 border rounded-lg">
                           <div className="text-2xl font-bold">
-                            {report.gdpr_compliance.data_retention_policies.length}
+                            {report.gdpr_compliance?.data_retention_policies?.length ?? 0}
                           </div>
                           <div className="text-sm text-muted-foreground">Megőrzési politikák</div>
                         </div>
                         <div className="p-4 border rounded-lg">
                           <div className="text-2xl font-bold">
-                            {report.gdpr_compliance.data_processing_activities.length}
+                            {report.gdpr_compliance?.data_processing_activities?.length ?? 0}
                           </div>
                           <div className="text-sm text-muted-foreground">Feldolgozási tevékenységek</div>
                         </div>
                         <div className="p-4 border rounded-lg">
                           <div className="text-2xl font-bold text-green-600">
-                            {report.gdpr_compliance.active_consents}
+                            {report.gdpr_compliance?.active_consents ?? 0}
                           </div>
                           <div className="text-sm text-muted-foreground">Aktív hozzájárulások</div>
                         </div>
                         <div className="p-4 border rounded-lg">
                           <div className="text-2xl font-bold text-yellow-600">
-                            {report.gdpr_compliance.pending_requests}
+                            {report.gdpr_compliance?.pending_requests ?? 0}
                           </div>
                           <div className="text-sm text-muted-foreground">Függő kérések</div>
                         </div>

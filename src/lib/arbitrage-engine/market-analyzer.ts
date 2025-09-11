@@ -1,6 +1,6 @@
 "use client";
 
-import { MarketEfficiency, AdvancedArbitrageOpportunity } from './ml-detector';
+import { AdvancedArbitrageOpportunity } from './ml-detector';
 
 // Market Analysis Interfaces
 export interface MarketAnalysis {
@@ -73,9 +73,36 @@ export interface MarketSentiment {
   sentiment_confidence: number; // Confidence in sentiment analysis
 }
 
+// Market data types
+interface MarketData {
+  timestamp: number;
+  odds: number;
+  volume: number;
+  liquidity: number;
+  bookmaker: string;
+  market: string;
+  closing_line?: number;
+  volatility?: number;
+}
+
+interface EfficiencyMetrics {
+  score: number;
+  confidence: number;
+  volatility: number;
+  trend: 'up' | 'down' | 'stable';
+}
+
+interface MarketEfficiency {
+  market: string;
+  efficiency: number;
+  confidence: number;
+  lastUpdated: number;
+  metrics: EfficiencyMetrics;
+}
+
 // Market Analyzer Engine
 export class MarketAnalyzer {
-  private historicalData: Map<string, any[]> = new Map();
+  private historicalData: Map<string, MarketData[]> = new Map();
   private efficiencyThresholds = {
     low: 0.3,
     medium: 0.6,
@@ -99,8 +126,8 @@ export class MarketAnalyzer {
     });
   }
 
-  private generateMockHistoricalData(sport: string, marketType: string): Record<string, unknown>[] {
-    const data = [];
+  private generateMockHistoricalData(sport: string, marketType: string): MarketData[] {
+    const data: MarketData[] = [];
     const baseEfficiency = this.getBaseEfficiency(sport, marketType);
     const baseVolatility = this.getBaseVolatility(sport, marketType);
     
@@ -109,13 +136,14 @@ export class MarketAnalyzer {
       date.setDate(date.getDate() - i);
       
       data.push({
-        date,
-        efficiency: baseEfficiency + (Math.random() - 0.5) * 0.2,
-        volatility: baseVolatility + (Math.random() - 0.5) * 0.1,
+        timestamp: date.getTime(),
+        odds: 1.5 + (Math.random() - 0.5) * 0.5,
         volume: Math.random() * 1000000,
-        sharp_money: (Math.random() - 0.5) * 2,
+        liquidity: Math.random() * 100000,
+        bookmaker: 'mock',
+        market: marketType,
         closing_line: 1.5 + (Math.random() - 0.5) * 0.5,
-        sentiment: (Math.random() - 0.5) * 2
+        volatility: baseVolatility + (Math.random() - 0.5) * 0.1
       });
     }
     
@@ -196,7 +224,7 @@ export class MarketAnalyzer {
   // Calculate market efficiency metrics
   private calculateEfficiencyMetrics(
     opportunities: AdvancedArbitrageOpportunity[],
-    historicalData: Record<string, unknown>[]
+    historicalData: MarketData[]
   ): MarketEfficiencyMetrics {
     const efficiencyScore = this.calculateEfficiencyScore(opportunities, historicalData);
     const priceDiscovery = this.calculatePriceDiscovery(historicalData);
@@ -217,7 +245,7 @@ export class MarketAnalyzer {
 
   private calculateEfficiencyScore(
     opportunities: AdvancedArbitrageOpportunity[],
-    historicalData: Record<string, unknown>[]
+    historicalData: MarketData[]
   ): number {
     if (opportunities.length === 0) return 0.9; // No opportunities = efficient market
     
@@ -241,16 +269,16 @@ export class MarketAnalyzer {
     return Math.min(Math.max(efficiencyScore, 0), 1);
   }
 
-  private calculatePriceDiscovery(historicalData: Record<string, unknown>[]): number {
+  private calculatePriceDiscovery(historicalData: MarketData[]): number {
     if (historicalData.length < 2) return 0.5;
     
     // Calculate how quickly prices reflect new information
     const recentData = historicalData.slice(0, 10);
     const priceChanges = recentData.map((data, i) => {
       if (i === 0) return 0;
-      const currentData = data as { closing_line: number };
-      const previousData = recentData[i - 1] as { closing_line: number };
-      return Math.abs(currentData.closing_line - previousData.closing_line);
+      const current = data.closing_line ?? 0;
+      const prev = recentData[i - 1].closing_line ?? 0;
+      return Math.abs(current - prev);
     });
     
     const avgPriceChange = priceChanges.reduce((sum, change) => sum + change, 0) / priceChanges.length;
@@ -298,13 +326,13 @@ export class MarketAnalyzer {
   }
 
   // Analyze market volatility
-  private analyzeVolatility(historicalData: any[]): VolatilityAnalysis {
+  private analyzeVolatility(historicalData: MarketData[]): VolatilityAnalysis {
     if (historicalData.length < 10) {
       return this.getDefaultVolatilityAnalysis();
     }
     
     const recentData = historicalData.slice(0, 30); // Last 30 data points
-    const volatilities = recentData.map(data => data.volatility);
+    const volatilities = recentData.map(data => data.volatility).filter((v): v is number => typeof v === 'number');
     
     const historicalVolatility = this.calculateHistoricalVolatility(volatilities);
     const impliedVolatility = this.calculateImpliedVolatility(historicalData);
@@ -332,12 +360,14 @@ export class MarketAnalyzer {
     return Math.sqrt(variance);
   }
 
-  private calculateImpliedVolatility(historicalData: any[]): number {
+  private calculateImpliedVolatility(historicalData: MarketData[]): number {
     // Simplified implied volatility calculation
     const recentData = historicalData.slice(0, 10);
     const priceChanges = recentData.map((data, i) => {
       if (i === 0) return 0;
-      return Math.abs(data.closing_line - recentData[i - 1].closing_line);
+      const curr = data.closing_line ?? 0;
+      const prev = recentData[i - 1].closing_line ?? 0;
+      return Math.abs(curr - prev);
     });
     
     const avgPriceChange = priceChanges.reduce((sum, change) => sum + change, 0) / priceChanges.length;
@@ -410,7 +440,7 @@ export class MarketAnalyzer {
   // Analyze market liquidity
   private analyzeLiquidity(
     opportunities: AdvancedArbitrageOpportunity[],
-    historicalData: any[]
+    historicalData: MarketData[]
   ): LiquidityAnalysis {
     const liquidityScore = this.calculateLiquidityScore(opportunities);
     const tradingVolume = this.calculateTradingVolume(historicalData);
@@ -615,11 +645,11 @@ export class MarketAnalyzer {
     return closingLines[closingLines.length - 1]; // Most recent value
   }
 
-  private calculateLineMovement(historicalData: any[]): number {
+  private calculateLineMovement(historicalData: MarketData[]): number {
     if (historicalData.length < 2) return 0;
     
-    const first = historicalData[historicalData.length - 1].closing_line;
-    const last = historicalData[0].closing_line;
+    const first = historicalData[historicalData.length - 1].closing_line ?? 0;
+    const last = historicalData[0].closing_line ?? 0;
     
     return (last - first) / first; // Percentage change
   }
@@ -632,14 +662,15 @@ export class MarketAnalyzer {
   private calculateLineVolatility(closingLines: number[]): number {
     if (closingLines.length < 2) return 0.1;
     
-    return this.calculateHistoricalVolatility(closingLines);
+    return this.calculateHistoricalVolatility(closingLines.filter((n) => typeof n === 'number'));
   }
 
   private calculateLineTrend(closingLines: number[]): 'up' | 'down' | 'stable' {
     if (closingLines.length < 5) return 'stable';
     
-    const recent = closingLines.slice(0, 3);
-    const older = closingLines.slice(3, 6);
+    const filtered = closingLines.filter((n) => typeof n === 'number');
+    const recent = filtered.slice(0, 3);
+    const older = filtered.slice(3, 6);
     
     if (recent.length === 0 || older.length === 0) return 'stable';
     
