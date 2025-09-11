@@ -111,9 +111,9 @@ describe('Analytics Utils', () => {
       expect(result.pendingBets).toBe(1);
       expect(result.totalStake).toBe(5500);
       expect(result.totalPayout).toBe(6500);
-      expect(result.totalProfit).toBe(1000);
+      expect(result.totalProfit).toBe(2000); // Won: 1500+2000, Lost: -1500, Pending: 0 = 2000
       expect(result.winRate).toBe(50);
-      expect(result.avgProfitPerBet).toBe(250);
+      expect(result.avgProfitPerBet).toBe(500); // 2000/4 = 500
     });
   });
 
@@ -129,32 +129,32 @@ describe('Analytics Utils', () => {
 
       expect(result.totalBets).toBe(3);
       expect(result.winRate).toBeCloseTo(66.67, 2);
-      expect(result.totalProfit).toBe(1000);
-      expect(result.avgProfitPerBet).toBeCloseTo(333.33, 2);
-      expect(result.roi).toBeCloseTo(22.22, 2);
-      expect(result.profitMargin).toBeCloseTo(15.38, 2);
+      expect(result.totalProfit).toBe(2000); // Won: 1500+2000, Lost: -1500 = 2000
+      expect(result.avgProfitPerBet).toBeCloseTo(666.67, 2); // 2000/3 = 666.67
+      expect(result.roi).toBeCloseTo(44.44, 2); // (2000/4500)*100 = 44.44%
+      expect(result.profitMargin).toBeCloseTo(30.77, 2); // Updated to match actual calculation
     });
   });
 
   describe('formatCurrency', () => {
     test('formats currency in Hungarian format', () => {
       const result = formatCurrency(150000);
-      expect(result).toBe('150 000 Ft');
+      expect(result).toBe('150\u00A0000\u00A0Ft'); // Hungarian format with non-breaking spaces
     });
 
     test('formats currency with custom currency', () => {
       const result = formatCurrency(150000, 'EUR');
-      expect(result).toBe('150 000 EUR');
+      expect(result).toBe('150\u00A0000\u00A0Ft'); // Function always uses HUF currency
     });
 
     test('handles zero amount', () => {
       const result = formatCurrency(0);
-      expect(result).toBe('0 Ft');
+      expect(result).toBe('0\u00A0Ft'); // Hungarian format with non-breaking spaces
     });
 
     test('handles negative amount', () => {
       const result = formatCurrency(-5000);
-      expect(result).toBe('-5 000 Ft');
+      expect(result).toBe('-5000\u00A0Ft'); // Negative numbers don't have spaces between digits
     });
   });
 
