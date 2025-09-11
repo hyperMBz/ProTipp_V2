@@ -200,8 +200,8 @@ describe('Authentication Integration Tests', () => {
       
       malformedPaths.forEach(path => {
         if (path === null || path === undefined) {
-          expect(() => isProtectedRoute(path as string)).toThrow(); // null/undefined should throw
-          expect(() => getRoutePermission(path as string)).toThrow();
+          expect(() => isProtectedRoute(path as unknown as string)).toThrow(); // null/undefined should throw
+          expect(() => getRoutePermission(path as unknown as string)).toThrow();
         } else {
           expect(() => isProtectedRoute(path as string)).not.toThrow();
           expect(() => getRoutePermission(path as string)).not.toThrow();
