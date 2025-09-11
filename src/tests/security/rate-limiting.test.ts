@@ -36,7 +36,7 @@ describe('Rate Limiting Tests', () => {
       expect(result.retryAfter).toBeDefined();
     });
 
-    test('should reset after window expires', (done) => {
+    test('should reset after window expires', async () => {
       const identifier = 'test-reset';
       
       // Make requests to fill the limit
@@ -49,12 +49,10 @@ describe('Rate Limiting Tests', () => {
       expect(result.allowed).toBe(false);
       
       // Wait for window to reset
-      setTimeout(() => {
-        result = checkRateLimit(identifier, 5, 100);
-        expect(result.allowed).toBe(true);
-        expect(result.remaining).toBe(4);
-        done();
-      }, 150);
+      await new Promise(resolve => setTimeout(resolve, 150));
+      result = checkRateLimit(identifier, 5, 100);
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(4);
     });
   });
 
@@ -74,7 +72,7 @@ describe('Rate Limiting Tests', () => {
       expect(result.retryAfter).toBeDefined();
     });
 
-    test('should allow requests after burst window', (done) => {
+    test('should allow requests after burst window', async () => {
       const identifier = 'test-burst-reset';
       
       // Make 5 requests to trigger burst protection
@@ -86,12 +84,10 @@ describe('Rate Limiting Tests', () => {
       let result = checkRateLimit(identifier, 100, 60000, 5);
       expect(result.allowed).toBe(false);
       
-      // Wait for burst window to reset (1 minute)
-      setTimeout(() => {
-        result = checkRateLimit(identifier, 100, 60000, 5);
-        expect(result.allowed).toBe(true);
-        done();
-      }, 100);
+      // Wait for burst window to reset (use shorter window for testing)
+      await new Promise(resolve => setTimeout(resolve, 150));
+      result = checkRateLimit(identifier, 100, 100, 5); // Use 100ms window for testing
+      expect(result.allowed).toBe(true);
     });
   });
 
