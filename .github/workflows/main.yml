@@ -101,26 +101,26 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 📥 Download build artifacts
-        uses: actions/download-artifact@v4
+      - name: 🔧 Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          name: build-files
-          path: .next
+          bun-version: ${{ env.BUN_VERSION }}
 
-      - name: 📂 Inspect downloaded artifact
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🏗️ Build (Netlify)
+        run: bun run build
+        env:
+          NODE_ENV: production
+
+      - name: 📂 Verify build output before deploy
         run: |
-          echo "Repository root contents after download:" && ls -la
-          echo "\n.next contents after download:" && ls -la .next || (echo "Failed to find downloaded .next" && exit 1)
+          echo "Repository root contents:" && ls -la
+          echo "\n.next contents:" && ls -la .next || (echo ".next directory is missing" && exit 1)
 
       - name: 🚀 Deploy to Netlify
-        uses: nwtgck/actions-netlify@v2.0
-        with:
-          publish-dir: '.next'
-          production-branch: main
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "🚀 Deploy from GitHub Actions - ${{ github.sha }}"
-          enable-pull-request-comment: true
-          enable-commit-comment: false
+        run: npx netlify deploy --dir=.next --prod --message "Deploy via GH Actions ${GITHUB_SHA}"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
