@@ -46,12 +46,14 @@ export function useDeviceInfo(): DeviceInfo {
 
   useEffect(() => {
     const updateDeviceInfo = () => {
-      const userAgent = navigator.userAgent;
-      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const hasNavigator = typeof navigator !== 'undefined';
+      const hasWindow = typeof window !== 'undefined';
+      const userAgent = hasNavigator ? navigator.userAgent : '';
+      const isTouch = hasWindow ? ('ontouchstart' in window || (hasNavigator && navigator.maxTouchPoints > 0)) : false;
       
       // Screen size
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+      const width = hasWindow ? window.innerWidth : 0;
+      const height = hasWindow ? window.innerHeight : 0;
       
       // Device type detection
       const isMobile = width < 768;
@@ -158,15 +160,19 @@ export function usePWAStatus(): PWAStatus {
  * Hook az offline státus kezeléséhez
  */
 export function useOfflineStatus(): OfflineStatus {
-  const [offlineStatus, setOfflineStatus] = useState<OfflineStatus>({
-    isOnline: navigator.onLine,
-    isOffline: !navigator.onLine,
-    lastOnline: navigator.onLine ? new Date() : null,
+  const [offlineStatus, setOfflineStatus] = useState<OfflineStatus>(() => {
+    const hasNavigator = typeof navigator !== 'undefined';
+    const online = hasNavigator ? navigator.onLine : true;
+    return {
+      isOnline: online,
+      isOffline: !online,
+      lastOnline: online ? new Date() : null,
+    };
   });
 
   useEffect(() => {
     const updateOnlineStatus = () => {
-      const isOnline = navigator.onLine;
+      const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
       setOfflineStatus(prev => ({
         isOnline,
         isOffline: !isOnline,
@@ -176,7 +182,7 @@ export function useOfflineStatus(): OfflineStatus {
     };
 
     const getConnectionType = (): 'wifi' | 'cellular' | 'none' => {
-      if (!navigator.onLine) return 'none';
+      if (typeof navigator === 'undefined' || !navigator.onLine) return 'none';
       
       // Try to detect connection type (not always available)
       const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
