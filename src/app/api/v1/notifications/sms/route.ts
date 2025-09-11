@@ -15,7 +15,15 @@ const SMS_CONFIG = {
 
 // SMS service interface
 interface SMSService {
-  sendSMS(to: string, message: string, options?: any): Promise<boolean>;
+  sendSMS(to: string, message: string, options?: SMSOptions): Promise<boolean>;
+}
+
+interface SMSOptions {
+  from?: string;
+  mediaUrl?: string[];
+  statusCallback?: string;
+  maxPrice?: string;
+  provideFeedback?: boolean;
 }
 
 // Twilio SMS service implementation
@@ -30,7 +38,7 @@ class TwilioSMSService implements SMSService {
     this.fromNumber = SMS_CONFIG.fromNumber!;
   }
 
-  async sendSMS(to: string, message: string, options?: any): Promise<boolean> {
+  async sendSMS(to: string, message: string, options?: SMSOptions): Promise<boolean> {
     try {
       const url = `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages.json`;
       
@@ -38,7 +46,11 @@ class TwilioSMSService implements SMSService {
         To: to,
         From: this.fromNumber,
         Body: message,
-        ...options,
+        ...(options?.from && { From: options.from }),
+        ...(options?.mediaUrl && { MediaUrl: options.mediaUrl.join(',') }),
+        ...(options?.statusCallback && { StatusCallback: options.statusCallback }),
+        ...(options?.maxPrice && { MaxPrice: options.maxPrice }),
+        ...(options?.provideFeedback && { ProvideFeedback: options.provideFeedback.toString() }),
       });
 
       const response = await fetch(url, {
@@ -76,7 +88,7 @@ class GenericSMSService implements SMSService {
     this.apiUrl = SMS_CONFIG.apiUrl!;
   }
 
-  async sendSMS(to: string, message: string, options?: any): Promise<boolean> {
+  async sendSMS(to: string, message: string, options?: SMSOptions): Promise<boolean> {
     try {
       const response = await fetch(this.apiUrl, {
         method: 'POST',

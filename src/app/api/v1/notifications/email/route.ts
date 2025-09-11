@@ -4,6 +4,58 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as nodemailer from 'nodemailer';
 
+// Email template data types
+interface ArbitrageAlertData {
+  alert: {
+    title: string;
+    message: string;
+    data: {
+      profit: number;
+      confidence: number;
+      risk: number;
+      sport: string;
+      event: string;
+      bookmakers: string[];
+    };
+  };
+  timestamp: string;
+  user: {
+    name: string;
+    email: string;
+  };
+}
+
+interface PriceAlertData {
+  alert: {
+    title: string;
+    message: string;
+    data: {
+      sport: string;
+      event: string;
+      bookmakers: string[];
+    };
+  };
+  timestamp: string;
+  user: {
+    name: string;
+    email: string;
+  };
+}
+
+interface SystemAlertData {
+  alert: {
+    title: string;
+    message: string;
+  };
+  timestamp: string;
+  type: 'maintenance' | 'update' | 'security' | 'feature';
+  scheduledTime?: string;
+  user: {
+    name: string;
+    email: string;
+  };
+}
+
 // Create email transporter
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -19,7 +71,7 @@ const transporter = nodemailer.createTransport({
 const emailTemplates = {
   'arbitrage-alert': {
     subject: '🚨 Arbitrage Opportunity Alert',
-    html: (data: any) => `
+    html: (data: ArbitrageAlertData) => `
       <!DOCTYPE html>
       <html>
       <head>
@@ -71,7 +123,7 @@ const emailTemplates = {
   },
   'price-alert': {
     subject: '📈 Price Change Alert',
-    html: (data: any) => `
+    html: (data: PriceAlertData) => `
       <!DOCTYPE html>
       <html>
       <head>
@@ -119,7 +171,7 @@ const emailTemplates = {
   },
   'system-alert': {
     subject: 'ℹ️ System Alert',
-    html: (data: any) => `
+    html: (data: SystemAlertData) => `
       <!DOCTYPE html>
       <html>
       <head>
