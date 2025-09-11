@@ -122,7 +122,17 @@ export function calculateResult(
   const { bet1, bet2 } = opportunity;
 
   // Validáció
-  if (stake <= 0 || bet1.odds <= 0 || bet2.odds <= 0) {
+  if (stake <= 0) {
+    return {
+      stake: 0,
+      payout: 0,
+      profit: 0,
+      profitPercentage: 0,
+      roi: 0,
+    };
+  }
+
+  if (bet1.odds <= 0 || bet2.odds <= 0) {
     return {
       stake: 0,
       payout: 0,
@@ -298,7 +308,7 @@ export function formatPercentage(
     ...options,
   };
 
-  return new Intl.NumberFormat('hu-HU', defaultOptions).format(safePercentage / 100);
+  return new Intl.NumberFormat('en-US', defaultOptions).format(safePercentage / 100);
 }
 
 /**

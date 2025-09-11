@@ -63,7 +63,7 @@ export default function AuditLogViewer({ className }: AuditLogViewerProps) {
     }
   };
 
-  const handleFilterChange = (key: keyof AuditFilter, value: any) => {
+  const handleFilterChange = (key: keyof AuditFilter, value: string | Date | null) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
@@ -203,7 +203,7 @@ export default function AuditLogViewer({ className }: AuditLogViewerProps) {
               <select
                 id="resource-type"
                 value={filters.resource_type || ""}
-                onChange={(e) => handleFilterChange('resource_type', e.target.value || undefined)}
+                onChange={(e) => handleFilterChange('resource_type', e.target.value || null)}
                 className="w-full px-3 py-2 border rounded-md"
               >
                 <option value="">Minden típus</option>
@@ -222,7 +222,7 @@ export default function AuditLogViewer({ className }: AuditLogViewerProps) {
               <select
                 id="action-type"
                 value={filters.action_type || ""}
-                onChange={(e) => handleFilterChange('action_type', e.target.value || undefined)}
+                onChange={(e) => handleFilterChange('action_type', e.target.value || null)}
                 className="w-full px-3 py-2 border rounded-md"
               >
                 <option value="">Minden művelet</option>
@@ -244,7 +244,7 @@ export default function AuditLogViewer({ className }: AuditLogViewerProps) {
               <select
                 id="status"
                 value={filters.status || ""}
-                onChange={(e) => handleFilterChange('status', e.target.value || undefined)}
+                onChange={(e) => handleFilterChange('status', e.target.value || null)}
                 className="w-full px-3 py-2 border rounded-md"
               >
                 <option value="">Minden státusz</option>

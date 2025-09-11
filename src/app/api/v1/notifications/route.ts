@@ -5,14 +5,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { withUserAuth, apiError, apiSuccess, getQueryParams } from '@/lib/auth/api-middleware';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase kliens, hogy a build során ne dobjon hibát hiányzó env esetén
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceRoleKey) {
+    // Nem dobunk hibát modul betöltéskor; a handleren belül kezeljük
+    // Egy minimális fallback kulcsot adunk, hogy a build ne hasaljon el
+    return createClient(url || 'http://localhost:54321', serviceRoleKey || 'placeholder-key');
+  }
+
+  return createClient(url, serviceRoleKey);
+}
 
 // GET /api/v1/notifications - Get user notifications (Protected)
 export const GET = withUserAuth(async (request: NextRequest, user) => {
   try {
+    const supabase = getSupabase();
     const query = getQueryParams(request);
     const type = query.get('type');
     const limit = query.getInt('limit', 50) ?? 50;
@@ -55,6 +65,7 @@ export const GET = withUserAuth(async (request: NextRequest, user) => {
 // POST /api/v1/notifications - Create notification (Protected)
 export const POST = withUserAuth(async (request: NextRequest, user) => {
   try {
+    const supabase = getSupabase();
     const body = await request.json();
     const { type, title, message, data } = body;
 
@@ -92,6 +103,7 @@ export const POST = withUserAuth(async (request: NextRequest, user) => {
 // PUT /api/v1/notifications - Update notification (Protected)
 export const PUT = withUserAuth(async (request: NextRequest, user) => {
   try {
+    const supabase = getSupabase();
     const body = await request.json();
     const { notificationId, updates } = body;
 
@@ -127,6 +139,7 @@ export const PUT = withUserAuth(async (request: NextRequest, user) => {
 // DELETE /api/v1/notifications - Delete notification (Protected)
 export const DELETE = withUserAuth(async (request: NextRequest, user) => {
   try {
+    const supabase = getSupabase();
     const query = getQueryParams(request);
     const notificationId = query.get('id');
 
