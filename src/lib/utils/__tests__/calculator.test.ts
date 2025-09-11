@@ -313,12 +313,14 @@ describe('Calculator Utilities', () => {
   describe('formatPercentage', () => {
     it('formats percentage correctly', () => {
       const result = formatPercentage(15.5);
-      expect(result).toContain('15.5%'); // Local environment uses en-US locale
+      // Accept both en-US (15.5%) and other locales (15,5%)
+      expect(result).toMatch(/15[.,]5%/);
     });
 
     it('uses custom formatting options', () => {
       const result = formatPercentage(15.5, { minimumFractionDigits: 1 });
-      expect(result).toContain('15.5%'); // Local environment uses en-US locale
+      // Accept both en-US (15.5%) and other locales (15,5%)
+      expect(result).toMatch(/15[.,]5%/);
     });
   });
 
