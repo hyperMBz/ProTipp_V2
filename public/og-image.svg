@@ -1,0 +1,47 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16213e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+
+  <!-- Decorative elements -->
+  <circle cx="200" cy="150" r="80" fill="#8b5cf6" opacity="0.1"/>
+  <circle cx="1000" cy="480" r="120" fill="#a855f7" opacity="0.1"/>
+  <circle cx="600" cy="200" r="60" fill="#8b5cf6" opacity="0.1"/>
+
+  <!-- Main title -->
+  <text x="600" y="280" text-anchor="middle" fill="url(#textGradient)" font-family="Arial, sans-serif" font-size="72" font-weight="bold">
+    ProTipp V2
+  </text>
+
+  <!-- Subtitle -->
+  <text x="600" y="350" text-anchor="middle" fill="#e5e7eb" font-family="Arial, sans-serif" font-size="32" font-weight="normal">
+    Professional Arbitrage Platform
+  </text>
+
+  <!-- Description -->
+  <text x="600" y="400" text-anchor="middle" fill="#9ca3af" font-family="Arial, sans-serif" font-size="24" font-weight="normal">
+    Real-time odds comparison & arbitrage opportunities
+  </text>
+
+  <!-- Bottom elements -->
+  <rect x="100" y="480" width="200" height="4" fill="#8b5cf6" rx="2"/>
+  <rect x="320" y="480" width="150" height="4" fill="#a855f7" rx="2"/>
+  <rect x="490" y="480" width="220" height="4" fill="#8b5cf6" rx="2"/>
+
+  <!-- Footer text -->
+  <text x="600" y="550" text-anchor="middle" fill="#6b7280" font-family="Arial, sans-serif" font-size="18">
+    protip-v2.vercel.app
+  </text>
+</svg>

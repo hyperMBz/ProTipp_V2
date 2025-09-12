@@ -51,22 +51,24 @@ export function HeroSection() {
             {user ? (
               // Bejelentkezett felhasználó gombjai
               <>
-                <Button 
-                  onClick={handleDashboardClick}
-                  size="lg" 
+                <Button
+                  asChild
+                  size="lg"
                   className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-lg font-semibold"
                 >
-                  <LogIn className="mr-2 h-5 w-5" />
-                  Dashboard
+                  <Link href="/dashboard">
+                    <LogIn className="mr-2 h-5 w-5" />
+                    Dashboard
+                  </Link>
                 </Button>
-                
-                <Button 
-                  asChild 
-                  variant="outline" 
+
+                <Button
+                  asChild
+                  variant="outline"
                   size="lg"
                   className="border border-border hover:bg-accent hover:text-accent-foreground px-8 py-3 text-lg font-semibold"
                 >
-                  <Link href="#how-it-works">
+                  <Link href="#how-it-works" scroll={false}>
                     <HelpCircle className="mr-2 h-5 w-5" />
                     Hogyan működik?
                   </Link>
@@ -75,32 +77,36 @@ export function HeroSection() {
             ) : (
               // Nem bejelentkezett felhasználó gombjai
               <>
-                <Button 
-                  onClick={handleRegisterClick}
-                  size="lg" 
+                <Button
+                  asChild
+                  size="lg"
                   className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-lg font-semibold"
                 >
-                  <UserPlus className="mr-2 h-5 w-5" />
-                  Ingyenes Regisztráció
+                  <Link href="/register">
+                    <UserPlus className="mr-2 h-5 w-5" />
+                    Ingyenes Regisztráció
+                  </Link>
                 </Button>
-                
-                <Button 
-                  onClick={handleLoginClick}
-                  variant="outline" 
+
+                <Button
+                  asChild
+                  variant="outline"
                   size="lg"
                   className="border border-border hover:bg-accent hover:text-accent-foreground px-8 py-3 text-lg font-semibold"
                 >
-                  <LogIn className="mr-2 h-5 w-5" />
-                  Bejelentkezés
+                  <Link href="/login">
+                    <LogIn className="mr-2 h-5 w-5" />
+                    Bejelentkezés
+                  </Link>
                 </Button>
-                
-                <Button 
-                  asChild 
-                  variant="ghost" 
+
+                <Button
+                  asChild
+                  variant="ghost"
                   size="lg"
                   className="hover:bg-accent hover:text-accent-foreground px-8 py-3 text-lg font-semibold"
                 >
-                  <Link href="#how-it-works">
+                  <Link href="#how-it-works" scroll={false}>
                     <HelpCircle className="mr-2 h-5 w-5" />
                     Hogyan működik?
                   </Link>

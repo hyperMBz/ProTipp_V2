@@ -51,8 +51,19 @@ const nextConfig = {
   //     'next/dist/client/components/error-boundary': 'next/dist/client/components/error-boundary.js',
   //   },
   // },
+  // Polyfills for cross-browser compatibility
+  transpilePackages: ['core-js', 'regenerator-runtime'],
+
   // Webpack optimizations - Bundle Size Optimization
   webpack: (config, { dev, isServer }) => {
+    // Add polyfills for older browsers
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        "core-js": require.resolve("core-js"),
+        "regenerator-runtime": require.resolve("regenerator-runtime"),
+      };
+    }
     // Bundle analyzer (only when ANALYZE=true)
     if (process.env.ANALYZE === 'true') {
       config.plugins.push(

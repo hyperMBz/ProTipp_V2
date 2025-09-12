@@ -1,0 +1,19 @@
+version: 1
+updated: 2025-09-11
+
+workflows:
+  - id: homepage-sprint1
+    title: "Kezdőlap Sprint 1 – Implementáció"
+    story: docs/stories/1.19.story.md
+    qa_gate: docs/qa/gates/kezdolap-implementation.yml
+    entry: docs/NEXT_TASK.md
+    docs:
+      - docs/architecture/system-architecture-2025.md
+      - docs/api-spec.md
+      - docs/architecture/branching-cicd-strategy.md
+      - docs/architecture/odds-data-strategy.md
+      - docs/ops/runbooks/deployment-runbook.md
+    outputs:
+      - PR linkek
+      - QA gate PASS
+      - Deploy jegyzetek

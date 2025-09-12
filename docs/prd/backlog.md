@@ -25,11 +25,11 @@ A ProTipp V2 platform fejlesztési feladatainak strukturált kezelése, priorit�
 
 ## 🎯 **2. EPIC 1: KEZDŐLAP LÉTREHOZÁSA**
 
-**Prioritás:** MAGAS  
-**Időigény:** 1 hét  
-**Státusz:** In Progress  
-**Sprint:** Sprint 1  
-**Felelős:** Frontend fejlesztő  
+**Prioritás:** MAGAS
+**Időigény:** 1 hét
+**Státusz:** ✅ **DONE** - 2025-09-11
+**Sprint:** Sprint 1
+**Felelős:** Agent  
 
 ### **2.1 Epic Leírás**
 Felhasználóbarát kezdőlap kialakítása, amely bemutatja a ProTipp V2 fő funkcióit és előnyeit, valamint biztosítja a megfelelő navigációs alapot a teljes platformhoz.
@@ -45,15 +45,15 @@ Felhasználóbarát kezdőlap kialakítása, amely bemutatja a ProTipp V2 fő fu
 #### **HOME-001: Projekt Struktúra Létrehozása**
 - **Prioritás:** MAGAS
 - **Story Points:** 3
-- **Státusz:** Ready for Development
-- **Felelős:** Frontend fejlesztő
+- **Státusz:** ✅ **DONE** - 2025-09-11
+- **Felelős:** Agent
 - **Időigény:** 1 nap
 
 **Elfogadási Kritériumok:**
-- [ ] Létrehozva a `src/components/home/` könyvtár
-- [ ] Minden kezdőlap komponens fájl létrehozva
-- [ ] Komponensek exportálva a `src/components/home/index.ts` fájlban
-- [ ] Tailwind CSS konfiguráció frissítve a kezdőlap stílusokhoz
+- [x] Létrehozva a `src/components/home/` könyvtár ✅
+- [x] Minden kezdőlap komponens fájl létrehozva ✅
+- [x] Komponensek exportálva a `src/components/home/index.ts` fájlban ✅
+- [x] Tailwind CSS konfiguráció frissítve a kezdőlap stílusokhoz ✅
 
 **Kapcsolódó dokumentumok:**
 - PRD: `docs/prd/kezdolap-spec.md`
@@ -62,17 +62,17 @@ Felhasználóbarát kezdőlap kialakítása, amely bemutatja a ProTipp V2 fő fu
 #### **HOME-002: HeroSection Komponens Fejlesztése**
 - **Prioritás:** MAGAS
 - **Story Points:** 5
-- **Státusz:** Ready for Development
-- **Felelős:** Frontend fejlesztő
+- **Státusz:** ✅ **DONE** - 2025-09-11
+- **Felelős:** Agent
 - **Időigény:** 1 nap
 
 **Elfogadási Kritériumok:**
-- [ ] Hero section teljes képernyő magasságú
-- [ ] Gradient háttér implementálva
-- [ ] Fő cím, alcím és leírás megjelenik
-- [ ] 3 CTA gomb (Regisztráció, Bejelentkezés, Hogyan működik)
-- [ ] Animált bejelenés (fade-in, slide-up)
-- [ ] Reszponzív design (mobile-first)
+- [x] Hero section teljes képernyő magasságú ✅
+- [x] Gradient háttér implementálva ✅
+- [x] Fő cím, alcím és leírás megjelenik ✅
+- [x] 3 CTA gomb (Regisztráció, Bejelentkezés, Hogyan működik) ✅
+- [x] Animált bejelenés (fade-in, slide-up) ✅
+- [x] Reszponzív design (mobile-first) ✅
 
 **Kapcsolódó dokumentumok:**
 - PRD: `docs/prd/kezdolap-spec.md`
@@ -81,16 +81,16 @@ Felhasználóbarát kezdőlap kialakítása, amely bemutatja a ProTipp V2 fő fu
 #### **HOME-003: FeaturesSection Komponens Fejlesztése**
 - **Prioritás:** MAGAS
 - **Story Points:** 5
-- **Státusz:** Ready for Development
-- **Felelős:** Frontend fejlesztő
+- **Státusz:** ✅ **DONE** - 2025-09-11
+- **Felelős:** Agent
 - **Időigény:** 1 nap
 
 **Elfogadási Kritériumok:**
-- [ ] 3 oszlopos grid layout (mobile: 1 oszlop)
-- [ ] Minden funkció kártya formában jelenik meg
-- [ ] Ikonok, címek, leírások és jellemzők megjelennek
-- [ ] Hover effektek implementálva
-- [ ] Reszponzív breakpoint-ok működnek
+- [x] 3 oszlopos grid layout (mobile: 1 oszlop) ✅
+- [x] Minden funkció kártya formában jelenik meg ✅
+- [x] Ikonok, címek, leírások és jellemzők megjelennek ✅
+- [x] Hover effektek implementálva ✅
+- [x] Reszponzív breakpoint-ok működnek ✅
 
 **Kapcsolódó dokumentumok:**
 - PRD: `docs/prd/kezdolap-spec.md`
@@ -99,16 +99,16 @@ Felhasználóbarát kezdőlap kialakítása, amely bemutatja a ProTipp V2 fő fu
 #### **HOME-004: HowItWorksSection Komponens Fejlesztése**
 - **Prioritás:** MAGAS
 - **Story Points:** 5
-- **Státusz:** Ready for Development
-- **Felelős:** Frontend fejlesztő
+- **Státusz:** ✅ **DONE** - 2025-09-11
+- **Felelős:** Agent
 - **Időigény:** 1 nap
 
 **Elfogadási Kritériumok:**
-- [ ] 3 lépéses timeline layout
-- [ ] Minden lépéshez ikon, cím, leírás és vizuális elem
-- [ ] Vízszintes layout desktop-en, függőleges mobile-en
-- [ ] Lépések számozva és sorrendben
-- [ ] Animált bejelenés
+- [x] 3 lépéses timeline layout ✅
+- [x] Minden lépéshez ikon, cím, leírás és vizuális elem ✅
+- [x] Vízszintes layout desktop-en, függőleges mobile-en ✅
+- [x] Lépések számozva és sorrendben ✅
+- [x] Animált bejelenés ✅
 
 **Kapcsolódó dokumentumok:**
 - PRD: `docs/prd/kezdolap-spec.md`
@@ -117,16 +117,16 @@ Felhasználóbarát kezdőlap kialakítása, amely bemutatja a ProTipp V2 fő fu
 #### **HOME-005: TestimonialsSection Komponens Fejlesztése**
 - **Prioritás:** KÖZEPES
 - **Story Points:** 3
-- **Státusz:** Ready for Development
-- **Felelős:** Frontend fejlesztő
+- **Státusz:** ✅ **DONE** - 2025-09-11
+- **Felelős:** Agent
 - **Időigény:** 0.5 nap
 
 **Elfogadási Kritériumok:**
-- [ ] 2-3 testimonial kártya megjelenik
-- [ ] Minden testimonialhoz név, pozíció, értékelés és vélemény
-- [ ] Kártya layout reszponzív
-- [ ] Csillagos értékelés megjelenik
-- [ ] Avatar placeholder
+- [x] 2-3 testimonial kártya megjelenik ✅
+- [x] Minden testimonialhoz név, pozíció, értékelés és vélemény ✅
+- [x] Kártya layout reszponzív ✅
+- [x] Csillagos értékelés megjelenik ✅
+- [x] Avatar placeholder ✅
 
 **Kapcsolódó dokumentumok:**
 - PRD: `docs/prd/kezdolap-spec.md`
@@ -135,16 +135,16 @@ Felhasználóbarát kezdőlap kialakítása, amely bemutatja a ProTipp V2 fő fu
 #### **HOME-006: StatsSection Komponens Fejlesztése**
 - **Prioritás:** KÖZEPES
 - **Story Points:** 3
-- **Státusz:** Ready for Development
-- **Felelős:** Frontend fejlesztő
+- **Státusz:** ✅ **DONE** - 2025-09-11
+- **Felelős:** Agent
 - **Időigény:** 0.5 nap
 
 **Elfogadási Kritériumok:**
-- [ ] 4 oszlopos grid layout (mobile: 2x2)
-- [ ] Minden statisztikához ikon, szám és címke
-- [ ] Animált számlálók (opcionális)
-- [ ] Reszponzív breakpoint-ok
-- [ ] Ikonok és szövegek olvashatóak
+- [x] 4 oszlopos grid layout (mobile: 2x2) ✅
+- [x] Minden statisztikához ikon, szám és címke ✅
+- [x] Animált számlálók (opcionális) ✅
+- [x] Reszponzív breakpoint-ok ✅
+- [x] Ikonok és szövegek olvashatóak ✅
 
 **Kapcsolódó dokumentumok:**
 - PRD: `docs/prd/kezdolap-spec.md`
@@ -153,16 +153,16 @@ Felhasználóbarát kezdőlap kialakítása, amely bemutatja a ProTipp V2 fő fu
 #### **HOME-007: CallToActionSection Komponens Fejlesztése**
 - **Prioritás:** MAGAS
 - **Story Points:** 3
-- **Státusz:** Ready for Development
-- **Felelős:** Frontend fejlesztő
+- **Státusz:** ✅ **DONE** - 2025-09-11
+- **Felelős:** Agent
 - **Időigény:** 0.5 nap
 
 **Elfogadási Kritériumok:**
-- [ ] Központosított layout
-- [ ] Fő üzenet és 3 CTA gomb
-- [ ] Elsődleges gomb kiemelve
-- [ ] Gradient háttér
-- [ ] Reszponzív design
+- [x] Központosított layout ✅
+- [x] Fő üzenet és 3 CTA gomb ✅
+- [x] Elsődleges gomb kiemelve ✅
+- [x] Gradient háttér ✅
+- [x] Reszponzív design ✅
 
 **Kapcsolódó dokumentumok:**
 - PRD: `docs/prd/kezdolap-spec.md`
@@ -171,16 +171,16 @@ Felhasználóbarát kezdőlap kialakítása, amely bemutatja a ProTipp V2 fő fu
 #### **HOME-008: Kezdőlap Integráció és Navigáció**
 - **Prioritás:** MAGAS
 - **Story Points:** 5
-- **Státusz:** Ready for Development
-- **Felelős:** Frontend fejlesztő
+- **Státusz:** ✅ **DONE** - 2025-09-11
+- **Felelős:** Agent
 - **Időigény:** 1 nap
 
 **Elfogadási Kritériumok:**
-- [ ] Kezdőlap komponensek integrálva a `src/app/page.tsx`-be
-- [ ] Navigációs menü frissítve
-- [ ] Dashboard áthelyezve `/dashboard` útvonalra
-- [ ] SEO meta címkék implementálva
-- [ ] Reszponzív navigáció működik
+- [x] Kezdőlap komponensek integrálva a `src/app/page.tsx`-be ✅
+- [x] Navigációs menü frissítve ✅
+- [x] Dashboard áthelyezve `/dashboard` útvonalra ✅
+- [x] SEO meta címkék implementálva ✅
+- [x] Reszponzív navigáció működik ✅
 
 **Kapcsolódó dokumentumok:**
 - PRD: `docs/prd/kezdolap-spec.md`
@@ -190,8 +190,8 @@ Felhasználóbarát kezdőlap kialakítása, amely bemutatja a ProTipp V2 fő fu
 - **Összes Story:** 8
 - **Összes Story Points:** 32
 - **Időigény:** 1 hét (5 munkanap)
-- **Felelős:** Frontend fejlesztő
-- **Státusz:** In Progress
+- **Felelős:** Agent
+- **Státusz:** ✅ **DONE** - 2025-09-11
 
 ## 🎯 **3. EPIC 2: DASHBOARD ÁTHELYEZÉS**
 

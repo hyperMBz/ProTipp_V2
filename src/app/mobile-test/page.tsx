@@ -10,11 +10,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Smartphone, 
-  Tablet, 
-  Monitor, 
-  Wifi, 
+import {
+  Smartphone,
+  Tablet,
+  Monitor,
+  Wifi,
   WifiOff,
   Zap,
   Settings,
@@ -22,6 +22,7 @@ import {
   Upload
 } from "lucide-react";
 import { useDeviceInfo, usePWAStatus, useOfflineStatus } from "@/lib/hooks/use-mobile";
+import { MobileResponsiveTest } from "@/components/mobile/MobileResponsiveTest";
 
 // Mock data for the table
 const mockArbitrageData = [
@@ -305,6 +306,19 @@ export default function MobileTestPage() {
 
           {/* Components Tab */}
           <TabsContent value="components" className="space-y-6">
+            {/* Mobile Responsive Test */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Mobile Responsive Teszt</CardTitle>
+                <CardDescription>
+                  Touch target-ek, form elemek és typography tesztelése
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <MobileResponsiveTest />
+              </CardContent>
+            </Card>
+
             {/* Touch Optimized Table */}
             <Card>
               <CardHeader>

@@ -1,0 +1,82 @@
+{
+  "summary": {
+    "overallScore": 82,
+    "timestamp": "2025-09-12T12:09:31.977Z"
+  },
+  "scores": {
+    "performance": 33,
+    "accessibility": 100,
+    "bestPractices": 96,
+    "seo": 100,
+    "pwa": 0
+  },
+  "topOpportunities": [
+    {
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "description": "Resources are blocking the first paint of your page. Consider delivering critical JS/CSS inline and deferring all non-critical JS/styles. [Learn how to eliminate render-blocking resources](https://developer.chrome.com/docs/lighthouse/performance/render-blocking-resources/).",
+      "score": 0,
+      "savings": 992,
+      "category": "performance"
+    },
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "description": "Reduce unused JavaScript and defer loading scripts until they are required to decrease bytes consumed by network activity. [Learn how to reduce unused JavaScript](https://developer.chrome.com/docs/lighthouse/performance/unused-javascript/).",
+      "score": 0,
+      "savings": 150,
+      "category": "performance"
+    },
+    {
+      "id": "unused-css-rules",
+      "title": "Reduce unused CSS",
+      "description": "Reduce unused rules from stylesheets and defer CSS not used for above-the-fold content to decrease bytes consumed by network activity. [Learn how to reduce unused CSS](https://developer.chrome.com/docs/lighthouse/performance/unused-css-rules/).",
+      "score": 50,
+      "savings": 0,
+      "category": "performance"
+    },
+    {
+      "id": "unminified-css",
+      "title": "Minify CSS",
+      "description": "Minifying CSS files can reduce network payload sizes. [Learn how to minify CSS](https://developer.chrome.com/docs/lighthouse/performance/unminified-css/).",
+      "score": 50,
+      "savings": 0,
+      "category": "performance"
+    },
+    {
+      "id": "unminified-javascript",
+      "title": "Minify JavaScript",
+      "description": "Minifying JavaScript files can reduce payload sizes and script parse time. [Learn how to minify JavaScript](https://developer.chrome.com/docs/lighthouse/performance/unminified-javascript/).",
+      "score": 50,
+      "savings": 0,
+      "category": "performance"
+    }
+  ],
+  "recommendations": [
+    {
+      "category": "performance",
+      "priority": "high",
+      "title": "Performance Optimization",
+      "description": "Focus on Core Web Vitals and bundle optimization",
+      "actions": [
+        "Implement code splitting and lazy loading",
+        "Optimize images with WebP/AVIF formats",
+        "Minimize and compress CSS/JS",
+        "Enable text compression",
+        "Preload critical resources"
+      ]
+    },
+    {
+      "category": "bundle",
+      "priority": "medium",
+      "title": "Bundle Optimization",
+      "description": "Reduce bundle size and eliminate unused code",
+      "actions": [
+        "Remove unused CSS and JavaScript",
+        "Implement tree shaking",
+        "Use dynamic imports for large dependencies",
+        "Optimize third-party libraries"
+      ]
+    }
+  ]
+}

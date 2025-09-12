@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/lib/providers";
 import { UnifiedNavigation } from "@/components/navigation/UnifiedNavigation";
+import { ClientMobileNavigation } from "@/components/mobile/ClientMobileNavigation";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
     siteName: "ProTipp V2",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.svg",
         width: 1200,
         height: 630,
         alt: "ProTipp V2 - Professional Arbitrage Platform",
@@ -53,7 +54,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ProTipp V2 - Professional Arbitrage Platform",
     description: "Professzionális sportszorzó arbitrage platform valós idejű odds összehasonlítással",
-    images: ["/og-image.png"],
+    images: ["/og-image.svg"],
     creator: "@protip_v2",
   },
   robots: {
@@ -123,6 +124,24 @@ export default function RootLayout({
         {/* DNS Prefetch for performance */}
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
         <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+
+        {/* Critical CSS inline - eliminates render blocking */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+            html { scroll-behavior: smooth; }
+            .min-h-screen { min-height: 100vh; }
+            .bg-background { background-color: hsl(0, 0%, 5%); }
+            .text-foreground { color: hsl(210, 40%, 98%); }
+            .flex { display: flex; }
+            .items-center { align-items: center; }
+            .justify-center { justify-content: center; }
+            .animate-spin { animation: spin 1s linear infinite; }
+            .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+            @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+          `
+        }} />
         
         {/* Mobile-specific meta tags */}
         <meta name="format-detection" content="telephone=no" />
@@ -137,6 +156,7 @@ export default function RootLayout({
         
         {/* Performance optimizations */}
         <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="modulepreload" href="/_next/static/chunks/webpack.js" />
         
         {/* React DevTools letiltása hydration hibák elkerülésére */}
         <script
@@ -204,7 +224,10 @@ export default function RootLayout({
             <div className="min-h-screen bg-background text-foreground flex">
               {/* Sidebar Navigation - csak bejelentkezett felhasználóknak */}
               <UnifiedNavigation className="hidden md:flex w-64 flex-shrink-0" />
-              
+
+              {/* Mobile Navigation */}
+              <ClientMobileNavigation className="md:hidden" />
+
               {/* Main Content */}
               <div className="flex-1 flex flex-col min-w-0">
                 {children}

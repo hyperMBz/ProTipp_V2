@@ -1,0 +1,212 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: Performance Metrics
+      - generic [ref=e7]: "FCP: ..."
+      - generic [ref=e8]: "LCP: ..."
+      - generic [ref=e9]: "FID: ..."
+      - generic [ref=e10]: "CLS: 0.0000"
+      - generic [ref=e11]: "TTFB: 2508ms"
+      - generic [ref=e12]: "Score: 75 (C)"
+    - generic [ref=e15]:
+      - heading "ProTipp V2" [level=1] [ref=e16]
+      - heading "Professzionális Arbitrage Platform" [level=2] [ref=e17]
+      - paragraph [ref=e18]: Fedezze fel a profitot a különböző fogadóirodák közötti odds különbségekből. Automatikus arbitrage detektálás, kalkulátor és fogadáskövető rendszer.
+      - generic [ref=e19]:
+        - link "Ingyenes Regisztráció" [ref=e20] [cursor=pointer]:
+          - /url: /register
+          - img
+          - text: Ingyenes Regisztráció
+        - link "Bejelentkezés" [ref=e21] [cursor=pointer]:
+          - /url: /login
+          - img
+          - text: Bejelentkezés
+        - link "Hogyan működik?" [ref=e22] [cursor=pointer]:
+          - /url: "#how-it-works"
+          - img
+          - text: Hogyan működik?
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - heading "Fő Funkciók" [level=2] [ref=e27]
+        - paragraph [ref=e28]: Fedezze fel a ProTipp V2 platform teljes funkcionalitását
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - img [ref=e33]
+            - generic [ref=e36]: Arbitrage Lehetőségek
+            - generic [ref=e37]: Valós idejű arbitrage lehetőségek automatikus detektálással
+          - list [ref=e39]:
+            - listitem [ref=e40]: Real-time odds frissítések
+            - listitem [ref=e42]: Automatikus profit számítás
+            - listitem [ref=e44]: Szűrés sport és profit szerint
+            - listitem [ref=e46]: Értesítések magas profit lehetőségekről
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - img [ref=e51]
+            - generic [ref=e53]: Profit Kalkulátor
+            - generic [ref=e54]: Pontos profit számítás tét elosztással és kockázat elemzéssel
+          - list [ref=e56]:
+            - listitem [ref=e57]: Tét elosztás optimalizálás
+            - listitem [ref=e59]: ROI számítás
+            - listitem [ref=e61]: Kockázat elemzés
+            - listitem [ref=e63]: Arbitrage profit kalkuláció
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - img [ref=e68]
+            - generic [ref=e72]: Fogadáskövető
+            - generic [ref=e73]: Követse fogadásait és elemzze teljesítményét
+          - list [ref=e75]:
+            - listitem [ref=e76]: Fogadások mentése
+            - listitem [ref=e78]: Teljesítmény statisztikák
+            - listitem [ref=e80]: Profit/veszteség követés
+            - listitem [ref=e82]: Export funkciók
+    - generic [ref=e86]:
+      - generic [ref=e87]:
+        - heading "Hogyan Működik?" [level=2] [ref=e88]
+        - paragraph [ref=e89]: Három egyszerű lépésben kezdje el a profit realizálását
+      - generic [ref=e90]:
+        - generic [ref=e92]:
+          - generic [ref=e93]:
+            - generic [ref=e94]: "1"
+            - img [ref=e96]
+            - generic [ref=e99]: Regisztráció
+            - generic [ref=e100]: Hozzon létre ingyenes fiókot 2 perc alatt
+          - paragraph [ref=e102]: Egyszerű regisztrációs folyamat email címmel és jelszóval. Azonnali hozzáférés az összes funkcióhoz.
+        - generic [ref=e104]:
+          - generic [ref=e105]:
+            - generic [ref=e106]: "2"
+            - img [ref=e108]
+            - generic [ref=e111]: Arbitrage Keresés
+            - generic [ref=e112]: Fedezze fel a legjobb arbitrage lehetőségeket
+          - paragraph [ref=e114]: Valós idejű odds összehasonlítás több fogadóiroda között. Automatikus arbitrage detektálás.
+        - generic [ref=e116]:
+          - generic [ref=e117]:
+            - generic [ref=e118]: "3"
+            - img [ref=e120]
+            - generic [ref=e122]: Profit Realizálás
+            - generic [ref=e123]: Helyezze el fogadásait és realizálja a profitot
+          - paragraph [ref=e125]: Pontos tét elosztás kalkulációval. Követés és teljesítmény elemzés a fogadások után.
+      - generic [ref=e126]:
+        - generic [ref=e127]:
+          - generic [ref=e128]: "1"
+          - generic [ref=e129]:
+            - generic [ref=e130]:
+              - generic [ref=e131]:
+                - img [ref=e133]
+                - generic [ref=e136]: Regisztráció
+              - generic [ref=e137]: Hozzon létre ingyenes fiókot 2 perc alatt
+            - paragraph [ref=e139]: Egyszerű regisztrációs folyamat email címmel és jelszóval. Azonnali hozzáférés az összes funkcióhoz.
+        - generic [ref=e140]:
+          - generic [ref=e141]: "2"
+          - generic [ref=e142]:
+            - generic [ref=e143]:
+              - generic [ref=e144]:
+                - img [ref=e146]
+                - generic [ref=e149]: Arbitrage Keresés
+              - generic [ref=e150]: Fedezze fel a legjobb arbitrage lehetőségeket
+            - paragraph [ref=e152]: Valós idejű odds összehasonlítás több fogadóiroda között. Automatikus arbitrage detektálás.
+        - generic [ref=e153]:
+          - generic [ref=e154]: "3"
+          - generic [ref=e155]:
+            - generic [ref=e156]:
+              - generic [ref=e157]:
+                - img [ref=e159]
+                - generic [ref=e161]: Profit Realizálás
+              - generic [ref=e162]: Helyezze el fogadásait és realizálja a profitot
+            - paragraph [ref=e164]: Pontos tét elosztás kalkulációval. Követés és teljesítmény elemzés a fogadások után.
+    - generic [ref=e167]:
+      - generic [ref=e168]:
+        - heading "Felhasználói Vélemények" [level=2] [ref=e169]
+        - paragraph [ref=e170]: Lássa, mit mondanak a felhasználók a ProTipp V2-ről
+      - generic [ref=e171]:
+        - generic [ref=e172]:
+          - generic [ref=e174]:
+            - generic [ref=e175]: KP
+            - generic [ref=e176]:
+              - heading "Kovács Péter" [level=3] [ref=e177]
+              - paragraph [ref=e178]: Amatőr fogadó
+              - generic [ref=e179]:
+                - img [ref=e180]
+                - img [ref=e182]
+                - img [ref=e184]
+                - img [ref=e186]
+                - img [ref=e188]
+          - blockquote [ref=e191]: "\"A ProTipp V2 segítségével már 3 hónap alatt 15% profitot értem el. A platform egyszerűen használható és valós idejű adatokat szolgáltat.\""
+        - generic [ref=e192]:
+          - generic [ref=e194]:
+            - generic [ref=e195]: NA
+            - generic [ref=e196]:
+              - heading "Nagy Anna" [level=3] [ref=e197]
+              - paragraph [ref=e198]: Veterán fogadó
+              - generic [ref=e199]:
+                - img [ref=e200]
+                - img [ref=e202]
+                - img [ref=e204]
+                - img [ref=e206]
+                - img [ref=e208]
+          - blockquote [ref=e211]: "\"A legjobb arbitrage platform, amit valaha használtam. A kalkulátor funkciók és a fogadáskövető rendszer nélkülözhetetlen.\""
+        - generic [ref=e212]:
+          - generic [ref=e214]:
+            - generic [ref=e215]: SG
+            - generic [ref=e216]:
+              - heading "Szabó Gábor" [level=3] [ref=e217]
+              - paragraph [ref=e218]: Profi fogadó
+              - generic [ref=e219]:
+                - img [ref=e220]
+                - img [ref=e222]
+                - img [ref=e224]
+                - img [ref=e226]
+                - img [ref=e228]
+          - blockquote [ref=e231]: "\"Professzionális eszközök, amikor a legjobb odds-okat keressük. A real-time frissítések és a szűrési lehetőségek kiválóak.\""
+    - generic [ref=e234]:
+      - generic [ref=e235]:
+        - heading "Platform Statisztikák" [level=2] [ref=e236]
+        - paragraph [ref=e237]: Impresszív számok, amelyek bizonyítják a platform hatékonyságát
+      - generic [ref=e238]:
+        - generic [ref=e240]:
+          - img [ref=e242]
+          - generic [ref=e247]: 10,000+
+          - generic [ref=e248]: Aktív Felhasználók
+          - generic [ref=e249]: Regisztrált felhasználók száma
+        - generic [ref=e251]:
+          - img [ref=e253]
+          - generic [ref=e256]: 50,000+
+          - generic [ref=e257]: Arbitrage Lehetőségek
+          - generic [ref=e258]: Naponta detektált lehetőségek
+        - generic [ref=e260]:
+          - img [ref=e262]
+          - generic [ref=e264]: 8.5%
+          - generic [ref=e265]: Átlagos Profit
+          - generic [ref=e266]: Felhasználók átlagos profitja
+        - generic [ref=e268]:
+          - img [ref=e270]
+          - generic [ref=e276]: 25+
+          - generic [ref=e277]: Sportágak
+          - generic [ref=e278]: Elérhető sportágak száma
+    - generic [ref=e282]:
+      - heading "Kezdje el a profit realizálását ma!" [level=2] [ref=e283]
+      - paragraph [ref=e284]: Csatlakozzon több mint 10,000 felhasználóhoz, akik már profitálnak a ProTipp V2 platformmal.
+      - generic [ref=e285]:
+        - button "Ingyenes Regisztráció" [ref=e286] [cursor=pointer]:
+          - img
+          - text: Ingyenes Regisztráció
+        - link "Demo Megtekintése" [ref=e287] [cursor=pointer]:
+          - /url: /dashboard
+          - img
+          - text: Demo Megtekintése
+        - link "Kapcsolatfelvétel" [ref=e288] [cursor=pointer]:
+          - /url: /contact
+          - img
+          - text: Kapcsolatfelvétel
+      - paragraph [ref=e290]: Ingyenes regisztráció • Nincs kötelező előfizetés • Azonnali hozzáférés
+  - generic [ref=e291]:
+    - img [ref=e293]
+    - button "Open Tanstack query devtools" [ref=e341] [cursor=pointer]:
+      - img [ref=e342] [cursor=pointer]
+  - alert [ref=e390]
+  - button "Open Next.js Dev Tools" [ref=e396] [cursor=pointer]:
+    - img [ref=e397] [cursor=pointer]
+```

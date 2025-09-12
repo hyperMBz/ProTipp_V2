@@ -16,7 +16,7 @@ export function CallToActionSection() {
   };
 
   return (
-    <section className="py-16 bg-gradient-to-r from-primary/10 to-purple-500/10">
+    <section id="cta" className="py-16 bg-gradient-to-r from-primary/10 to-purple-500/10">
       <div className="container mx-auto px-4 text-center">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Fő üzenet */}
@@ -54,13 +54,13 @@ export function CallToActionSection() {
             </Button>
             
             {/* Harmadlagos gomb - Kapcsolatfelvétel */}
-            <Button 
-              asChild 
-              variant="ghost" 
+            <Button
+              asChild
+              variant="ghost"
               size="lg"
               className="hover:bg-accent hover:text-accent-foreground px-8 py-4 text-lg font-semibold"
             >
-              <Link href="/dashboard">
+              <Link href="/contact">
                 <Mail className="mr-2 h-5 w-5" />
                 Kapcsolatfelvétel
               </Link>
